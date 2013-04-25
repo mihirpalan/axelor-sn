@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+
+	<selection name="select-count">
+		<option value="10">10</option>
+		<option value="15">15</option>
+		<option value="25">25</option>
+		<option value="50">50</option>
+		<option value="75">75</option>
+		<option value="100">100</option>
+	</selection>
+	
+	<selection name="select-days">
+		<option value="2">2</option>
+		<option value="3">3</option>
+		<option value="5">5</option>
+		<option value="7">7</option>
+		<option value="10">10</option>
+	</selection>
+
+	<grid title="Parameter Configration" name="LINparam-config-grid">
+		<field name="snType"/>
+		<field name="recordNumbers"/>
+		<field name="days"/>
+	</grid>
+
+	<form title="Parameter Configration" name="LINparam-config-form" onNew="action-current-user">
+		<field name="snType"/>
+		<break />
+		<field name="recordNumbers" selection="select-count"/>
+		<break />
+		<field name="days" selection="select-days"/>
+		<break />
+		<field name="curUser" readonly="true" hidden="true"/>
+	</form>
+
+</object-views>

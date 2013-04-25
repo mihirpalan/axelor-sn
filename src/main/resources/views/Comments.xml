@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	<grid name="comment-linkedin-grid" title="All Comments" model="com.axelor.sn.db.Comments">
+<!-- 		<field name="commentId" title="ID" /> -->
+		<field name="comment" title="Comment"/>
+		<field name="commentTime" title="Time"/>
+		<field name="fromUser" title="By" />
+	</grid>
+	<form name="comment-linkedin-form" title="Comment" cols="4" onNew="action-user5" model="com..axelor.sn.db.Comments">
+<!-- 		<field name="commentId" title="ID" /> -->
+		<field name="comment" title="Comment"/>
+		<field name="commentTime" title="Time"/>
+		<field name="fromUser" title="By"/>
+	</form>
+<!-- 		<field name="curUser" readonly="true" hidden="true" /> -->
+<!-- 		<field name="contentId" title="Content ID" colSpan="3"	domain="self.curUser = :curUser"/> -->
+<!-- 		<break /> -->
+<!-- 		<button name="getComments" title="Get Comments" onClick="action-get-comments" /> -->
+<!-- 		<separator colSpan="4"/> -->
+<!-- 		<notebook colSpan="4"> -->
+<!-- 			<page title="Comments" colWidths="4"> -->
+<!-- 				<field name="contentId" readonly="true"> -->
+<!-- 					<grid title=""> -->
+<!-- 						<field name="comment" title="Comment"/> -->
+<!-- 						<field name="commentTime" title="Time"/> -->
+<!-- 						<field name="fromUser" title="By"/> -->
+<!-- 					</grid> -->
+<!-- 				</field> -->
+<!-- 			</page> -->
+<!-- 		</notebook> -->
+<!-- 	</form> -->
+
+	<action-record name="action-user5" model="com.axelor.sn.db.ImportContacts">
+		<field name="curUser" expr="eval: __user__" />
+	</action-record>
+
+<!-- 	<action-method name="action-get-comments"> -->
+<!-- 		<call class="com.axelor.sn.web.Controller" method="getComments" /> -->
+<!-- 	</action-method> -->
+
+</object-views>

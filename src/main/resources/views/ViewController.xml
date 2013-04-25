@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	<form title="View Conroller" name="view-control-form" cols="3" >
+		<toolbar>
+			<button name="new" title="New" hidden="true" />
+			<button name="save" title="Save" hidden="true" />
+			<button name="edit" title="Edit" hidden="true" />
+			<button name="delete" title="Delete" hidden="true" />
+		</toolbar>
+		<group title="Existing Menu" colSpan="2">
+			<label name="menuVal" title="Social Networking" hidden="true" />
+			<field name="menus" domain="self.parent.title IN menuVal"></field>
+		</group>
+		<break />
+		<group title="Existing Group">
+			<field name="groups"></field>
+		</group>
+		<break />
+		<group cols="3">
+			<button name="fireRestriction" title="Restrict"
+				onClick="com.axelor.sn.web.ViewRestrictionController:getSelectedValues" />
+		</group>
+	</form>
+<!-- 	<action-record name="action-stat-val" model="com.axelor.sn.db.ViewController"> -->
+<!-- 		<field name="menu" expr="menu-sn" /> -->
+<!-- 	</action-record> -->
+
+</object-views>

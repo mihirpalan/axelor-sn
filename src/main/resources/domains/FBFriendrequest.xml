@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://apps.axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.7.xsd">
+	<module name="sn" package="com.axelor.sn.db" />
+	<entity name="FBFriendrequest">
+		<string name="name" title="Person Name"></string>
+		<string name="gender" title="Gender"></string>
+		<string name="link" title="Profile Link"></string>
+		
+		<many-to-one name="curUser" ref="com.axelor.auth.db.User"></many-to-one>
+	</entity>
+	</domain-models>

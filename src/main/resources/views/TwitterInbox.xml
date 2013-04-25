@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	<grid title="Inbox" name="twt-inbox-grid">
+		<toolbar>
+			<button name="fireGoEvent" title="Write New!!" onClick="action-fireGoEvent" />
+			<button name="fireEvent" title="Sync Inbox!!" onClick="com.axelor.sn.web.TWTController:getBoxMsg" />			
+			<button name="refresh" title="Refresh" />
+			<button name="search" title="Search" />
+			<button name="new" title="New" hidden="true" />
+			<button name="save" title="Save" />
+			<button name="edit" title="Edit" hidden="true" />
+			<button name="delete" title="Delete" hidden="true" />
+			<button name="fireDelete" title="Delete" onClick="com.axelor.sn.web.TWTController:deleteDirectMessage"/>
+		</toolbar>
+		<field name="msgId" readonly="true"></field>
+		<field name="msgContent" readonly="true"></field>
+		<field name="senderName" readonly="true"></field>
+		<field name="senderId" readonly="true" hidden="true"></field>
+	</grid>
+	
+	<action-view name="action-fireGoEvent" model="com.axelor.sn.db.DirectMessage" title="Compose New">
+	<view type="form" name="direct-msg-form"/>
+	</action-view>
+</object-views>
+

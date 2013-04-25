@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://apps.axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.7.xsd">
+	<module name="sn" package="com.axelor.sn.db" />
+	<entity name="FBInbox">
+		
+		<string name="msgId" title="Message ID"></string>
+		<string name="fromId" title="Participant 1"></string>
+<!-- 		<many-to-one name="fromId" title="Received From" ref="com.axelor.sn.db.ImportContact"></many-to-one> -->
+		<string name="toName" title="Participant 2" readonly="true"></string>
+		<string name="msgBody" multiline="true" title="Message Content"></string>	
+		<string name="sendDate" title="Date" ></string>	
+		<many-to-one name="curUser" ref="com.axelor.auth.db.User"
+			hidden="true"></many-to-one>
+	</entity>
+</domain-models>
+

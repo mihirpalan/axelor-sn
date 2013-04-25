@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://apps.axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.7.xsd">
+	<module name="sn" package="com.axelor.sn.db" />
+	<entity name="FBPages">
+		<string name="pageId"></string>
+		<string name="name" title="Page Name"></string>
+		<string name="username" title="User Name of Page"></string>
+		<string name="pageUrl" title="URL of Page"></string>
+		<one-to-many name="postcontent" ref="com.axelor.sn.db.FBPagePost" title="Post Content" orphan="true"/>		
+		<many-to-one name="curUser" ref="com.axelor.auth.db.User"/>
+	</entity>
+</domain-models>

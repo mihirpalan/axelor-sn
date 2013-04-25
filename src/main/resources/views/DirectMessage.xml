@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	<form name="direct-msg-form" title="Twitter Direct Message"  onNew="action-val-fie,com.axelor.sn.web.TWTController:saySNType">
+    <toolbar>
+        <button name="save" title="Save" hidden="true"/>
+        <button name="edit" title="Edit" hidden="true"/>
+        <button name="delete" title="Delete" hidden="true"/>
+    </toolbar>
+    <group title="Send Direct Message">
+        <field name="curUser" hidden="true" />
+        
+        <field name="snType" readonly="true" hidden="true"/>
+        <break/>
+        <field name="userId" domain="self.curUser=:curUser and self.snType=:snType"/>
+        <break/>
+        <field name="msgcontent"/>
+    </group>
+    <break/>
+    <group title="Controlles">
+        <button name="postMsg" title="Send Message" onClick="com.axelor.sn.web.TWTController:directMessage"/>
+        <break/>
+        <button name="viewall" title="View Messages" onClick="action-view-all-msg"/>
+        <break/>
+        <field name="acknowledgment" readonly="true"/>
+    </group>
+</form>
+
+	<action-record model="com.axelor.sn.db.DirectMessage" name="action-val-fie">
+    <field name="curUser" expr="eval:__user__"/>
+</action-record>
+
+	<action-view name="action-view-all-msg" model="com.axelor.sn.db.TwitterInbox"
+		title="Inbox!!">
+		<view type="grid" name="twt-inbox-grid" />
+	</action-view>
+</object-views>

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://apps.axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.7.xsd">
+	<module name="sn" package="com.axelor.sn.db" />
+	<entity name="PostEvent">
+		<string name="occession"></string>
+		<string name="location"></string>
+		<datetime name="startdate" tz="true"></datetime>
+		<datetime name="enddate" tz="true"></datetime>
+		<string name="privacy"></string>
+		<string name="acknowledgment"></string>
+		<many-to-one name="curUser" ref="com.axelor.auth.db.User"></many-to-one>
+		<datetime name="postedTime" tz="true"></datetime>
+	</entity>
+</domain-models>

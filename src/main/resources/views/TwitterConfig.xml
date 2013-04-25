@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	<grid title="Configuration" name="twt-config-grid">
+		<field name="snType"></field>
+		<field name="page"></field>
+		<field name="content"></field>
+		<field name="since"></field>
+	</grid>
+
+	<form onNew="action-say-cur-user,com.axelor.sn.web.TWTController:saySNType"
+		title="Configuration" name="twt-config-form">
+		<field readonly="true" title="N/W Type" name="snType" hidden="true" />
+		<group cols="3">
+			<field name="page" />
+			<field name="content" />
+			<field onChange="action-latest-update,action-on-latest-update"
+				title="Latest Updates" name="since" />
+		</group>
+		<field readonly="true" title="Current User" name="curUser"
+			hidden="true" />
+	</form>
+
+	<action-record name="action-say-cur-user" model="com.axelor.sn.db.TwitterConfig">
+		<field name="curUser" expr="eval:__user__" />
+	</action-record>
+
+	<action-record name="action-latest-update" model="com.axelor.sn.db.TwitterConfig">
+		<field name="page" expr="0" if="eval:since==true" />
+		<field name="content" expr="0" if="eval:since==true" />
+	</action-record>
+
+	<action-attrs name="action-on-latest-update">
+		<attribute name="hidden" for="page" expr="eval:since==true" />
+		<attribute name="hidden" for="content" expr="eval:since==true" />
+	</action-attrs>
+</object-views>

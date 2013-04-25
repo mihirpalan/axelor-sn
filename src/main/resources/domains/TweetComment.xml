@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<domain-models xmlns="http://apps.axelor.com/xml/ns/domain-models"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.7.xsd">
+	<module name="sn" package="com.axelor.sn.db" />
+	<entity name="TweetComment">
+		<!-- <string name="commentType" title="Comments Type"></string> -->
+		<string name="tweetcommentid" title="Tweet Replay ID"></string>
+		<many-to-one name="contentid" ref="com.axelor.sn.db.PostTweet"></many-to-one>
+		<many-to-one name="tweetFrom" title="From::User"
+			ref="com.axelor.sn.db.ImportContact"></many-to-one>			
+		<string name="tweetTime" title="Tweet Time"></string>
+		<string name="tweetContent" title="Content"></string>
+		<string name="tweetFevourite" title="Fevourite"></string>
+		<many-to-one name="curUser" ref="com.axelor.auth.db.User"></many-to-one>
+	</entity>
+</domain-models>

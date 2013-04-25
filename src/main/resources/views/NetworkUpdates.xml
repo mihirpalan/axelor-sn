@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+    <grid name="network-update-grid" title="Network Updates" model="com.axelor.sn.db.NetworkUpdates" orderBy="-contentTime">
+        <toolbar>
+        	<button name="new" title="" hidden="true"/>
+        	<button name="edit" title="" hidden="true"/>
+        	<button name="search" title="" hidden="true"/>
+        	<button name="sync" title="Synchronise" onClick="action-get-network-updates"/>
+        </toolbar>
+        <field name="content" title="Status Updates"/>
+        <field name="contentTime"/>
+        <field name="fromUser" title="By User"></field>
+    </grid>
+    <form name="network-update-form" title="Update" cols="4" model="com.axelor.sn.db.NetworkUpdates">
+		<field name="contentId" title="Status ID" readonly="true"/>
+		<break/>
+		<field name="content" title="Status Update" colSpan="3" readonly="true"/>
+		<break/>
+		<field name="fromUser" title="By" readonly="true" colSpan="3"/>
+		<break/>
+		<field name="contentTime" title="Time" readonly="true" colSpan="3"/>
+    </form>
+    
+    <action-method name="action-get-network-updates">
+    	<call class="com.axelor.sn.web.Controller" method="getNetworkUpdates"/>
+    </action-method>
+    
+</object-views>
