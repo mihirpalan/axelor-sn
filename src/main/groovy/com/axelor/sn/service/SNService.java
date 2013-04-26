@@ -187,6 +187,10 @@ public class SNService
 	@Transactional
 	static void fetchConnections(String consumerKeyValue,String consumerSecretValue, String userToken,String userTokenSecret,User user,SocialNetworking snType)
 	{
+		EntityManager em=JPA.em();
+		EntityTransaction tx=em.getTransaction();
+		tx.begin();
+		
 		List<ImportContact> lstImportContact=ImportContact.all().filter("curUser=? and snType=?",user,snType).fetch();
 		
 		List<String> lstUserId=new ArrayList<String>();
@@ -229,12 +233,12 @@ public class SNService
 					contact.persist();
 				}					
 			}
-			JPA.em().flush();
 		}
 		catch(Exception e)
 		{
 			System.out.println(e.toString());
 		}
+		tx.commit();
 	}
 	
 	static void sendMessage(String userId,String subject,String message,String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue)
@@ -263,6 +267,10 @@ public class SNService
 	@Transactional
 	static void getComments(String contentId, String userToken,String tokenSecret,String consumerKeyValue,String consumerSecretValue,User user,SocialNetworking snType)
 	{
+		EntityManager em=JPA.em();
+		EntityTransaction tx=em.getTransaction();
+		tx.begin();
+		
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
 		client=factory.createLinkedInApiClient(userToken,tokenSecret);
 		
@@ -304,11 +312,16 @@ public class SNService
 	       		}
 	       	}
 		}
+		tx.commit();
 	}
 	
 	@Transactional
 	static void addStatusComment(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,User user,String contentId,String comment)
 	{
+		EntityManager em=JPA.em();
+		EntityTransaction tx=em.getTransaction();
+		tx.begin();
+		
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
 		client=factory.createLinkedInApiClient(userToken,userTokenSecret);
 
@@ -336,12 +349,17 @@ public class SNService
             	comments.persist();
 			}
 		}
+		tx.commit();
 	}
 	
 	@SuppressWarnings("deprecation")
 	@Transactional
 	static void getNetworkUpdates(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,User user,SocialNetworking snType)
 	{
+		EntityManager em=JPA.em();
+		EntityTransaction tx=em.getTransaction();
+		tx.begin();
+		
 		LinkedinParameters parameters=null;
 		Network network=null;
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
@@ -428,11 +446,16 @@ public class SNService
 				}
 			}
 		}
+		tx.commit();
 	}
 	
 	@Transactional
 	static void getMembership(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,User user,SocialNetworking snType)
 	{
+		EntityManager em=JPA.em();
+		EntityTransaction tx=em.getTransaction();
+		tx.begin();
+		
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
 		client=factory.createLinkedInApiClient(userToken,userTokenSecret);
 		
@@ -460,12 +483,17 @@ public class SNService
             	groupMember.persist();
         	}
         }
+        tx.commit();
 	}
 	
 	@SuppressWarnings("deprecation")
 	@Transactional
 	static void getDiscussions(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,User user,GroupMember groupMember,SocialNetworking snType)
 	{
+		EntityManager em=JPA.em();
+		EntityTransaction tx=em.getTransaction();
+		tx.begin();
+		
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
 		client=factory.createLinkedInApiClient(userToken,userTokenSecret);
 		LinkedinParameters parameters=null;
@@ -539,6 +567,7 @@ public class SNService
 				
 			}
 		}
+		tx.commit();
 	}
 	
 	static String addGroupDiscussion(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,String title,String summary,String groupId)
@@ -553,7 +582,6 @@ public class SNService
         return discussionIdTime;
 	}
 	
-	@Transactional
 	static void addDiscussionComment(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,User user,GroupDiscussion groupDiscussion,String discussionId,String comment,int start,SocialNetworking snType)
 	{
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
@@ -567,6 +595,10 @@ public class SNService
 	@Transactional
 	static void getDiscussionComments(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,User user,GroupDiscussion groupDiscussion,SocialNetworking snType, int start)
 	{
+		EntityManager em=JPA.em();
+		EntityTransaction tx=em.getTransaction();
+		tx.begin();
+		
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
 		client=factory.createLinkedInApiClient(userToken,userTokenSecret);
 		LinkedinParameters parameters=null;
@@ -618,6 +650,7 @@ public class SNService
 				groupDiscussionComment.persist();
 			}
 		}
+		tx.commit();
 	}
 	
 	static String deleteDiscussion(List<Integer> lstIdValues,String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,User user)
