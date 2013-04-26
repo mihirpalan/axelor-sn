@@ -12,6 +12,8 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 
 import com.axelor.auth.db.User;
 import com.axelor.db.JPA;
@@ -68,7 +70,6 @@ import org.scribe.model.Verifier;
 
 public class SNService
 {
-	static String LINKIN_USERNAME,LINKIN_PASSWORD;
 	static LinkedInApiClient client=null;
 	static LinkedInApiClientFactory factory=null;
 	static LinkedInAccessToken accessToken=null;
@@ -96,32 +97,26 @@ public class SNService
 	}
 
 	@Transactional
-	static String getUrl(String consumerKey,String consumerSecret,User user,SocialNetworking snType)   // , String userName,String password)
+	static String getUrl(String consumerKey,String consumerSecret,User user,SocialNetworking snType)
 	{
-//		LINKIN_USERNAME = userName;
-//		LINKIN_PASSWORD=password;
 		String authUrl=null;
 		
 		try
 		{
 			consumerKeyValue = consumerKey;
 			consumerSecretValue = consumerSecret;
+			ApplicationCredentials applicationCredentials=ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
 			oauthService=LinkedInOAuthServiceFactory.getInstance().createLinkedInOAuthService(consumerKeyValue, consumerSecretValue);
-			requestToken=oauthService.getOAuthRequestToken("http://localhost:8080/axelor-demo/ws/linkedin/100");
-//			requestToken=oauthService.getOAuthRequestToken("http://192.168.0.155:8080/axelor-demo/#/ds/personalCredential/edit");
+			requestToken=oauthService.getOAuthRequestToken(applicationCredentials.getRedirectUrl());
 			authUrl=requestToken.getAuthorizationUrl();
-			System.out.println(requestToken);
 			setCurrentUser(user);
 			setSnType(snType);
-//			Verifier verifier = new Verifier(getVerifier(authUrl));
-//			accessToken = oauthService.getOAuthAccessToken(requestToken,verifier.getValue());
 			
 		}
 		catch(Exception e)
 		{
 			System.out.println(e.toString());
 		}
-//		return accessToken.getToken();
 		return authUrl;
 	}
 	
@@ -135,18 +130,16 @@ public class SNService
 		User user=getCurrentUser();
 		SocialNetworking snType=getSnType();
 		
-		String pin=verifier;
-//		System.out.println(pin);
-//		System.out.println(requestToken);
 		try
 		{
 		
 			accessToken = oauthService.getOAuthAccessToken(requestToken,verifier);
-			System.out.println(accessToken.getToken());
-			System.out.println(accessToken.getTokenSecret());
+			
 			factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
 			client=factory.createLinkedInApiClient(accessToken.getToken(),accessToken.getTokenSecret());
+			
 			PersonalCredential personalCredential=new PersonalCredential();
+			
 			personalCredential.setUserToken(accessToken.getToken());
 			personalCredential.setUserTokenSecret(accessToken.getTokenSecret());
 			Person profile= client.getProfileForCurrentUser(EnumSet.of(ProfileField.FIRST_NAME,ProfileField.LAST_NAME));
@@ -155,7 +148,6 @@ public class SNService
 			personalCredential.setSnType(snType);
 
 			personalCredential.merge();
-			System.out.println("Status=true");
 			status=true;
 		}
 		catch(Exception e)
@@ -166,55 +158,9 @@ public class SNService
 		return status;
 	}
 	
-//	static String getTokenSecret()
-//	{
-//		return accessToken.getTokenSecret();
-//	}
-//	
-//	static String getVerifier(String url) throws Exception 
-//	{
-//		String pin=null;
-//		try
-//		{
-//			final WebClient webClient = new WebClient();
-//			webClient.setJavaScriptEnabled(false);
-//			webClient.setCssEnabled(false);
-//  
-//			// Get the first page
-//			final HtmlPage page1 = webClient.getPage(url);
-//  
-//			// Get the form that we are dealing with and within that form,
-//			// find the submit button and the field that we want to change.
-//			final HtmlForm form = page1.getFormByName("oauthAuthorizeForm");
-//  
-//			final HtmlSubmitInput button = form.getInputByName("authorize");
-//			final HtmlTextInput textField = form.getInputByName("session_key");
-//			final HtmlPasswordInput textField2 = form.getInputByName("session_password");
-//			// Change the value of the text field
-//			textField.setValueAttribute(LINKIN_USERNAME);
-//			textField2.setValueAttribute(LINKIN_PASSWORD);
-//  
-//			// Now submit the form by clicking the button and get back the second page.
-//			final HtmlPage page2 = button.click();
-//  
-//			// Obtain the 5-digit access code from the returned page
-//			String text = page2.asText();
-//			int i = 0;
-//			while (text.charAt(i)>'9' || text.charAt(i)<'0') i++;
-//			
-//			pin = text.substring(i, i+5);
-//			webClient.closeAllWindows();
-//		}
-//		catch(Exception e)
-//		{
-//			e.printStackTrace();
-//		}
-//		return pin;
-//	}
-	
 	static SocialNetworking getSnType(String sntype)
 	{
-		SocialNetworking snType=SocialNetworking.all().filter("name=?", sntype).fetchOne();
+		SocialNetworking snType=SocialNetworking.all().filter("lower(name)= ?", sntype.toLowerCase()).fetchOne();
 		return snType;
 	}
 	
@@ -223,8 +169,7 @@ public class SNService
 		PersonalCredential query=null;
 		try
 		{
-		 query=PersonalCredential.all().filter("userId=? and snType=?", user,snType).fetchOne();
-		System.out.println(query);
+			query=PersonalCredential.all().filter("userId=? and snType=?", user,snType).fetchOne();
 		}
 		catch (Exception e) 
 		{
@@ -242,11 +187,6 @@ public class SNService
 	@Transactional
 	static void fetchConnections(String consumerKeyValue,String consumerSecretValue, String userToken,String userTokenSecret,User user,SocialNetworking snType)
 	{
-		EntityManager em=JPA.em();
-		EntityTransaction tx=em.getTransaction();
-		tx.begin();
-		
-//		List<ImportContacts> contacts=em.createQuery("select a from ImportContacts a where a.curUser="+user.getId()+" and a.sntype='"+snType.getName()+"'", ImportContacts.class).getResultList();
 		List<ImportContact> lstImportContact=ImportContact.all().filter("curUser=? and snType=?",user,snType).fetch();
 		
 		List<String> lstUserId=new ArrayList<String>();
@@ -295,7 +235,6 @@ public class SNService
 		{
 			System.out.println(e.toString());
 		}
-		tx.commit();
 	}
 	
 	static void sendMessage(String userId,String subject,String message,String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue)
@@ -321,7 +260,6 @@ public class SNService
 		return updateKeyTime;
 	}
 	
-	//FUNCTION TO GET THE COMMENTS OF A STATUS FROM LINKEDIN
 	@Transactional
 	static void getComments(String contentId, String userToken,String tokenSecret,String consumerKeyValue,String consumerSecretValue,User user,SocialNetworking snType)
 	{
@@ -330,25 +268,18 @@ public class SNService
 		
 		List<String> lstUserIds=new ArrayList<String>();
 		
-		//GET ALL THE CONTACTS OF THE CURRENT USER INTO A LIST
-//		List<ImportContacts> contacts=em.createQuery("select a from ImportContacts a where a.curUser="+user.getId()+" and a.sntype='"+snType+"'", ImportContacts.class).getResultList();
-		List<ImportContact> lstImportContact=ImportContact.all().filter("curUser=? and snType=?",user,snType).fetch(); 
+		List<ImportContact> lstImportContact=ImportContact.all().filter("curUser=? and snType=?",user,snType).fetch();
 		for(int i=0;i<lstImportContact.size();i++)
 			lstUserIds.add(lstImportContact.get(i).getUserId().toString());
 		
-		//SELECT AN OBJECT OF A POST WITH THE GIVEN CONTENT-ID
-//		PostUpdates post=em.createQuery("select a from PostUpdates a where a.contentId='"+contentId+"'",PostUpdates.class).getSingleResult();
 		PostUpdates postUpdate=PostUpdates.all().filter("contentId=?",contentId).fetchOne();
 		
-		//GET ALL THE COMMENTS OF A PARTICULAR POST INTO A LIST
-//		List<Comments> comments=em.createQuery("select a from Comments a where a.curUser="+user.getId()+" and a.contentId="+post.getId(), Comments.class).getResultList();
 		List<Comments> lstComments=Comments.all().filter("curUser=? and contentId=?",user,postUpdate).fetch();
 		List<String> lstCommentIds=new ArrayList<String>();
 		for(int i=0;i<lstComments.size();i++)
 			lstCommentIds.add(lstComments.get(i).getCommentId().toString());
 			
 		UpdateComments updateComments=client.getNetworkUpdateComments(contentId);
-//		System.out.println(client.getNetworkUpdateLikes(content_id));
 			
 		Iterator<UpdateComment> itr=updateComments.getUpdateCommentList().iterator();
 		UpdateComment comment=null;
@@ -359,7 +290,6 @@ public class SNService
 	       	{
 	       		if(!lstCommentIds.contains(comment.getId()))
 	       		{
-	               	//SET THE FIELDS FOR THE COMMENT
 	       			DateTime date=new DateTime(comment.getTimestamp());
 	       			Comments comments=new Comments();
 	       			comments.setContentId(postUpdate);
@@ -368,8 +298,6 @@ public class SNService
 	       			comments.setCommentTime(date);
 	       			comments.setCurUser(user);
 	               	
-	               	//SELECT FROM CLASS:ImportContacts TO SET THE USER WHO COMMENTED
-//	               	ImportContacts contact=em.createQuery("select a from ImportContacts a where a.userid='"+comment.getPerson().getId()+"' and a.curUser="+user.getId(),ImportContacts.class).getSingleResult();
 	   	           	ImportContact contact=ImportContact.all().filter("userId=? and curUser=?",comment.getPerson().getId(),user).fetchOne();
 	   	           	comments.setFromUser(contact);
 	   	           	comments.persist();
@@ -378,17 +306,14 @@ public class SNService
 		}
 	}
 	
+	@Transactional
 	static void addStatusComment(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,User user,String contentId,String comment)
 	{
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
 		client=factory.createLinkedInApiClient(userToken,userTokenSecret);
 
 		client.postComment(contentId, comment);
-		EntityManager em=JPA.em();
-		EntityTransaction tx=em.getTransaction();
-		tx.begin();
 
-//		PostUpdates post=em.createQuery("select a from PostUpdates a where a.contentId='"+contentId+"'",PostUpdates.class).getSingleResult();
 		PostUpdates postUpdate=PostUpdates.all().filter("contentId=?",contentId).fetchOne();
 		UpdateComments updateComments=client.getNetworkUpdateComments(contentId);
 		
@@ -411,7 +336,6 @@ public class SNService
             	comments.persist();
 			}
 		}
-		tx.commit();
 	}
 	
 	@SuppressWarnings("deprecation")
@@ -424,25 +348,19 @@ public class SNService
 		client=factory.createLinkedInApiClient(userToken,userTokenSecret);
 		SimpleDateFormat sdf=new SimpleDateFormat("MM/dd/yyyy");
 
-//		List<NetworkUpdates> networkUpdates=em.createQuery("select a from NetworkUpdates a where a.curUser="+user.getId()+" and a.snType="+sntype.getId(), NetworkUpdates.class).getResultList();
 		List<NetworkUpdates> lstNetworkUpdates= NetworkUpdates.all().filter("curUser=? and snType=?",user,snType).fetch();
 		List<String> lstUpdateIds=new ArrayList<String>();
+
 		for(int i=0;i<lstNetworkUpdates.size();i++)
 			lstUpdateIds.add(lstNetworkUpdates.get(i).getContentId().toString());
+		
 		try
 		{
-//			parameters=em.createQuery("select a from LinkedinParameters a where a.curUser="+user.getId()+" and a.snType="+sntype.getId(),LinkedinParameters.class).getSingleResult();
 			parameters=LinkedinParameters.all().filter("curUser=? and snType=?",user,snType).fetchOne();
-		}
-		catch(Exception e)
-		{
-
-		}
-		try
-		{
+		
 			if(parameters == null)
 			{
-				network = client.getNetworkUpdates(EnumSet.of(NetworkUpdateType.SHARED_ITEM));
+				throw new NullPointerException();
 			}
 			else if((parameters.getDays() == 0) && (parameters.getRecordNumbers() ==0) )
 			{
@@ -450,7 +368,6 @@ public class SNService
 			}
 			else if((parameters.getDays() != 0) && (parameters.getRecordNumbers() ==0) )
 			{
-//				System.out.println("Day Values");
 				Date endDate=new Date();
 				Calendar c=Calendar.getInstance();
 				c.add(Calendar.DATE, -(parameters.getDays()));
@@ -472,14 +389,19 @@ public class SNService
 		}
 		catch(NullPointerException e)
 		{
-			return;
+			network = client.getNetworkUpdates(EnumSet.of(NetworkUpdateType.SHARED_ITEM));
 		}
+		catch(Exception e)
+		{
+			e.printStackTrace();
+		}
+		
 		Iterator<Update> itr=network.getUpdates().getUpdateList().iterator();
 		Update update=null;
 
-//		List<ImportContacts> contacts=em.createQuery("select a from ImportContacts a where a.curUser="+user.getId()+" and a.sntype='"+sntype.getName()+"'", ImportContacts.class).getResultList();
 		List<ImportContact> lstImportContact=ImportContact.all().filter("curUser=? and snType=?",user,snType).fetch();
 		List<String> lstUserIds=new ArrayList<String>();
+
 		for(int i=0;i<lstImportContact.size();i++)
 			lstUserIds.add(lstImportContact.get(i).getUserId().toString());
 
@@ -496,8 +418,6 @@ public class SNService
 					if(update.getUpdateContent().getPerson().getCurrentShare().getComment()==null)
 						continue;
 					networkUpdate.setContent( update.getUpdateContent().getPerson().getCurrentShare().getComment());
-//					System.out.println("Likes:"+update.getNumLikes());
-//					ImportContacts fromUser=em.createQuery("select a from ImportContacts a where a.userid='"+update.getUpdateContent().getPerson().getId()+"' and a.curUser="+user.getId(),ImportContacts.class).getSingleResult();
 					ImportContact fromUser=ImportContact.all().filter("userId=? and curUser=?",update.getUpdateContent().getPerson().getId(),user).fetchOne();
 					networkUpdate.setFromUser(fromUser);
 					networkUpdate.setCurUser(user);
@@ -516,7 +436,6 @@ public class SNService
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
 		client=factory.createLinkedInApiClient(userToken,userTokenSecret);
 		
-//		List<GroupMember> member=em.createQuery("select a from GroupMember a where a.curUser="+user.getId()+" and a.snType="+sntype.getId(), GroupMember.class).getResultList();
 		List<GroupMember> lstGroupMember=GroupMember.all().filter("curUser=? and snType=?", user,snType).fetch();
 		
 		List<String> lstGroupIds=new ArrayList<String>();
@@ -544,6 +463,7 @@ public class SNService
 	}
 	
 	@SuppressWarnings("deprecation")
+	@Transactional
 	static void getDiscussions(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,User user,GroupMember groupMember,SocialNetworking snType)
 	{
 		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue); 
@@ -552,9 +472,6 @@ public class SNService
 		Posts post=null;
 		SimpleDateFormat sdf=new SimpleDateFormat("MM/dd/yyyy");
 		
-		EntityManager em=JPA.em();
-		EntityTransaction tx=em.getTransaction();
-		tx.begin();
 		List<GroupDiscussion> lstGroupDiscussion=GroupDiscussion.all().filter("curUser=? and groupName=?",user,groupMember).fetch();
 		List<String> lstGroupDiscussionIds=new ArrayList<String>();
 		for(GroupDiscussion d: lstGroupDiscussion)
@@ -563,13 +480,7 @@ public class SNService
 		try
 		{
 			parameters=LinkedinParameters.all().filter("curUser=? and snType=?",user,snType).fetchOne();
-		}
-		catch(Exception e)
-		{
-
-		}
-		try
-		{
+		
 			if(parameters == null)
 			{
 				post=client.getPostsByGroup(groupMember.getGroupId(),EnumSet.of(PostField.ID,PostField.SUMMARY,PostField.TITLE,PostField.TYPE,PostField.CREATION_TIMESTAMP,
@@ -613,8 +524,8 @@ public class SNService
 				discuss.setDiscussionId(p.getId());
 				if(p.getSummary() !=null)
 					discuss.setDiscussionSummary(p.getSummary());
-//				else
-//					discuss.setPostSummary("N/A");
+				else
+					discuss.setDiscussionSummary("N/A");
 				if(p.getTitle()!=null)
 					discuss.setDiscussionTitle(p.getTitle());	
 				else
@@ -628,7 +539,6 @@ public class SNService
 				
 			}
 		}
-		tx.commit();
 	}
 	
 	static String addGroupDiscussion(String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue,String title,String summary,String groupId)
@@ -652,34 +562,6 @@ public class SNService
 		
 		getDiscussionComments(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, groupDiscussion,snType,start);
 		
-//		EntityManager em=JPA.em();
-//		EntityTransaction tx=em.getTransaction();
-//		tx.begin();
-//
-//		com.google.code.linkedinapi.schema.Comments cmts=client.getPostComments(postId, EnumSet.of(CommentField.ID,CommentField.CREATOR,CommentField.CREATION_TIMESTAMP,
-//				CommentField.TEXT));
-//		Iterator<Comment> itr=cmts.getCommentList().iterator();
-//		Comment comments=null;
-//
-//		while(itr.hasNext())
-//		{
-//			comments=itr.next();
-//			if(!itr.hasNext())
-//			{
-//				DateTime date=new DateTime(comments.getCreationTimestamp());
-//				GroupDiscussionComments cmt=new GroupDiscussionComments();
-//
-//				cmt.setCommentId(comments.getId());
-//				cmt.setComment(comments.getText());
-//				cmt.setCommentTime(date);
-//				cmt.setByUser(comments.getCreator().getFirstName()+" "+comments.getCreator().getLastName());
-//				cmt.setCurUser(user);
-//				cmt.setPost(grpDiscuss);
-//				cmt.persist();
-//				cmt.flush();
-//			}
-//		}
-//		tx.commit();
 	}
 	
 	@Transactional
@@ -691,7 +573,6 @@ public class SNService
 		List<GroupDiscussionComments> lstGroupDiscussionComments=null;
 		com.google.code.linkedinapi.schema.Comments comments=null;
 		
-//		grpDiscussComments=em.createQuery("select a from GroupDiscussionComments a where a.curUser="+user.getId()+" and a.post="+groupdiscussion.getId(),GroupDiscussionComments.class).getResultList();
 		lstGroupDiscussionComments=GroupDiscussionComments.all().filter("curUser=? and discussion=?",user,groupDiscussion).fetch();
 		List<String> lstCommentIds=new ArrayList<String>();
 		
@@ -700,15 +581,7 @@ public class SNService
 		
 		try
 		{
-//			parameters=em.createQuery("select a from LinkedinParameters a where a.curUser="+user.getId()+" and a.snType="+sntype.getId(),LinkedinParameters.class).getSingleResult();
 			parameters=LinkedinParameters.all().filter("curUser=? and snType=?",user,snType).fetchOne();
-		}
-		catch(Exception e)
-		{
-
-		}
-		try
-		{
 			if(parameters == null)
 			{
 				comments=client.getPostComments(groupDiscussion.getDiscussionId(), EnumSet.of(CommentField.ID,CommentField.CREATOR,CommentField.CREATION_TIMESTAMP,
@@ -756,10 +629,8 @@ public class SNService
 		tx.begin();
 		String message="";
 
-//		List<String> array=new ArrayList<String>();
 		for(int i=0;i<lstIdValues.size();i++)
 		{
-//			GroupDiscussion query=em.createQuery("select a from GroupDiscussion a where a.id="+idvalues.get(i),GroupDiscussion.class).getSingleResult();
 			GroupDiscussion groupDiscussion=GroupDiscussion.all().filter("id=?", lstIdValues.get(i)).fetchOne();
 			try
 			{
@@ -774,5 +645,20 @@ public class SNService
 		}
 		tx.commit();
 		return message;
+	}
+	static List<Comments> refreshComments(PostUpdates postUpdates)
+	{
+		List<Comments> lstComment=Comments.all().filter("contentId=?", postUpdates).fetch();
+		return lstComment;
+	}
+	static List<GroupDiscussion> refreshDiscussions(GroupMember member)
+	{
+		List<GroupDiscussion> lstDiscussion=GroupDiscussion.all().filter("groupName=?", member).fetch();
+		return lstDiscussion;
+	}
+	static List<GroupDiscussionComments> refreshDiscussionComments(GroupDiscussion discussion)
+	{
+		List<GroupDiscussionComments> lstGroupDiscussionComment=GroupDiscussionComments.all().filter("discussion=?",discussion).fetch();
+		return lstGroupDiscussionComment;
 	}
 }

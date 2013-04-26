@@ -8,8 +8,6 @@
 		</repository>
 	</repositories>
 	<parent>
-		<!--<groupId>com.axelor</groupId> <artifactId>demo-parent</artifactId> 
-			<version>0.0.7-SNAPSHOT</version> <relativePath>../demo-parent/pom.xml</relativePath> -->
 		<groupId>com.axelor</groupId>
 		<artifactId>axelor-module-parent</artifactId>
 		<version>0.0.7-SNAPSHOT</version>

@@ -390,8 +390,7 @@ class TWTController
 	{
 		PostTweet postTweet=request.context.get("postTweet")
 		User user=request.context.get("__user__")
-		println(user)
-		service.getTweetsReply(user, postTweet)
+		service.orgPostTweetReplay(user, postTweet.acknowledgment)
 	}
 
 	void fetchTweetsReply(ActionRequest request,ActionResponse response)
@@ -437,8 +436,4 @@ class TWTController
 			response.flash=e.getMessage();
 		}
 	}
-
-
-
-
 }
