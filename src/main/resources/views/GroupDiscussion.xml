@@ -33,7 +33,7 @@
         <button name="addDiscussionComment" title="Add Comment" onClick="unhideCommentfield"/>
     </group>
     <break/>
-    <separator colSpan="4"/>
+<!--     <separator colSpan="4" title="Comments"/> -->
     <group name="commentgroup" title="Comment" hidden="true" colSpan="4" cols="4">
         <field name="comment" title="Comment" colSpan="3"/>
         <group cols="2" colSpan="1">

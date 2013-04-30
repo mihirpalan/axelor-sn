@@ -30,6 +30,7 @@ import com.google.code.linkedinapi.client.oauth.LinkedInAccessToken;
 import com.google.code.linkedinapi.schema.Connections
 import com.google.code.linkedinapi.schema.Person
 import com.google.common.cache.LocalCache.Values;
+import com.google.inject.persist.Transactional;
 
 class Controller
 {
@@ -78,6 +79,7 @@ class Controller
 	/**
 	 *This function is used to get our connections from Linkedin 
 	 */
+	@Transactional
 	void fetchConnections(ActionRequest request, ActionResponse response)
 	{
 		def context=request.context as ImportContact

@@ -26,13 +26,13 @@
 		<field name="days"/>
 	</grid>
 
-	<form title="Parameter Configration" name="LINparam-config-form" onNew="action-current-user">
-		<field name="snType"/>
+	<form title="Parameter Configration" name="LINparam-config-form" onNew="action-network,action-current-user">
+		<field name="snType" readonly="true"/>
 		<break />
-		<field name="recordNumbers" selection="select-count"/>
-		<break />
-		<field name="days" selection="select-days"/>
-		<break />
+		<field name="recordNumbers" min="0" max="100"/><label title="&lt;Font Size='0.75' Color='#ff0000'&gt;Max:100&lt;/Font&gt;" />
+   		<break/>
+    	<field name="days" min="0" max="15"/><label title="&lt;Font Size='0.75' Color='#ff0000'&gt;Max:15&lt;/Font&gt;" />
+    	<break/>
 		<field name="curUser" readonly="true" hidden="true"/>
 	</form>
 

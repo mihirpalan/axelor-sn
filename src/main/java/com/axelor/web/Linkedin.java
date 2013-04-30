@@ -16,9 +16,9 @@ public class Linkedin {
 	@Path("{id}")
 	public String get(@PathParam("id") Long id, @QueryParam("oauth_verifier") String verifier) throws Exception 
 	{
-		String str="Hello";
+		String str=null;
 		boolean status=SNService.getUserToken(verifier);		
-//		String str="<html><head><script type=\"text/javascript\">  function onLoadPage(){  window.close(); }   </script></head><body onLoad=\"onLoadPage()\">PPP</body> </HTML>";
+//		str="<html><head><script type=\"text/javascript\">  function onLoadPage(){  alert(\"Successfully Logged In\");  window.close(); }   </script></head><body onLoad=\"onLoadPage()\"></body> </HTML>";
 		if(status)
 		{
 			str="Successfully logged In..";

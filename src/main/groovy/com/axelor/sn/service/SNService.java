@@ -108,6 +108,7 @@ public class SNService
 			ApplicationCredentials applicationCredentials=ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
 			oauthService=LinkedInOAuthServiceFactory.getInstance().createLinkedInOAuthService(consumerKeyValue, consumerSecretValue);
 			requestToken=oauthService.getOAuthRequestToken(applicationCredentials.getRedirectUrl());
+//			requestToken=oauthService.getOAuthRequestToken("http://localhost:8080/axelor-demo/ws/linkedin/100");
 			authUrl=requestToken.getAuthorizationUrl();
 			setCurrentUser(user);
 			setSnType(snType);
@@ -184,12 +185,11 @@ public class SNService
 		return credential;
 	}
 	
-	@Transactional
 	static void fetchConnections(String consumerKeyValue,String consumerSecretValue, String userToken,String userTokenSecret,User user,SocialNetworking snType)
 	{
-		EntityManager em=JPA.em();
-		EntityTransaction tx=em.getTransaction();
-		tx.begin();
+//		EntityManager em=JPA.em();
+//		EntityTransaction tx=em.getTransaction();
+//		tx.begin();
 		
 		List<ImportContact> lstImportContact=ImportContact.all().filter("curUser=? and snType=?",user,snType).fetch();
 		
@@ -238,7 +238,7 @@ public class SNService
 		{
 			System.out.println(e.toString());
 		}
-		tx.commit();
+//		tx.commit();
 	}
 	
 	static void sendMessage(String userId,String subject,String message,String userToken,String userTokenSecret,String consumerKeyValue,String consumerSecretValue)
