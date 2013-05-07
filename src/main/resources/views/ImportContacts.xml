@@ -23,7 +23,7 @@
         	<button name="search" title="" hidden="true"/>
         	<button name="copy" title="" hidden="true"/>
         </toolbar>
-        <field name="userid" title="Linkedin-ID" readonly="true" colSpan="3"/>
+        <field name="userId" title="Linkedin-ID" readonly="true" colSpan="3"/>
 <!--         <label name="id" title="Linkedin-ID :" colSpan="1" /><label name="userId" title="" colSpan="3"/> -->
 		<break/>
         <field name="snType" title="Network Type" readonly="true" colSpan="3"/>

@@ -626,7 +626,7 @@ public class SNTWTService
 				twtconnect=new TwitterConnectionClass();
 				returnResponse=twtconnect.retrivePendingRequest(apiKey, apiSecret, userToken, userTokenSecret);
 				TwitterFollowerRequest twtRequest=new TwitterFollowerRequest();
-				List<TwitterFollowerRequest> query1=TwitterFollowerRequest.all().filter("curUser", user).fetch();
+				List<TwitterFollowerRequest> query1=TwitterFollowerRequest.all().filter("curUser=?", user).fetch();
 				if(query1.size()>0)
 				{
 					for(int i=0;i<query1.size();i++)

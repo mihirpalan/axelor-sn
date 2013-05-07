@@ -21,51 +21,59 @@
         </field>
      </grid>
      
-   <form name="post-form" title="Status" cols="4" onLoad="action-post-attributes,action-refresh-comments" onSave="action-status-update,save,action-post-attributes" onNew="action-user4,action-network2,action-post-attributes">
-    <field name="contentId" title="Status ID" colSpan="3" readonly="true"/>
-    <break/>
-    <field name="content" title="Status" colSpan="3"/>
-    <break/>
-    <field name="snType" title="Network" hidden="true"/>
-    <break/>
-    <field name="curUser" title="User" hidden="true"/>
-    <break/>
-    <field name="postTime" hidden="true" colSpan="3" readonly="true"/>
-    <break/>
-    <group cols="2" colSpan="1">
-        <button name="getComments" title="Get Comments" hidden="true" onClick="action-get-comments,action-refresh-comments"/>
-        <button name="addComment" title="Add Comment" hidden="true" onClick="unhideCommentsfield"/>
-    </group>
-    <break/>
-    <group name="commentgroup" title="Comment" hidden="true" colSpan="4" cols="4">
-        <field name="comment" title="Comment" colSpan="3"/>
-        <group cols="2" colSpan="1">
-            <button name="addStatusComment" title="Add" onClick="action-status-comment,hideCommentsfield,action-refresh-comments"/>
-            <button name="cancel" title="Cancel" onClick="action-comment-clear,hideCommentsfield"/>
-        </group>
-    </group>
-    <break/>
-    <separator colSpan="4"/>
-    <break/>
-    <notebook name="notebook" hidden="true" colSpan="4">
-        <page title="Comments">
-            <field name="comments" colSpan="3" readonly="true">
-                <grid title="" orderBy="-commentTime">
-                    <field name="comment" title="Comments"/>
-                    <field name="commentTime" title="Time"/>
-                    <field name="fromUser" title="By"/>
-                </grid>
-                <form title="Comments">
-                    <field name="comment" title="Comments" colSpan="4" readonly="true"/>
-                    <break/>
-                    <field name="commentTime" title="Time" colSpan="4" readonly="true"/>
-                    <break/>
-                    <field name="fromUser" title="By" readonly="true"/>
-                </form>
-            </field>
-        </page>
-    </notebook>
-</form>
+   <form name="post-form" title="Status" cols="4" colWidths="15%,*,25%"
+	onLoad="action-post-attributes,action-refresh-comments" onSave="action-status-update,save,action-post-attributes"
+	onNew="action-user4,action-network2,action-post-attributes">
+		 <group colSpan="4" cols="4">
+			<field name="contentId" title="Status ID" colSpan="3" readonly="true" />
+			<break />
+			<field name="content" title="Status" colSpan="3" />
+			<break />
+			<field name="snType" title="Network" hidden="true" />
+			<break />
+			<field name="curUser" title="User" hidden="true" />
+			<break />
+			<field name="postTime" hidden="true" colSpan="3" readonly="true" />
+		</group>
+		<break />
+		<group colSpan="1" cols="3" colWidths="15%">
+			<button name="getComments" title="Get Comments" hidden="true"
+				onClick="action-get-comments,action-refresh-comments" colSpan="1" />
+			<button name="addComment" title="Add Comment" hidden="true"
+				onClick="unhideCommentsfield" colSpan="1" />
+			<spacer colSpan="1" />
+		</group>
+		<break />
+		<group name="commentgroup" title="Comment" hidden="true" colSpan="4"
+			cols="4">
+			<field name="comment" title="Comment" colSpan="3" />
+			<group cols="2" colSpan="1">
+				<button name="addStatusComment" title="Add"
+					onClick="action-status-comment,hideCommentsfield,action-refresh-comments" />
+				<button name="cancel" title="Cancel"
+					onClick="action-comment-clear,hideCommentsfield" />
+			</group>
+		</group>
+		<break />
+		<notebook name="notebook" hidden="true" colSpan="4">
+			<page title="Comments">
+				<field name="comments" colSpan="3" readonly="true">
+					<grid title="" orderBy="-commentTime">
+						<field name="comment" title="Comments" />
+						<field name="commentTime" title="Time" />
+						<field name="fromUser" title="By" />
+					</grid>
+					<form title="Comments">
+						<field name="comment" title="Comments" colSpan="4" readonly="true" />
+						<break />
+						<field name="commentTime" title="Time" colSpan="4" readonly="true" />
+						<break />
+						<field name="fromUser" title="By" readonly="true" />
+					</form>
+				</field>
+			</page>
+		</notebook>
+	</form>
      
      <action-method name="action-comment-clear">
      	<call class="com.axelor.sn.web.Controller" method="clearCommentfield"/>

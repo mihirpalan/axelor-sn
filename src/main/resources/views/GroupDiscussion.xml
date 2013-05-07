@@ -12,48 +12,50 @@
 			<field name="groupName"/>
 			<field name="discussionComments" title="Comments"/>
     </grid>
-	<form name="group-discussion-form" title="Discussion" cols="4" colWidths="15%,*,25%" onLoad="action-post-discussion-view,hideCommentfield" onSave="postDiscussion,save,action-post-discussion-view" onNew="action-post-discussion-view,action-user3">
-    <field name="curUser" hidden="true" readonly="true"/>
-    <break/>
-    <field name="discussionId" title="ID" readonly="true"/>
-    <break/>
-    <field name="groupName" title="Group" colSpan="3" widget="SuggestBox" domain="self.curUser = :curUser" required="true"/>
-    <break/>
-    <field name="discussionTitle" title="Title" colSpan="3" required="true"/>
-    <break/>
-    <field name="discussionSummary" title="Summary" colSpan="3" required="true"/>
-    <break/>
-    <field name="discussionBy" title="By" hidden="true" colSpan="3" readonly="true"/>
-    <break/>
-    <field name="discussionTime" title="Time" colSpan="3" readonly="true"/>
-    <field name="discussionByCurrentUser" title="User" hidden="true"/>
-    <break/>
-    <group cols="2" colSpan="1">
-        <button name="getDiscussionComments" title="Get Comments" onClick="getDiscussionComments,refresh-discussion-comments"/>
-        <button name="addDiscussionComment" title="Add Comment" onClick="unhideCommentfield"/>
-    </group>
-    <break/>
-<!--     <separator colSpan="4" title="Comments"/> -->
-    <group name="commentgroup" title="Comment" hidden="true" colSpan="4" cols="4">
-        <field name="comment" title="Comment" colSpan="3"/>
-        <group cols="2" colSpan="1">
-            <button name="addPostComment" title="Add" onClick="addComment,hideCommentfield,refresh-discussion-comments"/>
-            <button name="cancel" title="Cancel" onClick="action-comment-clear,hideCommentfield"/>
-        </group>
-    </group>
-    <break/>
-    <notebook name="notebookComments" title="Comments" colSpan="4">
-        <page title="Comments">
-            <field name="discussionComments" readonly="true">
-                <grid title="Comments" orderBy="-commentTime">
-                    <field name="comment" title="Comment"/>
-                    <field name="commentTime" title="Time"/>
-                    <field name="byUser" title="By"/>
-                </grid>
-            </field>
-        </page>
-    </notebook>
-</form>
+	<form cols="4" colWidths="15%,*,25%" onLoad="action-post-discussion-view,hideCommentfield" onSave="postDiscussion,save,action-post-discussion-view" onNew="action-post-discussion-view,action-user3" name="group-discussion-form" title="Discussion">
+	    <group colSpan="4" cols="4" colWidths="15%,30%,30%,25%">
+		    <field name="curUser" hidden="true" readonly="true"/>
+		    <break/>
+		    <field name="discussionId" title="ID" readonly="true"/>
+		    <break/>
+		    <field name="groupName" title="Group" colSpan="3" widget="SuggestBox" domain="self.curUser = :curUser" required="true"/>
+		    <break/>
+		    <field name="discussionTitle" title="Title" colSpan="3" required="true"/>
+		    <break/>
+		    <field name="discussionSummary" title="Summary" colSpan="3" required="true"/>
+		    <break/>
+		    <field name="discussionBy" title="By" hidden="true" colSpan="3" readonly="true"/>
+		    <break/>
+		    <field name="discussionTime" title="Time" colSpan="3" readonly="true"/>
+		    <field name="discussionByCurrentUser" title="User" hidden="true"/>
+	    </group>
+	    <break/>
+	    <group colSpan="1" cols="3" colWidths="15%">
+	        <button name="getDiscussionComments" title="Get Comments" onClick="getDiscussionComments,refresh-discussion-comments" colSpan="1"/>
+	        <button name="addDiscussionComment" title="Add Comment" onClick="unhideCommentfield" colSpan="1"/>
+	        <spacer colSpan="1"/>
+	    </group>
+	    <break/>
+	    <group name="commentgroup" title="Comment" hidden="true" colSpan="4" cols="4">
+	        <field name="comment" title="Comment" colSpan="3"/>
+	        <group colSpan="1" cols="2">
+	            <button name="addPostComment" title="Add" onClick="addComment,hideCommentfield,refresh-discussion-comments"/>
+	            <button name="cancel" title="Cancel" onClick="action-comment-clear,hideCommentfield"/>
+	        </group>
+	    </group>
+	    <break/>
+	    <notebook name="notebookComments" title="Comments" colSpan="4">
+	        <page title="Comments">
+	            <field name="discussionComments" readonly="true">
+	                <grid orderBy="-commentTime" title="Comments">
+	                    <field name="comment" title="Comment"/>
+	                    <field name="commentTime" title="Time"/>
+	                    <field name="byUser" title="By"/>
+	                </grid>
+	            </field>
+	        </page>
+	    </notebook>
+	</form>
 
     <action-attrs name="action-post-discussion-view">
     	<attribute name="readonly" for="discussionTitle" expr="eval: id!=null"/>
