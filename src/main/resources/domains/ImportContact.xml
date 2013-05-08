@@ -11,6 +11,5 @@
 		
 		<many-to-one name="snType" ref="com.axelor.sn.db.SocialNetworking" orphan="true"></many-to-one>
 		<many-to-one name="curUser" ref="com.axelor.auth.db.User"></many-to-one>
-		<boolean name="sendmsg"></boolean>
 	</entity>
 </domain-models>

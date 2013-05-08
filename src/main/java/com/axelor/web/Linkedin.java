@@ -5,27 +5,31 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
-import com.axelor.rpc.ActionResponse;
+
+import org.apache.shiro.SecurityUtils;
+import org.apache.shiro.subject.Subject;
+
+import com.axelor.auth.db.User;
 import com.axelor.sn.service.SNService;
 
 @Path("/linkedin")
 public class Linkedin {
 	
-	@Inject SNService service;
+	@Inject
+	SNService LinkedinService;
+
 	@GET
 	@Path("{id}")
 	public String get(@PathParam("id") Long id, @QueryParam("oauth_verifier") String verifier) throws Exception 
 	{
 		String str=null;
-		boolean status=SNService.getUserToken(verifier);		
-//		str="<html><head><script type=\"text/javascript\">  function onLoadPage(){  alert(\"Successfully Logged In\");  window.close(); }   </script></head><body onLoad=\"onLoadPage()\"></body> </HTML>";
+		Subject subject = SecurityUtils.getSubject();
+		User currentUser = User.all().filter("self.code = ?1", subject.getPrincipal()).fetchOne();
+		boolean status=LinkedinService.getUserToken( verifier, currentUser);		
 		if(status)
 		{
-			str="Successfully logged In..";
-		}
-		else
-		{
-			str="There's Some Problem";
+//			str="Successfully logged In..";
+			str="<html><head><script type=\"text/javascript\">  function onLoadPage(){  alert(\"Successfully Logged In\");  window.close(); }   </script></head><body onLoad=\"onLoadPage()\"></body> </HTML>";
 		}
 		return str;
 	}

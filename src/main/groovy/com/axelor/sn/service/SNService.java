@@ -22,10 +22,10 @@ import com.axelor.sn.db.GroupDiscussion;
 import com.axelor.sn.db.GroupDiscussionComments;
 import com.axelor.sn.db.GroupMember;
 import com.axelor.sn.db.ImportContact;
-//import com.axelor.sn.db.ImportContacts;
 import com.axelor.sn.db.LinkedinParameters;
 import com.axelor.sn.db.PersonalCredential;
 import com.axelor.sn.db.SocialNetworking;
+import com.axelor.sn.likedin.LinkedinConnectionClass;
 import com.google.code.linkedinapi.client.LinkedInApiClient;
 import com.google.code.linkedinapi.client.LinkedInApiClientException;
 import com.google.code.linkedinapi.client.LinkedInApiClientFactory;
@@ -36,7 +36,6 @@ import com.google.code.linkedinapi.client.enumeration.PostField;
 import com.google.code.linkedinapi.client.enumeration.ProfileField;
 import com.google.code.linkedinapi.client.oauth.LinkedInAccessToken;
 import com.google.code.linkedinapi.client.oauth.LinkedInOAuthService;
-import com.google.code.linkedinapi.client.oauth.LinkedInOAuthServiceFactory;
 import com.google.code.linkedinapi.client.oauth.LinkedInRequestToken;
 import com.google.code.linkedinapi.schema.Connections;
 import com.google.code.linkedinapi.schema.GroupMembership;
@@ -49,107 +48,92 @@ import com.google.code.linkedinapi.schema.Update;
 import com.google.code.linkedinapi.schema.UpdateComment;
 import com.google.code.linkedinapi.schema.UpdateComments;
 import com.google.code.linkedinapi.schema.Updates;
+import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 import org.joda.time.DateTime;
 
 public class SNService {
+	
+	@Inject
+	LinkedinConnectionClass LinkedinConnect;
+	
 	static LinkedInApiClient client = null;
 	static LinkedInApiClientFactory factory = null;
 	static LinkedInAccessToken accessToken = null;
 	static LinkedInRequestToken requestToken = null;
 	static LinkedInOAuthService oauthService = null;
-	static User currentUser = null;
-	static SocialNetworking snType = null;
+	static SocialNetworking socialType = null;
 	static String consumerKeyValue = null;
 	static String consumerSecretValue = null;
 
-	public static SocialNetworking getSnType() {
+	public SocialNetworking getSocialType() {
+		return socialType;
+	}
+
+	public void setSocialType(SocialNetworking snType) {
+		socialType = snType;
+	}
+
+	public SocialNetworking getSnType(String sntype) {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", sntype.toLowerCase()).fetchOne();
+		setSocialType(snType);
 		return snType;
 	}
 
-	public static void setSnType(SocialNetworking snType) {
-		SNService.snType = snType;
+	public PersonalCredential getPersonalCredential(User user,	SocialNetworking snType) {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+		return personalCredential;
 	}
 
-	public static User getCurrentUser() {
-		return currentUser;
+	public ApplicationCredentials getApplicationCredential(	SocialNetworking snType) {
+		ApplicationCredentials credential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+		return credential;
 	}
 
-	public static void setCurrentUser(User currentUser) {
-		SNService.currentUser = currentUser;
-	}
-
-	@Transactional
-	static String getUrl(String consumerKey, String consumerSecret, User user,	SocialNetworking snType) {
-		String authUrl = null;
-		try {
-			consumerKeyValue = consumerKey;
-			consumerSecretValue = consumerSecret;
-			ApplicationCredentials applicationCredentials = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
-			oauthService = LinkedInOAuthServiceFactory.getInstance().createLinkedInOAuthService(consumerKeyValue, consumerSecretValue);
-			requestToken = oauthService.getOAuthRequestToken(applicationCredentials.getRedirectUrl());
-			// requestToken=oauthService.getOAuthRequestToken("http://localhost:8080/axelor-demo/ws/linkedin/100");
-			authUrl = requestToken.getAuthorizationUrl();
-			setCurrentUser(user);
-			setSnType(snType);
-		} catch (Exception e) {
-			System.out.println(e.toString());
+	public String getUrl(User user, SocialNetworking snType) throws Exception {
+		String authUrl = "";
+		PersonalCredential personalCredential = getPersonalCredential(user, snType);
+		if (personalCredential == null) {
+			try {
+				ApplicationCredentials applicationCredentials = ApplicationCredentials
+						.all().filter("snType=?", snType).fetchOne();
+				String redirectUrl = applicationCredentials.getRedirectUrl()
+						+ "/" + user.getId();
+				authUrl = LinkedinConnect.getUrl(applicationCredentials.getApikey(),
+						applicationCredentials.getApisecret(), redirectUrl, user.getName());
+				setSocialType(snType);
+			} catch (NullPointerException e) {
+				throw new Exception(e.toString());
+			}
+		} else {
+			throw new Exception("You Already have One Account Associated...");
 		}
 		return authUrl;
 	}
 
-	public static boolean getUserToken(String verifier) throws Exception {
+	@Transactional
+	public boolean getUserToken( String verifier, User user) throws Exception {
 		boolean status = false;
-
-		EntityManager em = JPA.em();
-		EntityTransaction tx = em.getTransaction();
-		tx.begin();
-
-		User user = getCurrentUser();
-		SocialNetworking snType = getSnType();
-
+		
+		String userDetails = LinkedinConnect.getUserToken(verifier, user.getName());
+		String[] details = userDetails.split("=");
+		String token = details[0];
+		String tokenSecret = details[1];
+		String name = details[2];
 		try {
-			accessToken = oauthService.getOAuthAccessToken(requestToken, verifier);
-			factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-			client = factory.createLinkedInApiClient(accessToken.getToken(), accessToken.getTokenSecret());
-
 			PersonalCredential personalCredential = new PersonalCredential();
-			personalCredential.setUserToken(accessToken.getToken());
-			personalCredential.setUserTokenSecret(accessToken.getTokenSecret());
-			Person profile = client.getProfileForCurrentUser(EnumSet.of(ProfileField.FIRST_NAME, ProfileField.LAST_NAME));
-			personalCredential.setSnUserName(profile.getFirstName() + " "
-					+ profile.getLastName());
+			personalCredential.setUserToken(token);
+			personalCredential.setUserTokenSecret(tokenSecret);
+			personalCredential.setSnUserName(name);
 			personalCredential.setUserId(user);
-			personalCredential.setSnType(snType);
+			personalCredential.setSnType(getSocialType());
 			personalCredential.merge();
-
 			status = true;
 		} catch (Exception e) {
 			throw new Exception("There's Some Problem. Not Authorised.");
 		}
-		tx.commit();
 		return status;
-	}
-
-	static SocialNetworking getSnType(String sntype) {
-		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", sntype.toLowerCase()).fetchOne();
-		return snType;
-	}
-
-	static PersonalCredential getPersonalCredential(User user,	SocialNetworking snType) {
-		PersonalCredential query = null;
-		try {
-			query = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		return query;
-	}
-
-	static ApplicationCredentials getApplicationCredential(	SocialNetworking snType) {
-		ApplicationCredentials credential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
-		return credential;
 	}
 
 	@Transactional

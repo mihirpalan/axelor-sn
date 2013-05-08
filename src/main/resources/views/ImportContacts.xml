@@ -13,9 +13,9 @@
 			<button name="edit" title="" hidden="true" />
 			<button name="search" title="" hidden="true" />
 		</toolbar>
-		<field name="snType" title="Network Type" />
 		<field name="name" title="Full Name" />
 		<field name="link" title="Link" />
+		<field name="snType" title="Network Type" />
 	</grid>
 	<form name="import-contacts-form" title="Contacts" cols="4"
 		onNew="action-import-contact,action-user3" model="com.axelor.sn.db.ImportContact">

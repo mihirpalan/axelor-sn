@@ -30,37 +30,30 @@ import com.google.code.linkedinapi.client.oauth.LinkedInAccessToken;
 import com.google.code.linkedinapi.schema.Connections
 import com.google.code.linkedinapi.schema.Person
 import com.google.common.cache.LocalCache.Values;
+import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
 class Controller {
+	
+	@Inject
+	SNService LinkedinService;
+	
 	/**
 	 *This function is used to get  the Authorization URL
 	 *Clicking this will go to a page where our application will be Authorized by the user 
 	 */
 	void getUrl(ActionRequest request, ActionResponse response) {
-		def context = request.context as PersonalCredential
 
+		def context = request.context as PersonalCredential
 		User user = request.context.get("__user__")
 		SocialNetworking snType = request.context.get("snType")
-		PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-		if(personalCredential != null)
-			throw new Exception("You Already Have One Account Associated...")
-		else {
-			String consumerKey,consumerSecret;
-			ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-			if(applicationCredential != null) {
-				consumerKey = applicationCredential.apikey
-				consumerSecret = applicationCredential.apisecret
-				String authUrl = SNService.getUrl(consumerKey, consumerSecret, user, snType)
-				response.flash = "Click the link to get access <a href=" + authUrl + " target='_blank'>" + authUrl + "</a>"
-			}
-			else
-				response.flash = "No Application Defined..."
-		}
+
+		String authUrl = LinkedinService.getUrl(user, snType)
+		response.flash = "Click the link to get access <a href=" + authUrl + " target='_blank'>" + authUrl + "</a>"
 	}
 
 	void networkType(ActionRequest request, ActionResponse response) {
-		SocialNetworking snType = SNService.getSnType("Linkedin")
+		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 		if(snType != null)
 			response.values = ["snType":snType]
 		else
@@ -74,20 +67,20 @@ class Controller {
 	void fetchConnections(ActionRequest request, ActionResponse response) {
 		def context = request.context as ImportContact
 		User user = request.context.get("__user__")
-		SocialNetworking snType = SNService.getSnType("Linkedin")
+		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 		if(snType != null) {
-			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 			if(personalCredential == null)
 				throw new Exception("Please Login First")
 			else {
-				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
 
-					SNService.fetchConnections(consumerKeyValue, consumerSecretValue, userToken, userTokenSecret, user, snType)
+					LinkedinService.fetchConnections(consumerKeyValue, consumerSecretValue, userToken, userTokenSecret, user, snType)
 					response.flash = "Imported Contacts Successfully..."
 				}
 				else
@@ -110,18 +103,18 @@ class Controller {
 		String subject = request.context.get("subject")
 		String message = request.context.get("msgcontent")
 
-		SocialNetworking snType = SNService.getSnType("Linkedin")
+		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 		if(snType != null) {
-			PersonalCredential personalCredential = SNService.getPersonalCredential(user,snType)
+			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user,snType)
 			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
 
-					SNService.sendMessage(userId,subject,message,userToken, userTokenSecret, consumerKeyValue, consumerSecretValue)
+					LinkedinService.sendMessage(userId,subject,message,userToken, userTokenSecret, consumerKeyValue, consumerSecretValue)
 					response.flash = "Message Sent..."
 				}
 				else
@@ -143,18 +136,18 @@ class Controller {
 		if(context.getId() == null) {
 			User user = request.context.get("__user__")
 			String message = request.context.get("content").toString()
-			SocialNetworking snType = SNService.getSnType("Linkedin")
+			SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 			if(snType != null) {
-				PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+				PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 				if(personalCredential != null) {
-					ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+					ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 					if(applicationCredential != null) {
 						String consumerKeyValue = applicationCredential.apikey
 						String consumerSecretValue = applicationCredential.apisecret
 						String userToken = personalCredential.userToken
 						String userTokenSecret = personalCredential.userTokenSecret
 
-						String updateKeyTime = SNService.updateStatus(message, userToken, userTokenSecret,consumerKeyValue, consumerSecretValue)
+						String updateKeyTime = LinkedinService.updateStatus(message, userToken, userTokenSecret,consumerKeyValue, consumerSecretValue)
 						String[] array = updateKeyTime.split(":")
 						DateTime date = new DateTime(Long.parseLong(array[1]));
 						response.values = ["contentId":array[0], "postTime":date]
@@ -179,17 +172,17 @@ class Controller {
 		String contentId = request.context.get("contentId")
 		if(!contentId.equals(null)) {
 			User user = request.context.get("__user__")
-			SocialNetworking snType = SNService.getSnType("Linkedin")
+			SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 			if(snType!=null) {
-				PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+				PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 				if(personalCredential != null) {
-					ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+					ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 					if(applicationCredential != null) {
 						String consumerKeyValue=applicationCredential.apikey
 						String consumerSecretValue=applicationCredential.apisecret
 						String userToken=personalCredential.userToken
 						String userTokenSecret=personalCredential.userTokenSecret
-						SNService.getComments(contentId, userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
+						LinkedinService.getComments(contentId, userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
 						response.flash = "Comments Retrieved..."
 					}
 					else
@@ -217,7 +210,7 @@ class Controller {
 	void refreshComments(ActionRequest request, ActionResponse response) {
 		def context = request.context as PostUpdates
 		List<Comments> lstComments = context.getComments()
-		List<Comments> lstComment = SNService.refreshComments(context)
+		List<Comments> lstComment = LinkedinService.refreshComments(context)
 		for(int i=0; i<lstComment.size(); i++) {
 			if(!lstComments.contains(lstComment.get(i)))
 				lstComments.add(lstComment.get(i))
@@ -237,16 +230,16 @@ class Controller {
 		PostUpdates postUpdates = request.context.get("__self__")
 		SocialNetworking snType = request.context.get("snType")
 
-		PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+		PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 		if(personalCredential != null) {
-			ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+			ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 			if(applicationCredential != null ) {
 				String consumerKeyValue = applicationCredential.apikey
 				String consumerSecretValue = applicationCredential.apisecret
 				String userToken = personalCredential.userToken
 				String userTokenSecret = personalCredential.userTokenSecret
 
-				SNService.addStatusComment(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, contentId, comment)
+				LinkedinService.addStatusComment(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, contentId, comment)
 				response.flash = "Comment Added..."
 			}
 			else
@@ -261,17 +254,17 @@ class Controller {
 		def context = request.context as NetworkUpdates
 		User user = request.context.get("__user__")
 
-		SocialNetworking snType = SNService.getSnType("Linkedin")
+		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 		if(snType!=null) {
-			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-					SNService.getNetworkUpdates(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
+					LinkedinService.getNetworkUpdates(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
 					response.flash = "Networks Updates Fetched..."
 				}
 				else
@@ -290,17 +283,17 @@ class Controller {
 	@Transactional
 	void getMembership(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
-		SocialNetworking snType = SNService.getSnType("Linkedin")
+		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 		if(snType != null) {
-			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-					SNService.getMembership(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
+					LinkedinService.getMembership(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
 					response.flash = "Group Memberships Obtained..."
 				}
 				else
@@ -320,17 +313,17 @@ class Controller {
 	void getDiscussions(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		GroupMember groupMember = request.context.get("__self__")
-		SocialNetworking snType = SNService.getSnType("Linkedin")
+		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 		if(snType != null) {
-			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 			if(personalCredential != null)	{
-				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-					SNService.getDiscussions(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, groupMember, snType)
+					LinkedinService.getDiscussions(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, groupMember, snType)
 					response.flash = "Group Discussions Obtained..."
 				}
 				else
@@ -349,7 +342,7 @@ class Controller {
 	void refreshDiscussions(ActionRequest request,ActionResponse response) {
 		def context = request.context as GroupMember
 		List<GroupDiscussion> lstDiscussions = context.getDiscussions()
-		List<GroupDiscussion> lstDiscussion = SNService.refreshDiscussions(context)
+		List<GroupDiscussion> lstDiscussion = LinkedinService.refreshDiscussions(context)
 		for(int i=0; i<lstDiscussion.size(); i++) {
 			if(!lstDiscussions.contains(lstDiscussion.get(i)))
 				lstDiscussions.add(lstDiscussion.get(i))
@@ -368,17 +361,17 @@ class Controller {
 		User user = request.context.get("__user__")
 		String postId = request.context.get("discussionId")
 		GroupDiscussion groupDiscussion = request.context.get("__self__")
-		SocialNetworking snType = SNService.getSnType("Linkedin")
+		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 		if(snType != null) {
-			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-					SNService.getDiscussionComments(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue,
+					LinkedinService.getDiscussionComments(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue,
 						user, groupDiscussion, snType, start)
 					response.flash = "Comments Fetched Successfully..."
 				}
@@ -404,17 +397,17 @@ class Controller {
 			String summary = request.context.get("discussionSummary")
 			GroupMember groupMember = request.context.get("groupName")
 			String groupId = groupMember.groupId
-			SocialNetworking snType = SNService.getSnType("Linkedin")
+			SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 			if(snType != null)	{
-				PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+				PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 				if(personalCredential !=null) {
-					ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+					ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 					if(applicationCredential != null) {
 						String consumerKeyValue = applicationCredential.apikey
 						String consumerSecretValue = applicationCredential.apisecret
 						String userToken = personalCredential.userToken
 						String userTokenSecret = personalCredential.userTokenSecret
-						String postIdTime = SNService.addGroupDiscussion(userToken, userTokenSecret, consumerKeyValue,
+						String postIdTime = LinkedinService.addGroupDiscussion(userToken, userTokenSecret, consumerKeyValue,
 							consumerSecretValue, title, summary, groupId)
 						String[] array = postIdTime.split(":")
 						DateTime date = new DateTime(Long.parseLong(array[1]));
@@ -442,17 +435,17 @@ class Controller {
 		User user = request.context.get("__user__")
 		GroupDiscussion groupDiscussion = request.context.get("__self__")
 
-		SocialNetworking snType = SNService.getSnType("Linkedin")
+		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 		if(snType != null) {
-			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 			if(personalCredential != null)	{
-				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-					SNService.addDiscussionComment(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue,
+					LinkedinService.addDiscussionComment(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue,
 						user, groupDiscussion, discussionId, comment,start,snType)
 					response.flash = "Comment Added..."
 				}
@@ -470,7 +463,7 @@ class Controller {
 	void refreshDiscussionComments(ActionRequest request,ActionResponse response) {
 		def context = request.context as GroupDiscussion
 		List<GroupDiscussionComments> lstGroupDiscussionComments = context.getDiscussionComments()
-		List<GroupDiscussionComments> lstGroupDiscussionComment = SNService.refreshDiscussionComments(context)
+		List<GroupDiscussionComments> lstGroupDiscussionComment = LinkedinService.refreshDiscussionComments(context)
 		for(int i=0; i<lstGroupDiscussionComment.size(); i++) {
 			if(!lstGroupDiscussionComments.contains(lstGroupDiscussionComment.get(i)))
 				lstGroupDiscussionComments.add(lstGroupDiscussionComment.get(i))
@@ -485,17 +478,17 @@ class Controller {
 		User user = request.context.get("__user__")
 		List lstIdValues = request.context.get("_ids")
 
-		SocialNetworking snType = SNService.getSnType("Linkedin")
+		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
 		if(snType != null) {
-			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
+			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
 			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
+				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
 				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-					String str = SNService.deleteDiscussion(lstIdValues, userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user)
+					String str = LinkedinService.deleteDiscussion(lstIdValues, userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user)
 					response.flash = str
 				}
 				else
