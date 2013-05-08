@@ -1,53 +1,49 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<object-views xmlns="http://apps.axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
-    
-    <grid name="import-contacts-grid" title="Contacts List" model="com.axelor.sn.db.ImportContact">
-        <toolbar>
-        	<button name="sync" title="Synchronise" onClick="action-import-contact"/>
-        	<button name="save" title="" hidden="true"/>
-        	<button name="new" title="" hidden="true"/>
-        	<button name="cancel" title="" hidden="true"/>
-        	<button name="edit" title="" hidden="true"/>
-        	<button name="search" title="" hidden="true"/>
-        </toolbar>
-<!--         <field name="userid" title="User ID"/> -->
-        <field name="snType" title="Network Type"/>
-        <field name="name" title="Full Name"/>
-        <field name="link" title="Link"/>
-<!--         <field name="curUser" title="User"/> -->
-    </grid>
-    <form name="import-contacts-form" title="Contacts" cols="4" onNew="action-import-contact,action-user3" model="com.axelor.sn.db.ImportContact">
-        <toolbar>
-        	<button name="sync" title="Synchronise" onClick="action-import-contact"/>
-        	<button name="new" title="" hidden="true"/>
-        	<button name="search" title="" hidden="true"/>
-        	<button name="copy" title="" hidden="true"/>
-        </toolbar>
-        <field name="userId" title="Linkedin-ID" readonly="true" colSpan="3"/>
-<!--         <label name="id" title="Linkedin-ID :" colSpan="1" /><label name="userId" title="" colSpan="3"/> -->
-		<break/>
-        <field name="snType" title="Network Type" readonly="true" colSpan="3"/>
-<!--         <label name="snName" title="Network Type :" colSpan="1" /><label name="snType" title="" colSpan="3"/> -->
-        <break/>
-        <field name="name" title="Full Name" readonly="true" colSpan="3"/>
-<!-- 		<label name="name" title="Full Name :" colSpan="1" /><label name="fullname" title="" colSpan="3"/> -->
-		<break/>
-        <field name="link" title="Link" readonly="true" colSpan="3"/>
-<!-- 		<label name="url" title="Link :" colSpan="1" /><label name="link" title="" colSpan="3"/> -->
-		<break/>
-<!--    		<field name="curUser" title="User" readonly="true"/> -->
-    </form>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
-<!-- 	<action-attrs name="action-user-details"> -->
-<!-- 		<attribute name="title" for="userId" expr="eval: userid"/> -->
-<!-- 		<attribute name="title" for="snType" expr="eval: sntype"/> -->
-<!-- 		<attribute name="title" for="fullname" expr="eval: fullname"/> -->
-<!-- 		<attribute name="title" for="link" expr="eval: link"/> -->
-<!-- 	</action-attrs> -->
+	<grid name="import-contacts-grid" title="Contacts List"
+		model="com.axelor.sn.db.ImportContact">
+		<toolbar>
+			<button name="sync" title="Synchronise" onClick="action-import-contact" />
+			<button name="save" title="" hidden="true" />
+			<button name="new" title="" hidden="true" />
+			<button name="cancel" title="" hidden="true" />
+			<button name="edit" title="" hidden="true" />
+			<button name="search" title="" hidden="true" />
+		</toolbar>
+		<field name="snType" title="Network Type" />
+		<field name="name" title="Full Name" />
+		<field name="link" title="Link" />
+	</grid>
+	<form name="import-contacts-form" title="Contacts" cols="4"
+		onNew="action-import-contact,action-user3" model="com.axelor.sn.db.ImportContact">
+		<toolbar>
+			<button name="sync" title="Synchronise" onClick="action-import-contact" />
+			<button name="new" title="" hidden="true" />
+			<button name="search" title="" hidden="true" />
+			<button name="copy" title="" hidden="true" />
+		</toolbar>
+		<field name="userId" title="Linkedin-ID" readonly="true"
+			colSpan="3" />
+		<break />
+		<field name="snType" title="Network Type" readonly="true"
+			colSpan="3" />
+		<break />
+		<field name="name" title="Full Name" readonly="true" colSpan="3" />
+		<break />
+		<field name="link" title="Link" readonly="true" colSpan="3" />
+		<break />
+		<!-- <field name="curUser" title="User" readonly="true"/> -->
+	</form>
+
 	<action-method name="action-import-contact">
-   		<call class="com.axelor.sn.web.Controller" method="fetchConnections"/>
-    </action-method>
-    <action-record name="action-user3" model="com.axelor.sn.db.ImportContact">
-    	<field name="curUser" expr="eval: __user__"/>
-    </action-record>
+		<call class="com.axelor.sn.web.Controller" method="fetchConnections" />
+	</action-method>
+
+	<action-record name="action-user3" model="com.axelor.sn.db.ImportContact">
+		<field name="curUser" expr="eval: __user__" />
+	</action-record>
+
 </object-views>

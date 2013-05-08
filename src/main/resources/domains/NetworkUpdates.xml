@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://apps.axelor.com/xml/ns/domain-models"
   xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.7.xsd">
+  xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.8.xsd">
 
   <module name="sn" package="com.axelor.sn.db" />
 
   <entity name="NetworkUpdates">
-	<string name="contentId" title="ID"/>
-	<string name="content" title="Content" multiline="true" max="10000"/>
-	<datetime name="contentTime" title="Time" tz="true"/>
+	<string name="contentId" title="ID" />
+	<string name="content" title="Content" multiline="true" max="10000" />
+	<datetime name="contentTime" title="Time" tz="true" />
 	<many-to-one name="curUser" ref="com.axelor.auth.db.User" />
 	<many-to-one name="fromUser" ref="com.axelor.sn.db.ImportContact" />
-	<many-to-one name="snType" ref="com.axelor.sn.db.SocialNetworking"></many-to-one>
+	<many-to-one name="snType" ref="com.axelor.sn.db.SocialNetworking" />
   </entity>
 
 </domain-models>

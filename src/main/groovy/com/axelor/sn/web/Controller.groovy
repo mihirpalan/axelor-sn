@@ -32,14 +32,12 @@ import com.google.code.linkedinapi.schema.Person
 import com.google.common.cache.LocalCache.Values;
 import com.google.inject.persist.Transactional;
 
-class Controller
-{
+class Controller {
 	/**
 	 *This function is used to get  the Authorization URL
 	 *Clicking this will go to a page where our application will be Authorized by the user 
 	 */
-	void getUrl(ActionRequest request, ActionResponse response)
-	{
+	void getUrl(ActionRequest request, ActionResponse response) {
 		def context = request.context as PersonalCredential
 
 		User user = request.context.get("__user__")
@@ -47,50 +45,43 @@ class Controller
 		PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
 		if(personalCredential != null)
 			throw new Exception("You Already Have One Account Associated...")
-		else
-		{
+		else {
 			String consumerKey,consumerSecret;
 			ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-			if(applicationCredential != null)
-			{
+			if(applicationCredential != null) {
 				consumerKey = applicationCredential.apikey
 				consumerSecret = applicationCredential.apisecret
 				String authUrl = SNService.getUrl(consumerKey, consumerSecret, user, snType)
-				response.flash = "Click the link to get access <a href="+authUrl+" target='_blank'>"+authUrl+"</a>"
+				response.flash = "Click the link to get access <a href=" + authUrl + " target='_blank'>" + authUrl + "</a>"
 			}
 			else
 				response.flash = "No Application Defined..."
 		}
 	}
-	
-	void networkType(ActionRequest request, ActionResponse response)
-	{
+
+	void networkType(ActionRequest request, ActionResponse response) {
 		SocialNetworking snType = SNService.getSnType("Linkedin")
 		if(snType != null)
 			response.values = ["snType":snType]
 		else
 			throw new Exception("Network Type not Found...")
 	}
-	
+
 	/**
 	 *This function is used to get our connections from Linkedin 
 	 */
 	@Transactional
-	void fetchConnections(ActionRequest request, ActionResponse response)
-	{
+	void fetchConnections(ActionRequest request, ActionResponse response) {
 		def context = request.context as ImportContact
 		User user = request.context.get("__user__")
 		SocialNetworking snType = SNService.getSnType("Linkedin")
-		if(snType != null)
-		{
+		if(snType != null) {
 			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
 			if(personalCredential == null)
 				throw new Exception("Please Login First")
-			else
-			{
+			else {
 				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-				if(applicationCredential != null)
-				{
+				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
@@ -106,13 +97,12 @@ class Controller
 		else
 			throw new Exception("Network Type not Found...")
 	}
-	
+
 	/**
 	 *This function is used to Send a Direct Message to a Contact on Linkedin  
 	 */
 	@Transactional
-	void sendMessage(ActionRequest  request, ActionResponse response)
-	{
+	void sendMessage(ActionRequest  request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		ImportContact contact = request.context.get("userid")
 
@@ -121,14 +111,11 @@ class Controller
 		String message = request.context.get("msgcontent")
 
 		SocialNetworking snType = SNService.getSnType("Linkedin")
-		if(snType != null)
-		{
+		if(snType != null) {
 			PersonalCredential personalCredential = SNService.getPersonalCredential(user,snType)
-			if(personalCredential != null)
-			{
+			if(personalCredential != null) {
 				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-				if(applicationCredential != null)
-				{
+				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
@@ -146,28 +133,22 @@ class Controller
 		else
 			throw new Exception("Network Type not Found...")
 	}
-	
+
 	/**
 	 *This function is used to post a new Status to Linkedin 
 	 */
 	@Transactional
-	void updateStatus(ActionRequest request, ActionResponse response)
-	{
+	void updateStatus(ActionRequest request, ActionResponse response) {
 		def context = request.context as PostUpdates
-
-		if(context.getId() == null)
-		{
+		if(context.getId() == null) {
 			User user = request.context.get("__user__")
 			String message = request.context.get("content").toString()
 			SocialNetworking snType = SNService.getSnType("Linkedin")
-			if(snType != null)
-			{
+			if(snType != null) {
 				PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-				if(personalCredential != null)
-				{
+				if(personalCredential != null) {
 					ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-					if(applicationCredential != null)
-					{
+					if(applicationCredential != null) {
 						String consumerKeyValue = applicationCredential.apikey
 						String consumerSecretValue = applicationCredential.apisecret
 						String userToken = personalCredential.userToken
@@ -189,34 +170,25 @@ class Controller
 				throw new Exception("Network Type not Found...")
 		}
 	}
-	
+
 	/**
 	 *This function is used to get the Comments of a Status from Linkedin
 	 */
 	@Transactional
-	void getComments(ActionRequest request, ActionResponse response)
-	{
-
+	void getComments(ActionRequest request, ActionResponse response) {
 		String contentId = request.context.get("contentId")
-		if(!contentId.equals(null))
-		{
+		if(!contentId.equals(null)) {
 			User user = request.context.get("__user__")
-
 			SocialNetworking snType = SNService.getSnType("Linkedin")
-			if(snType!=null)
-			{
+			if(snType!=null) {
 				PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-				if(personalCredential != null)
-				{
+				if(personalCredential != null) {
 					ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-
-					if(applicationCredential != null)
-					{
+					if(applicationCredential != null) {
 						String consumerKeyValue=applicationCredential.apikey
 						String consumerSecretValue=applicationCredential.apisecret
 						String userToken=personalCredential.userToken
 						String userTokenSecret=personalCredential.userTokenSecret
-
 						SNService.getComments(contentId, userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
 						response.flash = "Comments Retrieved..."
 					}
@@ -233,53 +205,42 @@ class Controller
 			response.flash="Select A Status to Fetch Comments..."
 	}
 
-	//Clears the Comment Field	
-	void clearCommentfield(ActionRequest request, ActionResponse response)
-	{
+	//Clears the Comment Field
+	void clearCommentfield(ActionRequest request, ActionResponse response) {
 		response.values=["comment":""]
 	}
-	
-	
+
+
 	/**
 	 *This function is used to refresh the Comments O2M field  
 	 */
-	void refreshComments(ActionRequest request, ActionResponse response)
-	{
+	void refreshComments(ActionRequest request, ActionResponse response) {
 		def context = request.context as PostUpdates
-		
 		List<Comments> lstComments = context.getComments()
-		
 		List<Comments> lstComment = SNService.refreshComments(context)
-
-		for(int i=0; i<lstComment.size(); i++)
-		{
+		for(int i=0; i<lstComment.size(); i++) {
 			if(!lstComments.contains(lstComment.get(i)))
 				lstComments.add(lstComment.get(i))
 		}
 		context.setComments(lstComments)
 		response.values = context
 	}
-	
+
 	/**
 	 *This function is used to add a Comment to Status  
 	 */
 	@Transactional
-	void addStatusComment(ActionRequest request, ActionResponse response)
-	{
-		
+	void addStatusComment(ActionRequest request, ActionResponse response) {
 		String contentId = request.context.get("contentId")
 		String comment = request.context.get("comment")
 		User user = request.context.get("__user__")
 		PostUpdates postUpdates = request.context.get("__self__")
-		
 		SocialNetworking snType = request.context.get("snType")
 
 		PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-		if(personalCredential != null)
-		{
+		if(personalCredential != null) {
 			ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-			if(applicationCredential != null )
-			{
+			if(applicationCredential != null ) {
 				String consumerKeyValue = applicationCredential.apikey
 				String consumerSecretValue = applicationCredential.apisecret
 				String userToken = personalCredential.userToken
@@ -294,28 +255,22 @@ class Controller
 		else
 			throw new Exception("Please Login First")
 	}
-	
+
 	@Transactional
-	void getNetworkUpdates(ActionRequest request, ActionResponse response)
-	{
+	void getNetworkUpdates(ActionRequest request, ActionResponse response) {
 		def context = request.context as NetworkUpdates
 		User user = request.context.get("__user__")
 
 		SocialNetworking snType = SNService.getSnType("Linkedin")
-		if(snType!=null)
-		{
+		if(snType!=null) {
 			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-			if(personalCredential != null)
-			{
+			if(personalCredential != null) {
 				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-
-				if(applicationCredential != null)
-				{
+				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-
 					SNService.getNetworkUpdates(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
 					response.flash = "Networks Updates Fetched..."
 				}
@@ -333,24 +288,18 @@ class Controller
 	 *This function is used to obtain the Memberships to a Group from Linkedin 
 	 */
 	@Transactional
-	void getMembership(ActionRequest request, ActionResponse response)
-	{
+	void getMembership(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
-
 		SocialNetworking snType = SNService.getSnType("Linkedin")
-		if(snType != null)
-		{
+		if(snType != null) {
 			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-			if(personalCredential != null)
-			{
+			if(personalCredential != null) {
 				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-				if(applicationCredential != null)
-				{
+				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-
 					SNService.getMembership(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
 					response.flash = "Group Memberships Obtained..."
 				}
@@ -368,26 +317,19 @@ class Controller
 	 *This function is used to get the Discussions from a particular Group 	
 	 */
 	@Transactional
-	void getDiscussions(ActionRequest request, ActionResponse response)
-	{
-		
+	void getDiscussions(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		GroupMember groupMember = request.context.get("__self__")
-
 		SocialNetworking snType = SNService.getSnType("Linkedin")
-		if(snType != null)
-		{
+		if(snType != null) {
 			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-			if(personalCredential != null)
-			{
+			if(personalCredential != null)	{
 				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-				if(applicationCredential != null)
-				{
+				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-
 					SNService.getDiscussions(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, groupMember, snType)
 					response.flash = "Group Discussions Obtained..."
 				}
@@ -400,56 +342,44 @@ class Controller
 		else
 			throw new Exception("Network Type not Found...")
 	}
-	
+
 	/**
 	 *This function is used to refresh the Discussions field in the view 
 	 */
-	void refreshDiscussions(ActionRequest request,ActionResponse response)
-	{
+	void refreshDiscussions(ActionRequest request,ActionResponse response) {
 		def context = request.context as GroupMember
-		
 		List<GroupDiscussion> lstDiscussions = context.getDiscussions()
-		
 		List<GroupDiscussion> lstDiscussion = SNService.refreshDiscussions(context)
-
-		for(int i=0; i<lstDiscussion.size(); i++)
-		{
+		for(int i=0; i<lstDiscussion.size(); i++) {
 			if(!lstDiscussions.contains(lstDiscussion.get(i)))
 				lstDiscussions.add(lstDiscussion.get(i))
 		}
 		context.setDiscussions(lstDiscussions)
 		response.values = context
 	}
-	
+
 	/**
 	 * This function is used to get the comments from a particular Discussion 
 	 */
 	@Transactional
-	void getDiscussionComments(ActionRequest request, ActionResponse response)
-	{
-			
+	void getDiscussionComments(ActionRequest request, ActionResponse response) {
 		List<GroupDiscussionComments> posts = request.context.get("discussionComments")
 		int start = posts.size()
 		User user = request.context.get("__user__")
 		String postId = request.context.get("discussionId")
-
 		GroupDiscussion groupDiscussion = request.context.get("__self__")
-
 		SocialNetworking snType = SNService.getSnType("Linkedin")
-		if(snType != null)
-		{
+		if(snType != null) {
 			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-			if(personalCredential != null)
-			{
+			if(personalCredential != null) {
 				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-				if(applicationCredential != null)
-				{
+				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-
-					SNService.getDiscussionComments(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, groupDiscussion, snType, start)
+					SNService.getDiscussionComments(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue,
+						user, groupDiscussion, snType, start)
 					response.flash = "Comments Fetched Successfully..."
 				}
 				else
@@ -461,37 +391,31 @@ class Controller
 		else
 			throw new Exception("Network Type not Found...")
 	}
-	
+
 	/**
 	 *This function is used to post a new discussion to a particular Group 
 	 */
 	@Transactional
-	void postDiscussion(ActionRequest request, ActionResponse response)
-	{
+	void postDiscussion(ActionRequest request, ActionResponse response) {
 		def context = request.context as GroupDiscussion
-		if(context.getId() == null)
-		{
+		if(context.getId() == null) 	{
 			User user = request.context.get("__user__")
-
 			String title = request.context.get("discussionTitle")
 			String summary = request.context.get("discussionSummary")
 			GroupMember groupMember = request.context.get("groupName")
 			String groupId = groupMember.groupId
-
 			SocialNetworking snType = SNService.getSnType("Linkedin")
-			if(snType != null)
-			{
+			if(snType != null)	{
 				PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-				if(personalCredential !=null)
-				{
+				if(personalCredential !=null) {
 					ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-					if(applicationCredential != null)
-					{
+					if(applicationCredential != null) {
 						String consumerKeyValue = applicationCredential.apikey
 						String consumerSecretValue = applicationCredential.apisecret
 						String userToken = personalCredential.userToken
 						String userTokenSecret = personalCredential.userTokenSecret
-						String postIdTime = SNService.addGroupDiscussion(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, title, summary, groupId)
+						String postIdTime = SNService.addGroupDiscussion(userToken, userTokenSecret, consumerKeyValue,
+							consumerSecretValue, title, summary, groupId)
 						String[] array = postIdTime.split(":")
 						DateTime date = new DateTime(Long.parseLong(array[1]));
 						response.values = ["discussionId":array[0],"discussionTime":date,"discussionBy":array[2]]
@@ -507,11 +431,10 @@ class Controller
 				throw new Exception("Network Type not Found...")
 		}
 	}
-	
+
 	//This function is used to add anew comment on a particular Discussion in a group
 	@Transactional
-	void addDiscussionComment(ActionRequest request, ActionResponse response)
-	{
+	void addDiscussionComment(ActionRequest request, ActionResponse response) {
 		List<GroupDiscussionComments> lstGroupDiscussionComments = request.context.get("discussionComments")
 		int start = lstGroupDiscussionComments.size()
 		String discussionId = request.context.get("discussionId")
@@ -520,19 +443,17 @@ class Controller
 		GroupDiscussion groupDiscussion = request.context.get("__self__")
 
 		SocialNetworking snType = SNService.getSnType("Linkedin")
-		if(snType != null)
-		{
+		if(snType != null) {
 			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-			if(personalCredential != null)
-			{
+			if(personalCredential != null)	{
 				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-				if(applicationCredential != null)
-				{
+				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken
 					String userTokenSecret = personalCredential.userTokenSecret
-					SNService.addDiscussionComment(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, groupDiscussion, discussionId, comment,start,snType)
+					SNService.addDiscussionComment(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue,
+						user, groupDiscussion, discussionId, comment,start,snType)
 					response.flash = "Comment Added..."
 				}
 				else
@@ -544,41 +465,32 @@ class Controller
 		else
 			throw new Exception("Network Type not Found...")
 	}
-	
+
 	//This function refreshes the view with Discussion Comments
-	void refreshDiscussionComments(ActionRequest request,ActionResponse response)
-	{
+	void refreshDiscussionComments(ActionRequest request,ActionResponse response) {
 		def context = request.context as GroupDiscussion
-		
 		List<GroupDiscussionComments> lstGroupDiscussionComments = context.getDiscussionComments()
-		
 		List<GroupDiscussionComments> lstGroupDiscussionComment = SNService.refreshDiscussionComments(context)
-		
-		for(int i=0; i<lstGroupDiscussionComment.size(); i++)
-		{
+		for(int i=0; i<lstGroupDiscussionComment.size(); i++) {
 			if(!lstGroupDiscussionComments.contains(lstGroupDiscussionComment.get(i)))
 				lstGroupDiscussionComments.add(lstGroupDiscussionComment.get(i))
 		}
 		context.setDiscussionComments(lstGroupDiscussionComments)
 		response.values = context
 	}
-	
+
 	//This function is used to delete a discussion from Linkedin
 	@Transactional
-	void deleteDiscussion(ActionRequest request, ActionResponse response)
-	{
+	void deleteDiscussion(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		List lstIdValues = request.context.get("_ids")
 
 		SocialNetworking snType = SNService.getSnType("Linkedin")
-		if(snType != null)
-		{
+		if(snType != null) {
 			PersonalCredential personalCredential = SNService.getPersonalCredential(user, snType)
-			if(personalCredential != null)
-			{
+			if(personalCredential != null) {
 				ApplicationCredentials applicationCredential = SNService.getApplicationCredential(snType)
-				if(applicationCredential != null)
-				{
+				if(applicationCredential != null) {
 					String consumerKeyValue = applicationCredential.apikey
 					String consumerSecretValue = applicationCredential.apisecret
 					String userToken = personalCredential.userToken

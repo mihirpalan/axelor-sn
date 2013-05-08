@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <domain-models xmlns="http://apps.axelor.com/xml/ns/domain-models"
-  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.7.xsd">
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.8.xsd">
 
-  <module name="sn" package="com.axelor.sn.db" />
+	<module name="sn" package="com.axelor.sn.db" />
 
-  <entity name="Comments">
-	<many-to-one name="contentId" ref="com.axelor.sn.db.PostUpdates" />
-	<string name="commentId" title="Comment ID" />
-	<string name="comment" title="Comment" multiline="true" max="700"/>
-	<datetime name="commentTime" title="Time" tz="true"/>
-	<many-to-one name="curUser" ref="com.axelor.auth.db.User" />
-	<many-to-one name="fromUser" ref="com.axelor.sn.db.ImportContact" />
-  </entity>
+	<entity name="Comments">
+		<many-to-one name="contentId" ref="com.axelor.sn.db.PostUpdates" />
+		<string name="commentId" title="Comment ID" />
+		<string name="comment" title="Comment" multiline="true" max="700" />
+		<datetime name="commentTime" title="Time" tz="true" />
+		<many-to-one name="curUser" ref="com.axelor.auth.db.User" />
+		<many-to-one name="fromUser" ref="com.axelor.sn.db.ImportContact" />
+	</entity>
 
 </domain-models>
