@@ -127,54 +127,14 @@ class Controller {
 		String contentId = request.context.get("contentId")
 		String comment = request.context.get("comment")
 		User user = request.context.get("__user__")
-		PostUpdates postUpdates = request.context.get("__self__")
-		SocialNetworking snType = request.context.get("snType")
-
-		PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-		if(personalCredential != null) {
-			ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-			if(applicationCredential != null ) {
-				String consumerKeyValue = applicationCredential.apikey
-				String consumerSecretValue = applicationCredential.apisecret
-				String userToken = personalCredential.userToken
-				String userTokenSecret = personalCredential.userTokenSecret
-
-				LinkedinService.addStatusComment(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, contentId, comment)
-				response.flash = "Comment Added..."
-			}
-			else
-				throw new Exception("No Application Defined")
-		}
-		else
-			throw new Exception("Please Login First")
+		LinkedinService.addStatusComment(user, contentId, comment)
 	}
 
 	@Transactional
 	void getNetworkUpdates(ActionRequest request, ActionResponse response) {
-		def context = request.context as NetworkUpdates
 		User user = request.context.get("__user__")
-
-		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-		if(snType!=null) {
-			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-				if(applicationCredential != null) {
-					String consumerKeyValue = applicationCredential.apikey
-					String consumerSecretValue = applicationCredential.apisecret
-					String userToken = personalCredential.userToken
-					String userTokenSecret = personalCredential.userTokenSecret
-					LinkedinService.getNetworkUpdates(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
-					response.flash = "Networks Updates Fetched..."
-				}
-				else
-					throw new Exception("No Application Defined")
-			}
-			else
-				throw new Exception("Please Login First")
-		}
-		else
-			throw new Exception("Network Type not Found...")
+		String acknowledgement = LinkedinService.fetchNetworkUpdates(user)
+		response.flash = acknowledgement
 	}
 
 	/**
@@ -183,27 +143,8 @@ class Controller {
 	@Transactional
 	void getMembership(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
-		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-		if(snType != null) {
-			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-				if(applicationCredential != null) {
-					String consumerKeyValue = applicationCredential.apikey
-					String consumerSecretValue = applicationCredential.apisecret
-					String userToken = personalCredential.userToken
-					String userTokenSecret = personalCredential.userTokenSecret
-					LinkedinService.getMembership(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
-					response.flash = "Group Memberships Obtained..."
-				}
-				else
-					throw new Exception("No Application Defined")
-			}
-			else
-				throw new Exception("Please Login First")
-		}
-		else
-			throw new Exception("Network Type not Found...")
+		String acknowledgement = LinkedinService.getMembership(user)
+		response.flash = acknowledgement
 	}
 
 	/**

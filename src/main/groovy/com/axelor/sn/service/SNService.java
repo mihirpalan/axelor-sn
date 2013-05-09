@@ -68,7 +68,8 @@ public class SNService {
 	static SocialNetworking socialType = null;
 	static String consumerKeyValue = null;
 	static String consumerSecretValue = null;
-
+	SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+	
 	public SocialNetworking getSocialType() {
 		return socialType;
 	}
@@ -224,7 +225,7 @@ public class SNService {
 		}
 	}
 
-	@SuppressWarnings({ "unused", "unchecked", "rawtypes" })
+	@SuppressWarnings({  "unchecked", "rawtypes" })
 	@Transactional
 	public void getComments(String contentId, User user) throws Exception {
 		EntityManager em = JPA.em();
@@ -259,14 +260,14 @@ public class SNService {
 						if(lstUserId.contains(comments.get("fromUser").toString())) {
 							if(!lstCommentsId.contains(comments.get("commentId").toString())) {
 								Comments comment = new Comments();
+								ImportContact contact = ImportContact.all().filter("userId=? and curUser=?",
+										comments.get("fromUser").toString(), user).fetchOne();
 								DateTime date = new DateTime(comments.get("commentTime"));
 								comment.setContentId(postUpdate);
 								comment.setCommentId(comments.get("commentId").toString());
 								comment.setComment(comments.get("comment").toString());
 								comment.setCommentTime(date);
 								comment.setCurUser(user);
-								
-								ImportContact contact = ImportContact.all().filter("userId=? and curUser=?", comments.get("fromUser").toString(), user).fetchOne();
 								comment.setFromUser(contact);
 								comment.persist();
 							}
@@ -277,141 +278,160 @@ public class SNService {
 		}
 	}
 
+	@SuppressWarnings({ "rawtypes" })
 	@Transactional
-	static void addStatusComment(String userToken, String userTokenSecret, String consumerKeyValue, String consumerSecretValue, User user,
-			String contentId, String comment) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-
-		client.postComment(contentId, comment);
-
-		PostUpdates postUpdate = PostUpdates.all().filter("contentId=?", contentId).fetchOne();
-		UpdateComments updateComments = client.getNetworkUpdateComments(contentId);
-
-		Iterator<UpdateComment> itr = updateComments.getUpdateCommentList().iterator();
-		UpdateComment coment = null;
-		while (itr.hasNext()) {
-			coment = itr.next();
-			if (!itr.hasNext()) {
-				DateTime date = new DateTime(coment.getTimestamp());
-				Comments comments = new Comments();
-				comments.setContentId(postUpdate);
-				comments.setCommentId(coment.getId());
-				comments.setComment(coment.getComment());
-				comments.setCommentTime(date);
-				comments.setCurUser(user);
-
-				ImportContact contact = ImportContact.all().filter("userId=? and curUser=?", coment.getPerson().getId(), user).fetchOne();
-				comments.setFromUser(contact);
-				comments.persist();
-			}
-		}
-	}
-
-	@SuppressWarnings("deprecation")
-	@Transactional
-	static void getNetworkUpdates(String userToken, String userTokenSecret, String consumerKeyValue, String consumerSecretValue, 
-			User user, SocialNetworking snType) {
-		LinkedinParameters parameters = null;
-		Network network = null;
-
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
-
-		List<NetworkUpdates> lstNetworkUpdates = NetworkUpdates.all().filter("curUser=? and snType=?", user, snType).fetch();
-
-		List<String> lstUpdateIds = new ArrayList<String>();
-		for (int i = 0; i < lstNetworkUpdates.size(); i++)
-			lstUpdateIds.add(lstNetworkUpdates.get(i).getContentId().toString());
-
-		try {
-			parameters = LinkedinParameters.all().filter("curUser=? and snType=?", user, snType).fetchOne();
-
-			if (parameters == null)
-				throw new NullPointerException();
-			else if ((parameters.getDays() == 0) && (parameters.getRecordNumbers() == 0))
-				network = client.getNetworkUpdates(EnumSet.of(NetworkUpdateType.SHARED_ITEM));
-			else if ((parameters.getDays() != 0) && (parameters.getRecordNumbers() == 0)) {
-				Date endDate = new Date();
-				Calendar c = Calendar.getInstance();
-				c.add(Calendar.DATE, -(parameters.getDays()));
-				Date startDate = new Date(sdf.format(c.getTime()));
-				network = client.getNetworkUpdates(EnumSet.of(NetworkUpdateType.SHARED_ITEM), startDate, endDate);
-			} else if ((parameters.getDays() == 0) && (parameters.getRecordNumbers() != 0)) {
-				network = client.getNetworkUpdates(EnumSet.of(NetworkUpdateType.SHARED_ITEM), 0, parameters.getRecordNumbers());
-			} else if ((parameters.getDays() != 0) && (parameters.getRecordNumbers() != 0)) {
-				Date endDate = new Date();
-				Calendar c = Calendar.getInstance();
-				c.add(Calendar.DATE, -(parameters.getDays()));
-				Date startDate = new Date(sdf.format(c.getTime()));
-				network = client.getNetworkUpdates(EnumSet.of(NetworkUpdateType.SHARED_ITEM), 0, parameters.getRecordNumbers(), startDate, endDate);
-			}
-		} catch (NullPointerException e) {
-			network = client.getNetworkUpdates(EnumSet.of(NetworkUpdateType.SHARED_ITEM));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-
-		Iterator<Update> itr = network.getUpdates().getUpdateList().iterator();
-		Update update = null;
-
-		List<ImportContact> lstImportContact = ImportContact.all().filter("curUser=? and snType=?", user, snType).fetch();
-		List<String> lstUserIds = new ArrayList<String>();
-
-		for (int i = 0; i < lstImportContact.size(); i++)
-			lstUserIds.add(lstImportContact.get(i).getUserId().toString());
-
-		while (itr.hasNext()) {
-			update = itr.next();
-			if (lstUserIds.contains(update.getUpdateContent().getPerson().getId())) {
-				if (!lstUpdateIds.contains(update.getUpdateKey())) {
-					NetworkUpdates networkUpdate = new NetworkUpdates();
-					DateTime date = new DateTime(update.getTimestamp());
-					networkUpdate.setContentId(update.getUpdateKey());
-					if (update.getUpdateContent().getPerson().getCurrentShare().getComment() == null)
-						continue;
-
-					networkUpdate.setContent(update.getUpdateContent().getPerson().getCurrentShare().getComment());
-					networkUpdate.setCurUser(user);
-					networkUpdate.setContentTime(date);
-					networkUpdate.setSnType(snType);
-
-					ImportContact fromUser = ImportContact.all().filter("userId=? and curUser=?",update.getUpdateContent().getPerson().getId(), user).fetchOne();
-					networkUpdate.setFromUser(fromUser);
-
-					networkUpdate.persist();
+	public void addStatusComment(User user, String contentId, String comment) throws Exception {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					HashMap comments = LinkedinConnect.addStatusComment(userToken, userTokenSecret, contentId, comment);
+					PostUpdates postUpdate = PostUpdates.all().filter("contentId=?", contentId).fetchOne();
+					ImportContact contact = ImportContact.all().filter("userId=? and curUser=?", comments.get("fromUser").toString(), user).fetchOne();
+					
+					Comments commentObject = new Comments();
+					DateTime date = new DateTime(comments.get("commentTime"));
+					commentObject.setContentId(postUpdate);
+					commentObject.setCommentId(comments.get("commentId").toString());
+					commentObject.setComment(comments.get("comment").toString());
+					commentObject.setCommentTime(date);
+					commentObject.setCurUser(user);
+					commentObject.setFromUser(contact);
+					commentObject.persist();
 				}
 			}
 		}
 	}
 
+	@SuppressWarnings({ "deprecation", "rawtypes", "unchecked" })
 	@Transactional
-	static void getMembership(String userToken, String userTokenSecret, String consumerKeyValue, String consumerSecretValue,
-			User user, SocialNetworking snType) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
+	public String fetchNetworkUpdates(User user) throws Exception {
+		EntityManager em = JPA.em();
+		
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					LinkedinParameters parameters = LinkedinParameters.all().filter("curUser=?", user).fetchOne();
+					int count = 0;
+					Date startDate = null, endDate = null;
+					if (parameters == null) {
+						count = 0;
+						startDate = null;
+						endDate = null;
+					}
+					else if ((parameters.getDays() != 0) && (parameters.getRecordNumbers() == 0)) {
+						endDate = new Date();
+						Calendar c = Calendar.getInstance();
+						c.add(Calendar.DATE, -(parameters.getDays()));
+						startDate = new Date(sdf.format(c.getTime()));
+					}
+					else if ((parameters.getDays() == 0) && (parameters.getRecordNumbers() != 0)) {
+						startDate = null;
+						endDate = null;
+						count = parameters.getRecordNumbers();
+					}
+					else if ((parameters.getDays() != 0) && (parameters.getRecordNumbers() != 0)) {
+						endDate = new Date();
+						Calendar c = Calendar.getInstance();
+						c.add(Calendar.DATE, -(parameters.getDays()));
+						startDate = new Date(sdf.format(c.getTime()));
+						count = parameters.getRecordNumbers();
+					}
+					else {
+						count = 0;
+						startDate = null;
+						endDate = null;
+					}
+					ArrayList<HashMap> networkUpdatesList = LinkedinConnect.fetchNetworkUpdates(userToken, userTokenSecret, count, startDate, endDate);
+					
+					List<String> lstUserId = (List<String>) em.createQuery("SELECT a.userId FROM ImportContact a WHERE a.curUser="
+							+ user.getId() + " AND a.snType="+ snType.getId()).getResultList();
+					
+					List<String> lstNetworkUpdateIds = (List<String>) em.createQuery("SELECT a.contentId FROM NetworkUpdates a WHERE a.curUser="
+							+ user.getId()).getResultList();
+					
+					HashMap networkUpdate = new HashMap();
+					for(int i = 0; i < networkUpdatesList.size(); i++) {
+						networkUpdate = networkUpdatesList.get(i);
+						if (lstUserId.contains(networkUpdate.get("fromUser").toString())) {
+							if (!lstNetworkUpdateIds.contains(networkUpdate.get("contentId").toString())) {
+								NetworkUpdates networkUpdateObject = new NetworkUpdates();
+								ImportContact fromUser = ImportContact.all().filter("userId=? and curUser=?",networkUpdate.get("fromUser").toString(), user).fetchOne();
+								DateTime date = new DateTime(networkUpdate.get("timeStamp"));
+								networkUpdateObject.setContentId(networkUpdate.get("contentId").toString());
+								networkUpdateObject.setContent(networkUpdate.get("content").toString());
+								networkUpdateObject.setCurUser(user);
+								networkUpdateObject.setContentTime(date);
+								networkUpdateObject.setSnType(snType);
+								networkUpdateObject.setFromUser(fromUser);
+								networkUpdateObject.persist();
+							}
+						}
+					}
+					return "Network Updates Fetched...";
+				}
+			}
+		}
+	}
 
-		List<GroupMember> lstGroupMember = GroupMember.all().filter("curUser=? and snType=?", user, snType).fetch();
-
-		List<String> lstGroupIds = new ArrayList<String>();
-		for (int i = 0; i < lstGroupMember.size(); i++)
-			lstGroupIds.add(lstGroupMember.get(i).getGroupId().toString());
-
-		Set<GroupMembershipField> groupFields = EnumSet.of(GroupMembershipField.GROUP_ID,
-				GroupMembershipField.MEMBERSHIP_STATE, GroupMembershipField.GROUP_NAME);
-
-		GroupMemberships memberships = client.getGroupMemberships(groupFields);
-		for (GroupMembership membership : memberships.getGroupMembershipList()) {
-			if (!lstGroupIds.contains(membership.getGroup().getId().toString())) {
-				GroupMember groupMember = new GroupMember();
-				groupMember.setGroupId(membership.getGroup().getId());
-				groupMember.setGroupName(membership.getGroup().getName());
-				groupMember.setMembershipState(membership.getMembershipState().getCode().toString());
-				groupMember.setCurUser(user);
-				groupMember.setSnType(snType);
-
-				groupMember.persist();
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@Transactional
+	public String getMembership(User user) throws Exception {
+		EntityManager em = JPA.em();
+		
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					ArrayList<HashMap> groupMembers = LinkedinConnect.getMemberships(userToken, userTokenSecret);
+					List<String> lstGroupIds = em.createQuery("SELECT a.groupId FROM GroupMember a WHERE a.curUser=" + user.getId()).getResultList();
+					HashMap members = new HashMap();
+					for(int i = 0; i < groupMembers.size(); i++) {
+						members = groupMembers.get(i);
+						if (!lstGroupIds.contains(members.get("groupId").toString())) {
+							GroupMember groupMember = new GroupMember();
+							groupMember.setGroupId(members.get("groupId").toString());
+							groupMember.setGroupName(members.get("groupName").toString());
+							groupMember.setMembershipState(members.get("membershipState").toString());
+							groupMember.setCurUser(user);
+							groupMember.setSnType(snType);
+							
+							groupMember.persist();
+						}
+					}
+					return "Group Memberships Obtained...";
+				}
 			}
 		}
 	}
