@@ -65,30 +65,10 @@ class Controller {
 	 */
 	@Transactional
 	void fetchConnections(ActionRequest request, ActionResponse response) {
-		def context = request.context as ImportContact
+		String acknowlegement
 		User user = request.context.get("__user__")
-		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-		if(snType != null) {
-			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-			if(personalCredential == null)
-				throw new Exception("Please Login First")
-			else {
-				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-				if(applicationCredential != null) {
-					String consumerKeyValue = applicationCredential.apikey
-					String consumerSecretValue = applicationCredential.apisecret
-					String userToken = personalCredential.userToken
-					String userTokenSecret = personalCredential.userTokenSecret
-
-					LinkedinService.fetchConnections(consumerKeyValue, consumerSecretValue, userToken, userTokenSecret, user, snType)
-					response.flash = "Imported Contacts Successfully..."
-				}
-				else
-					response.flash = "No Application Defined..."
-			}
-		}
-		else
-			throw new Exception("Network Type not Found...")
+		acknowlegement = LinkedinService.fetchConnections(user)
+		response.flash = acknowlegement
 	}
 
 	/**

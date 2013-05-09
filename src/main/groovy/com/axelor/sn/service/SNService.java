@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
@@ -26,6 +27,7 @@ import com.axelor.sn.db.LinkedinParameters;
 import com.axelor.sn.db.PersonalCredential;
 import com.axelor.sn.db.SocialNetworking;
 import com.axelor.sn.likedin.LinkedinConnectionClass;
+import com.gargoylesoftware.htmlunit.html.xpath.LowerCaseFunction;
 import com.google.code.linkedinapi.client.LinkedInApiClient;
 import com.google.code.linkedinapi.client.LinkedInApiClientException;
 import com.google.code.linkedinapi.client.LinkedInApiClientFactory;
@@ -136,52 +138,45 @@ public class SNService {
 		return status;
 	}
 
+	@SuppressWarnings("unchecked")
 	@Transactional
-	static void fetchConnections(String consumerKeyValue, String consumerSecretValue, String userToken, 
-			String userTokenSecret, User user, SocialNetworking snType) {
-		List<ImportContact> lstImportContact = ImportContact.all().filter("curUser=? and snType=?", user, snType).fetch();
-		List<String> lstUserId = new ArrayList<String>();
-
-		for (int i = 0; i < lstImportContact.size(); i++)
-			lstUserId.add(lstImportContact.get(i).getUserId());
-
-		try {
-			factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-			client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-
-			final Set<ProfileField> setProfileFields = EnumSet.of(ProfileField.ID, ProfileField.FIRST_NAME,
-					ProfileField.LAST_NAME, ProfileField.PUBLIC_PROFILE_URL);
-
-			Person ownProfile = client.getProfileForCurrentUser(setProfileFields);
-			if (!lstUserId.contains(ownProfile.getId())) {
-				ImportContact cntct = new ImportContact();
-				cntct.setUserId(ownProfile.getId());
-				cntct.setName(ownProfile.getFirstName() + " "
-						+ ownProfile.getLastName());
-				cntct.setSnType(snType);
-				cntct.setCurUser(user);
-				cntct.setLink(ownProfile.getPublicProfileUrl());
-				cntct.persist();
-			}
-
-			Connections connections = client.getConnectionsForCurrentUser(setProfileFields);
-			for (Person person : connections.getPersonList()) {
-				if (!lstUserId.contains(person.getId())) {
-					ImportContact contact = new ImportContact();
-					contact.setUserId(person.getId());
-					contact.setName(person.getFirstName() + " "
-							+ person.getLastName());
-					contact.setSnType(snType);
-					contact.setCurUser(user);
-					contact.setLink(person.getPublicProfileUrl());
-
-					contact.persist();
+	public String fetchConnections(User user) throws Exception {
+		EntityManager em = JPA.em();
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential
+							.getUserTokenSecret();
+					ArrayList<HashMap> users = LinkedinConnect.getUserConnections(userToken, userTokenSecret);
+					List<String> lstUserId = (List<String>) em.createQuery("SELECT a.userId FROM ImportContact a WHERE a.curUser="
+									+ user.getId() + " AND a.snType="+ snType.getId()).getResultList();
+					HashMap<String, String> userDetails = new HashMap<String, String>();
+					for (int i = 0; i < users.size(); i++) {
+						userDetails = (HashMap<String, String>) users.get(i);
+						if (!lstUserId.contains(userDetails.get("userId").toString())) {
+							ImportContact contact = new ImportContact();
+							contact.setUserId(userDetails.get("userId"));
+							contact.setName(userDetails.get("userName"));
+							contact.setSnType(snType);
+							contact.setCurUser(user);
+							contact.setLink(userDetails.get("userLink"));
+							contact.persist();
+						}
+					}
+					return "Contacts Imported Successfully.";
 				}
 			}
-		} catch (Exception e) {
-			System.out.println(e.toString());
 		}
-		// tx.commit();
 	}
 
 	static void sendMessage(String userId, String subject, String message, String userToken, String userTokenSecret, String consumerKeyValue,
