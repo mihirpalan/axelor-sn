@@ -10,7 +10,6 @@
 		<many-to-one name="userid" ref="com.axelor.sn.db.ImportContact"	required="true" />
 		<string name="subject" title="Subject" required="true" max="150" />
 		<string name="msgcontent" multiline="true" title="Message Content" required="true" max="4000" />
-		<string name="acknowledgment" title="Message ID" default="1" />
 		<many-to-one name="curUser" ref="com.axelor.auth.db.User" />
 		<datetime name="date" tz="true" />
 	</entity>

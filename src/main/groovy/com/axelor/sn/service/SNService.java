@@ -155,8 +155,7 @@ public class SNService {
 					throw new Exception("No Application Defined");
 				else {
 					String userToken = personalCredential.getUserToken();
-					String userTokenSecret = personalCredential
-							.getUserTokenSecret();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
 					ArrayList<HashMap> users = LinkedinConnect.getUserConnections(userToken, userTokenSecret);
 					List<String> lstUserId = (List<String>) em.createQuery("SELECT a.userId FROM ImportContact a WHERE a.curUser="
 									+ user.getId() + " AND a.snType="+ snType.getId()).getResultList();
@@ -179,13 +178,28 @@ public class SNService {
 		}
 	}
 
-	static void sendMessage(String userId, String subject, String message, String userToken, String userTokenSecret, String consumerKeyValue,
-			String consumerSecretValue) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		ArrayList<String> lstUserId = new ArrayList<String>();
-		lstUserId.add(userId);
-		client.sendMessage(lstUserId, subject, message);
+	public String sendMessage(String userId, String subject, String message, User user) throws Exception {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					ArrayList<String> lstUserId = new ArrayList<String>();
+					lstUserId.add(userId);
+					LinkedinConnect.sendMessage(userToken, userTokenSecret, lstUserId, subject, message);
+					return "Message Sent Successfully.";
+				}
+			}
+		}
 	}
 
 	@Transactional

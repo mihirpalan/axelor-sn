@@ -70,8 +70,8 @@ public class LinkedinConnectionClass {
 		return userDetails;
 	}
 	
-	public ArrayList<HashMap> getUserConnections(String token, String tokenSecret) {
-		client = factory.createLinkedInApiClient(token, tokenSecret);
+	public ArrayList<HashMap> getUserConnections(String userToken, String userTokenSecret) {
+		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
 		Person profile = client.getProfileForCurrentUser(setProfileFields);
 		Connections connections = client.getConnectionsForCurrentUser(setProfileFields);
 		
@@ -92,5 +92,10 @@ public class LinkedinConnectionClass {
 		}
 		System.out.println("IN Connection :"+users);
 		return users;
+	}
+	
+	public void sendMessage(String userToken, String userTokenSecret, ArrayList<String> lstUserId, String subject, String message) {
+		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
+		client.sendMessage(lstUserId, subject, message);
 	}
 }

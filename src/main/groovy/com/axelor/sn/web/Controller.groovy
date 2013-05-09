@@ -63,7 +63,6 @@ class Controller {
 	/**
 	 *This function is used to get our connections from Linkedin 
 	 */
-	@Transactional
 	void fetchConnections(ActionRequest request, ActionResponse response) {
 		String acknowlegement
 		User user = request.context.get("__user__")
@@ -74,37 +73,14 @@ class Controller {
 	/**
 	 *This function is used to Send a Direct Message to a Contact on Linkedin  
 	 */
-	@Transactional
 	void sendMessage(ActionRequest  request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		ImportContact contact = request.context.get("userid")
-
 		String userId = contact.getUserId()
 		String subject = request.context.get("subject")
 		String message = request.context.get("msgcontent")
-
-		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-		if(snType != null) {
-			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user,snType)
-			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-				if(applicationCredential != null) {
-					String consumerKeyValue = applicationCredential.apikey
-					String consumerSecretValue = applicationCredential.apisecret
-					String userToken = personalCredential.userToken
-					String userTokenSecret = personalCredential.userTokenSecret
-
-					LinkedinService.sendMessage(userId,subject,message,userToken, userTokenSecret, consumerKeyValue, consumerSecretValue)
-					response.flash = "Message Sent..."
-				}
-				else
-					throw new Exception("No Application Defined")
-			}
-			else
-				throw new Exception("Please Login First")
-		}
-		else
-			throw new Exception("Network Type not Found...")
+		String acknowlegement = LinkedinService.sendMessage(userId, subject, message, user)
+		response.flash = acknowlegement
 	}
 
 	/**
