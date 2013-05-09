@@ -138,7 +138,7 @@ public class SNService {
 		return status;
 	}
 
-	@SuppressWarnings("unchecked")
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Transactional
 	public String fetchConnections(User user) throws Exception {
 		EntityManager em = JPA.em();
@@ -224,43 +224,54 @@ public class SNService {
 		}
 	}
 
+	@SuppressWarnings({ "unused", "unchecked", "rawtypes" })
 	@Transactional
-	static void getComments(String contentId, String userToken, String tokenSecret, String consumerKeyValue,
-			String consumerSecretValue, User user, SocialNetworking snType) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, tokenSecret);
+	public void getComments(String contentId, User user) throws Exception {
+		EntityManager em = JPA.em();
+		
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					ArrayList<HashMap> commentList = LinkedinConnect.getComments(userToken, userTokenSecret, contentId);
 
-		List<String> lstUserIds = new ArrayList<String>();
+					List<String> lstUserId = (List<String>) em.createQuery("SELECT a.userId FROM ImportContact a WHERE a.curUser="
+							+ user.getId() + " AND a.snType="+ snType.getId()).getResultList();
 
-		List<ImportContact> lstImportContact = ImportContact.all().filter("curUser=? and snType=?", user, snType).fetch();
-		for (int i = 0; i < lstImportContact.size(); i++)
-			lstUserIds.add(lstImportContact.get(i).getUserId().toString());
+					PostUpdates postUpdate = PostUpdates.all().filter("contentId=?", contentId).fetchOne();
+					
+					List<String> lstCommentsId = em.createQuery("SELECT a.commentId FROM Comments a WHERE a.curUser="
+							+ user.getId() + " AND a.contentId=" + postUpdate.getId()).getResultList();
 
-		PostUpdates postUpdate = PostUpdates.all().filter("contentId=?", contentId).fetchOne();
-
-		List<Comments> lstComments = Comments.all().filter("curUser=? and contentId=?", user, postUpdate).fetch();
-		List<String> lstCommentIds = new ArrayList<String>();
-		for (int i = 0; i < lstComments.size(); i++)
-			lstCommentIds.add(lstComments.get(i).getCommentId().toString());
-
-		UpdateComments updateComments = client.getNetworkUpdateComments(contentId);
-		Iterator<UpdateComment> itr = updateComments.getUpdateCommentList().iterator();
-		UpdateComment comment = null;
-		while (itr.hasNext()) {
-			comment = itr.next();
-			if (lstUserIds.contains(comment.getPerson().getId())) {
-				if (!lstCommentIds.contains(comment.getId())) {
-					DateTime date = new DateTime(comment.getTimestamp());
-					Comments comments = new Comments();
-					comments.setContentId(postUpdate);
-					comments.setCommentId(comment.getId());
-					comments.setComment(comment.getComment());
-					comments.setCommentTime(date);
-					comments.setCurUser(user);
-
-					ImportContact contact = ImportContact.all().filter("userId=? and curUser=?", comment.getPerson().getId(), user).fetchOne();
-					comments.setFromUser(contact);
-					comments.persist();
+					HashMap comments = new HashMap();
+					for(int i = 0; i < commentList.size(); i++) {
+						comments = commentList.get(i);
+						if(lstUserId.contains(comments.get("fromUser").toString())) {
+							if(!lstCommentsId.contains(comments.get("commentId").toString())) {
+								Comments comment = new Comments();
+								DateTime date = new DateTime(comments.get("commentTime"));
+								comment.setContentId(postUpdate);
+								comment.setCommentId(comments.get("commentId").toString());
+								comment.setComment(comments.get("comment").toString());
+								comment.setCommentTime(date);
+								comment.setCurUser(user);
+								
+								ImportContact contact = ImportContact.all().filter("userId=? and curUser=?", comments.get("fromUser").toString(), user).fetchOne();
+								comment.setFromUser(contact);
+								comment.persist();
+							}
+						}
+					}
 				}
 			}
 		}

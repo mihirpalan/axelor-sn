@@ -14,6 +14,8 @@ import java.util.Set;
 
 import javax.ws.rs.Consumes;
 
+import org.joda.time.DateTime;
+
 import com.google.code.linkedinapi.client.LinkedInApiClient;
 import com.google.code.linkedinapi.client.LinkedInApiClientFactory;
 import com.google.code.linkedinapi.client.enumeration.NetworkUpdateType;
@@ -25,16 +27,15 @@ import com.google.code.linkedinapi.client.oauth.LinkedInRequestToken;
 import com.google.code.linkedinapi.schema.Connections;
 import com.google.code.linkedinapi.schema.Person;
 import com.google.code.linkedinapi.schema.Update;
+import com.google.code.linkedinapi.schema.UpdateComment;
+import com.google.code.linkedinapi.schema.UpdateComments;
 import com.google.code.linkedinapi.schema.Updates;
 
 public class LinkedinConnectionClass {
 	
 	static LinkedInOAuthService oauthService=null;
-	LinkedInAccessToken accessToken=null;
 	LinkedInRequestToken requestToken=null;
 	static LinkedInApiClientFactory factory = null;
-	static String consumeKeyValue;
-	static String consumeSecretValue;
 	LinkedInApiClient client=null;
 	final Set<ProfileField> setProfileFields = EnumSet.of(ProfileField.ID, ProfileField.FIRST_NAME,
 			ProfileField.LAST_NAME, ProfileField.PUBLIC_PROFILE_URL);
@@ -42,8 +43,6 @@ public class LinkedinConnectionClass {
 	
 	public String getUrl(String consumerKey, String consumerSecret, String redirectUrl, String userName) throws IOException {
 		String authUrl = "";
-		consumeKeyValue = consumerKey;
-		consumeSecretValue = consumerSecret;
 //		try {
 			oauthService = LinkedInOAuthServiceFactory.getInstance().createLinkedInOAuthService(consumerKey, consumerSecret);
 			requestToken = oauthService.getOAuthRequestToken(redirectUrl);
@@ -67,7 +66,7 @@ public class LinkedinConnectionClass {
 		requestToken=(LinkedInRequestToken)inStream.readObject();
 		temp.delete();
 		inStream.close();
-		accessToken = oauthService.getOAuthAccessToken(requestToken, verifier);
+		LinkedInAccessToken accessToken = oauthService.getOAuthAccessToken(requestToken, verifier);
 		String userDetails = accessToken.getToken() + "=" + accessToken.getTokenSecret();
 		client = factory.createLinkedInApiClient(accessToken);
 		Person profile = client.getProfileForCurrentUser(setProfileFields);
@@ -75,6 +74,7 @@ public class LinkedinConnectionClass {
 		return userDetails;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	public ArrayList<HashMap> getUserConnections(String userToken, String userTokenSecret) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
 		Person profile = client.getProfileForCurrentUser(setProfileFields);
@@ -95,7 +95,6 @@ public class LinkedinConnectionClass {
 			userDetails.put("userLink", person.getPublicProfileUrl());
 			users.add(userDetails);
 		}
-		System.out.println("IN Connection :"+users);
 		return users;
 	}
 	
@@ -114,5 +113,25 @@ public class LinkedinConnectionClass {
 		
 		String updateKeyTime = update.getUpdateKey() + ":" + update.getTimestamp();
 		return updateKeyTime;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public ArrayList<HashMap> getComments(String userToken, String userTokenSecret, String contentId) {
+		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
+		
+		UpdateComments updateComments = client.getNetworkUpdateComments(contentId);
+		Iterator<UpdateComment> itr = updateComments.getUpdateCommentList().iterator();
+		UpdateComment comment = null;
+		ArrayList<HashMap> commentList = new ArrayList<HashMap>();
+		while (itr.hasNext()) {
+			comment = itr.next();
+			HashMap comments  = new HashMap();
+			comments.put("commentId", comment.getId());
+			comments.put("comment", comment.getComment());
+			comments.put("commentTime", comment.getTimestamp());
+			comments.put("fromUser",comment.getPerson().getId());
+			commentList.add(comments);
+		}
+		return commentList;
 	}
 }

@@ -93,35 +93,12 @@ class Controller {
 		}
 	}
 
-	/**
-	 *This function is used to get the Comments of a Status from Linkedin
-	 */
-	@Transactional
+	 //This function is used to get the Comments of a Status from Linkedin
 	void getComments(ActionRequest request, ActionResponse response) {
 		String contentId = request.context.get("contentId")
 		if(!contentId.equals(null)) {
 			User user = request.context.get("__user__")
-			SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-			if(snType!=null) {
-				PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-				if(personalCredential != null) {
-					ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-					if(applicationCredential != null) {
-						String consumerKeyValue=applicationCredential.apikey
-						String consumerSecretValue=applicationCredential.apisecret
-						String userToken=personalCredential.userToken
-						String userTokenSecret=personalCredential.userTokenSecret
-						LinkedinService.getComments(contentId, userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, snType)
-						response.flash = "Comments Retrieved..."
-					}
-					else
-						throw new Exception("No Application Defined")
-				}
-				else
-					throw new Exception("Please Login First")
-			}
-			else
-				throw new Exception("Network Type not Found...")
+			LinkedinService.getComments(contentId, user)
 		}
 		else
 			response.flash="Select A Status to Fetch Comments..."
@@ -132,10 +109,7 @@ class Controller {
 		response.values=["comment":""]
 	}
 
-
-	/**
-	 *This function is used to refresh the Comments O2M field  
-	 */
+	 //This function is used to refresh the Comments O2M field  
 	void refreshComments(ActionRequest request, ActionResponse response) {
 		def context = request.context as PostUpdates
 		List<Comments> lstComments = context.getComments()
@@ -148,10 +122,7 @@ class Controller {
 		response.values = context
 	}
 
-	/**
-	 *This function is used to add a Comment to Status  
-	 */
-	@Transactional
+	 //This function is used to add a Comment to Status  
 	void addStatusComment(ActionRequest request, ActionResponse response) {
 		String contentId = request.context.get("contentId")
 		String comment = request.context.get("comment")
