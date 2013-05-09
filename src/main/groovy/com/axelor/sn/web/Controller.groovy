@@ -47,7 +47,6 @@ class Controller {
 		def context = request.context as PersonalCredential
 		User user = request.context.get("__user__")
 		SocialNetworking snType = request.context.get("snType")
-
 		String authUrl = LinkedinService.getUrl(user, snType)
 		response.flash = "Click the link to get access <a href=" + authUrl + " target='_blank'>" + authUrl + "</a>"
 	}
@@ -60,9 +59,8 @@ class Controller {
 			throw new Exception("Network Type not Found...")
 	}
 
-	/**
-	 *This function is used to get our connections from Linkedin 
-	 */
+	
+	//This function is used to get our connections from Linkedin 
 	void fetchConnections(ActionRequest request, ActionResponse response) {
 		String acknowlegement
 		User user = request.context.get("__user__")
@@ -70,9 +68,7 @@ class Controller {
 		response.flash = acknowlegement
 	}
 
-	/**
-	 *This function is used to Send a Direct Message to a Contact on Linkedin  
-	 */
+	 //This function is used to Send a Direct Message to a Contact on Linkedin  
 	void sendMessage(ActionRequest  request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		ImportContact contact = request.context.get("userid")
@@ -83,40 +79,17 @@ class Controller {
 		response.flash = acknowlegement
 	}
 
-	/**
-	 *This function is used to post a new Status to Linkedin 
-	 */
-	@Transactional
+	 //This function is used to post a new Status to Linkedin 
 	void updateStatus(ActionRequest request, ActionResponse response) {
 		def context = request.context as PostUpdates
 		if(context.getId() == null) {
 			User user = request.context.get("__user__")
-			String message = request.context.get("content").toString()
-			SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-			if(snType != null) {
-				PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-				if(personalCredential != null) {
-					ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-					if(applicationCredential != null) {
-						String consumerKeyValue = applicationCredential.apikey
-						String consumerSecretValue = applicationCredential.apisecret
-						String userToken = personalCredential.userToken
-						String userTokenSecret = personalCredential.userTokenSecret
-
-						String updateKeyTime = LinkedinService.updateStatus(message, userToken, userTokenSecret,consumerKeyValue, consumerSecretValue)
-						String[] array = updateKeyTime.split(":")
-						DateTime date = new DateTime(Long.parseLong(array[1]));
-						response.values = ["contentId":array[0], "postTime":date]
-						response.flash = "Status Successfully Updated to LinkedIn..."
-					}
-					else
-						throw new Exception("No Application Defined")
-				}
-				else
-					throw new Exception("Please Login First")
-			}
-			else
-				throw new Exception("Network Type not Found...")
+			String content = request.context.get("content").toString()
+			String updateKeyTime = LinkedinService.updateStatus(content, user)
+			String[] array = updateKeyTime.split(":")
+			DateTime date = new DateTime(Long.parseLong(array[1]));
+			response.values = ["contentId":array[0], "postTime":date]
+			response.flash = "Status Successfully Updated to LinkedIn..."
 		}
 	}
 

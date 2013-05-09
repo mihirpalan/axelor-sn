@@ -202,19 +202,26 @@ public class SNService {
 		}
 	}
 
-	@Transactional
-	static String updateStatus(String message, String userToken, String userTokenSecret, String consumerKeyValue,
-			String consumerSecretValue) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		client.updateCurrentStatus(message);
-		
-		Updates upd = client.getUserUpdates(0, 1).getUpdates();
-		Iterator<Update> itr = upd.getUpdateList().iterator();
-		Update update = itr.next();
-
-		String updateKeyTime = update.getUpdateKey() + ":" + update.getTimestamp();
-		return updateKeyTime;
+	public String updateStatus(String content, User user) throws Exception {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					String updateKeyTime = LinkedinConnect.updateStatus(userToken, userTokenSecret, content);
+					return updateKeyTime;
+				}
+			}
+		}
 	}
 
 	@Transactional

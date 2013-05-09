@@ -9,12 +9,14 @@ import java.io.ObjectOutputStream;
 import java.util.ArrayList;
 import java.util.EnumSet;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
 
 import com.google.code.linkedinapi.client.LinkedInApiClient;
 import com.google.code.linkedinapi.client.LinkedInApiClientFactory;
+import com.google.code.linkedinapi.client.enumeration.NetworkUpdateType;
 import com.google.code.linkedinapi.client.enumeration.ProfileField;
 import com.google.code.linkedinapi.client.oauth.LinkedInAccessToken;
 import com.google.code.linkedinapi.client.oauth.LinkedInOAuthService;
@@ -22,6 +24,8 @@ import com.google.code.linkedinapi.client.oauth.LinkedInOAuthServiceFactory;
 import com.google.code.linkedinapi.client.oauth.LinkedInRequestToken;
 import com.google.code.linkedinapi.schema.Connections;
 import com.google.code.linkedinapi.schema.Person;
+import com.google.code.linkedinapi.schema.Update;
+import com.google.code.linkedinapi.schema.Updates;
 
 public class LinkedinConnectionClass {
 	
@@ -34,6 +38,7 @@ public class LinkedinConnectionClass {
 	LinkedInApiClient client=null;
 	final Set<ProfileField> setProfileFields = EnumSet.of(ProfileField.ID, ProfileField.FIRST_NAME,
 			ProfileField.LAST_NAME, ProfileField.PUBLIC_PROFILE_URL);
+	final Set<NetworkUpdateType> networkUpdateType = EnumSet.of(NetworkUpdateType.SHARED_ITEM);
 	
 	public String getUrl(String consumerKey, String consumerSecret, String redirectUrl, String userName) throws IOException {
 		String authUrl = "";
@@ -97,5 +102,17 @@ public class LinkedinConnectionClass {
 	public void sendMessage(String userToken, String userTokenSecret, ArrayList<String> lstUserId, String subject, String message) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
 		client.sendMessage(lstUserId, subject, message);
+	}
+	
+	public String updateStatus(String userToken, String userTokenSecret, String content) {
+		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
+		client.updateCurrentStatus(content);
+
+		Updates upd = client.getUserUpdates(networkUpdateType, 0, 1).getUpdates();
+		Iterator<Update> itr = upd.getUpdateList().iterator();
+		Update update = itr.next();
+		
+		String updateKeyTime = update.getUpdateKey() + ":" + update.getTimestamp();
+		return updateKeyTime;
 	}
 }
