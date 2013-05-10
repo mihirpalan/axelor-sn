@@ -644,42 +644,27 @@ public class SNService {
 				throw new Exception("You Have not Authorized the Application...");
 			}
 			else {
-				List<GroupDiscussionComments> discussionComments = GroupDiscussionComments.all().filter("curUSer=?", user).fetch();
-				for(int i = 0; i < discussionComments.size(); i++) {
-					em.remove(GroupDiscussionComments.find(discussionComments.get(i).getId().longValue()));
-				}
-				
-				List<GroupDiscussion> discussion = GroupDiscussion.all().filter("curUSer=?", user).fetch();
-				for(int i = 0; i < discussion.size(); i++) {
-					em.remove(GroupDiscussion.find(discussion.get(i).getId().longValue()));
-				}
-				
-				List<GroupMember> groupMember = GroupMember.all().filter("curUSer=?", user).fetch();
+				List<GroupMember> groupMember = GroupMember.all().filter("curUser=?", user).fetch();
 				for(int i = 0; i < groupMember.size(); i++) {
 					em.remove(GroupMember.find(groupMember.get(i).getId().longValue()));
 				}
 				
-				List<NetworkUpdates> networkUpdates = NetworkUpdates.all().filter("curUSer=?", user).fetch();
+				List<NetworkUpdates> networkUpdates = NetworkUpdates.all().filter("curUser=?", user).fetch();
 				for(int i = 0; i < networkUpdates.size(); i++) {
 					em.remove(NetworkUpdates.find(networkUpdates.get(i).getId().longValue()));
 				}
 				
-				List<Comments> comments = Comments.all().filter("curUSer=?", user).fetch();
-				for(int i = 0; i < comments.size(); i++) {
-					em.remove(Comments.find(comments.get(i).getId().longValue()));
-				}
-				
-				List<PostUpdates> postUpdates = PostUpdates.all().filter("curUSer=?", user).fetch();
+				List<PostUpdates> postUpdates = PostUpdates.all().filter("curUser=?", user).fetch();
 				for(int i = 0; i < postUpdates.size(); i++) {
 					em.remove(PostUpdates.find(postUpdates.get(i).getId().longValue()));
 				}
 				
-				List<DirectMessages> directMessages = DirectMessages.all().filter("curUSer=?", user).fetch();
+				List<DirectMessages> directMessages = DirectMessages.all().filter("curUser=?", user).fetch();
 				for(int i = 0; i < directMessages.size(); i++) {
 					em.remove(DirectMessages.find(directMessages.get(i).getId().longValue()));
 				}
 				
-				List<ImportContact> importContact = ImportContact.all().filter("curUSer=?", user).fetch();
+				List<ImportContact> importContact = ImportContact.all().filter("curUser=?", user).fetch();
 				for(int i = 0; i < importContact.size(); i++) {
 					em.remove(ImportContact.find(importContact.get(i).getId().longValue()));
 				}
