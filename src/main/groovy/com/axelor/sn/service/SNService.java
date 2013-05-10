@@ -69,6 +69,7 @@ public class SNService {
 	static String consumerKeyValue = null;
 	static String consumerSecretValue = null;
 	SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
+	EntityManager em = JPA.em();
 	
 	public SocialNetworking getSocialType() {
 		return socialType;
@@ -142,7 +143,6 @@ public class SNService {
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Transactional
 	public String fetchConnections(User user) throws Exception {
-		EntityManager em = JPA.em();
 		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
 		if (snType == null)
 			throw new Exception("Network Type Not Found");
@@ -228,8 +228,6 @@ public class SNService {
 	@SuppressWarnings({  "unchecked", "rawtypes" })
 	@Transactional
 	public void getComments(String contentId, User user) throws Exception {
-		EntityManager em = JPA.em();
-		
 		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
 		if (snType == null)
 			throw new Exception("Network Type Not Found");
@@ -316,8 +314,6 @@ public class SNService {
 	@SuppressWarnings({ "deprecation", "rawtypes", "unchecked" })
 	@Transactional
 	public String fetchNetworkUpdates(User user) throws Exception {
-		EntityManager em = JPA.em();
-		
 		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
 		if (snType == null)
 			throw new Exception("Network Type Not Found");
@@ -398,8 +394,6 @@ public class SNService {
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	@Transactional
 	public String getMembership(User user) throws Exception {
-		EntityManager em = JPA.em();
-		
 		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
 		if (snType == null)
 			throw new Exception("Network Type Not Found");
@@ -436,69 +430,69 @@ public class SNService {
 		}
 	}
 
-	@SuppressWarnings("deprecation")
+	@SuppressWarnings({ "deprecation", "rawtypes", "unchecked" })
 	@Transactional
-	static void getDiscussions(String userToken, String userTokenSecret, String consumerKeyValue, String consumerSecretValue, User user,
-			GroupMember groupMember, SocialNetworking snType) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-
-		LinkedinParameters parameters = null;
-		Posts post = null;
-		SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
-
-		List<GroupDiscussion> lstGroupDiscussion = GroupDiscussion.all().filter("curUser=? and groupName=?", user, groupMember).fetch();
-		List<String> lstGroupDiscussionIds = new ArrayList<String>();
-		for (GroupDiscussion d : lstGroupDiscussion)
-			lstGroupDiscussionIds.add(d.getDiscussionId().toString());
-
-		Set<PostField> postField = EnumSet.of(PostField.ID, PostField.SUMMARY,
-				PostField.TITLE, PostField.TYPE, PostField.CREATION_TIMESTAMP,
-				PostField.CREATOR_FIRST_NAME, PostField.CREATOR_LAST_NAME);
-		try {
-			parameters = LinkedinParameters.all().filter("curUser=? and snType=?", user, snType).fetchOne();
-			if (parameters == null)
-				post = client.getPostsByGroup(groupMember.getGroupId(), postField, 0, 15);
-			else if (parameters.getRecordNumbers() == 0)
-				post = client.getPostsByGroup(groupMember.getGroupId(), postField, 0, 15);
-			else if (parameters.getRecordNumbers() != 0) {
-				if (parameters.getDays() != 0) {
-					Calendar c = Calendar.getInstance();
-					c.add(Calendar.DATE, -(parameters.getDays()));
-					Date modified = new Date(sdf.format(c.getTime()));
-					post = client.getPostsByGroup(groupMember.getGroupId(), postField, 0, parameters.getRecordNumbers(), modified);
-				} else {
-					post = client.getPostsByGroup(groupMember.getGroupId(), postField, 0, parameters.getRecordNumbers());
+	public void getDiscussions(User user, GroupMember groupMember) throws Exception {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					String groupId = groupMember.getGroupId();
+					LinkedinParameters parameters = LinkedinParameters.all().filter("curUser=?", user).fetchOne();
+					int count = 0;
+					Date modifiedDate = null;
+					if (parameters != null) {
+						if ((parameters.getRecordNumbers() == 0) && (parameters.getDays() != 0)) { 
+							Calendar c = Calendar.getInstance();
+							c.add(Calendar.DATE, -(parameters.getDays()));
+							modifiedDate = new Date(sdf.format(c.getTime()));
+						}
+						else if ((parameters.getRecordNumbers() != 0) && (parameters.getDays() == 0)) {
+							count = parameters.getRecordNumbers();
+						}
+						else if ((parameters.getRecordNumbers() != 0) && (parameters.getDays() != 0)) {
+							Calendar c = Calendar.getInstance();
+							c.add(Calendar.DATE, -(parameters.getDays()));
+							modifiedDate = new Date(sdf.format(c.getTime()));
+							count = parameters.getRecordNumbers();
+						}
+					}
+					else {
+						count = 0;
+						modifiedDate = null;
+					}
+					ArrayList<HashMap> groupDiscussions = LinkedinConnect.getDiscussions(userToken, userTokenSecret, groupId, count, modifiedDate);
+					List<String> lstGroupDiscussionIds = em.createQuery("SELECT a.discussionId FROM GroupDiscussion a WHERE a.curUser="
+							+ user.getId() + " AND a.groupName=" + groupMember.getId()).getResultList();
+					
+					HashMap discussion = new HashMap();
+					for(int i = 0; i < groupDiscussions.size(); i++) {
+						discussion = groupDiscussions.get(i);
+						if(!lstGroupDiscussionIds.contains(discussion.get("id").toString())) {
+							DateTime date = new DateTime(discussion.get("time"));
+							GroupDiscussion discussionObject = new GroupDiscussion();
+							discussionObject.setDiscussionId(discussion.get("id").toString());
+							discussionObject.setDiscussionSummary(discussion.get("summary").toString());
+							discussionObject.setDiscussionTitle(discussion.get("title").toString());
+							discussionObject.setDiscussionBy(discussion.get("by").toString());
+							discussionObject.setDiscussionTime(date);
+							discussionObject.setGroupName(groupMember);
+							discussionObject.setDiscussionByCurrentUser(false);
+							discussionObject.setCurUser(user);
+							discussionObject.persist();
+						}
+					}
 				}
-			}
-		} catch (NullPointerException e) {
-			return;
-		}
-
-		for (Post p : post.getPostList()) {
-			if (!lstGroupDiscussionIds.contains(p.getId())) {
-
-				DateTime date = new DateTime(p.getCreationTimestamp());
-				GroupDiscussion discussion = new GroupDiscussion();
-
-				discussion.setDiscussionId(p.getId());
-				if (p.getSummary() != null)
-					discussion.setDiscussionSummary(p.getSummary());
-				else
-					discussion.setDiscussionSummary("N/A");
-				
-				if (p.getTitle() != null)
-					discussion.setDiscussionTitle(p.getTitle());
-				else
-					discussion.setDiscussionTitle("N/A");
-				
-				discussion.setDiscussionBy(p.getCreator().getFirstName() + " "
-						+ p.getCreator().getLastName());
-				discussion.setDiscussionTime(date);
-				discussion.setDiscussionByCurrentUser(false);
-				discussion.setGroupName(groupMember);
-				discussion.setCurUser(user);
-				discussion.persist();
 			}
 		}
 	}

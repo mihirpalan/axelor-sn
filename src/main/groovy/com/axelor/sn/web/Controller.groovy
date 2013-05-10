@@ -130,7 +130,6 @@ class Controller {
 		LinkedinService.addStatusComment(user, contentId, comment)
 	}
 
-	@Transactional
 	void getNetworkUpdates(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		String acknowledgement = LinkedinService.fetchNetworkUpdates(user)
@@ -147,39 +146,14 @@ class Controller {
 		response.flash = acknowledgement
 	}
 
-	/**
-	 *This function is used to get the Discussions from a particular Group 	
-	 */
-	@Transactional
+	 //This function is used to get the Discussions from a particular Group 	
 	void getDiscussions(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		GroupMember groupMember = request.context.get("__self__")
-		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-		if(snType != null) {
-			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-			if(personalCredential != null)	{
-				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-				if(applicationCredential != null) {
-					String consumerKeyValue = applicationCredential.apikey
-					String consumerSecretValue = applicationCredential.apisecret
-					String userToken = personalCredential.userToken
-					String userTokenSecret = personalCredential.userTokenSecret
-					LinkedinService.getDiscussions(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user, groupMember, snType)
-					response.flash = "Group Discussions Obtained..."
-				}
-				else
-					throw new Exception("No Application Defined")
-			}
-			else
-				throw new Exception("Please Login First")
-		}
-		else
-			throw new Exception("Network Type not Found...")
+		LinkedinService.getDiscussions(user, groupMember)
 	}
 
-	/**
-	 *This function is used to refresh the Discussions field in the view 
-	 */
+	 //This function is used to refresh the Discussions field in the view 
 	void refreshDiscussions(ActionRequest request,ActionResponse response) {
 		def context = request.context as GroupMember
 		List<GroupDiscussion> lstDiscussions = context.getDiscussions()

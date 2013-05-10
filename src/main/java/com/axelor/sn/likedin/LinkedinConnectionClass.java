@@ -21,6 +21,7 @@ import com.google.code.linkedinapi.client.LinkedInApiClient;
 import com.google.code.linkedinapi.client.LinkedInApiClientFactory;
 import com.google.code.linkedinapi.client.enumeration.GroupMembershipField;
 import com.google.code.linkedinapi.client.enumeration.NetworkUpdateType;
+import com.google.code.linkedinapi.client.enumeration.PostField;
 import com.google.code.linkedinapi.client.enumeration.ProfileField;
 import com.google.code.linkedinapi.client.oauth.LinkedInAccessToken;
 import com.google.code.linkedinapi.client.oauth.LinkedInOAuthService;
@@ -31,6 +32,8 @@ import com.google.code.linkedinapi.schema.GroupMembership;
 import com.google.code.linkedinapi.schema.GroupMemberships;
 import com.google.code.linkedinapi.schema.Network;
 import com.google.code.linkedinapi.schema.Person;
+import com.google.code.linkedinapi.schema.Post;
+import com.google.code.linkedinapi.schema.Posts;
 import com.google.code.linkedinapi.schema.Update;
 import com.google.code.linkedinapi.schema.UpdateComment;
 import com.google.code.linkedinapi.schema.UpdateComments;
@@ -47,6 +50,8 @@ public class LinkedinConnectionClass {
 	final Set<NetworkUpdateType> networkUpdateType = EnumSet.of(NetworkUpdateType.SHARED_ITEM);
 	final Set<GroupMembershipField> groupFields = EnumSet.of(GroupMembershipField.GROUP_ID,
 			GroupMembershipField.MEMBERSHIP_STATE, GroupMembershipField.GROUP_NAME);
+	final Set<PostField> postField = EnumSet.of(PostField.ID, PostField.SUMMARY, PostField.TITLE,
+			PostField.CREATION_TIMESTAMP, PostField.CREATOR_FIRST_NAME, PostField.CREATOR_LAST_NAME);
 	
 	public String getUrl(String consumerKey, String consumerSecret, String redirectUrl, String userName) throws IOException {
 		String authUrl = "";
@@ -208,5 +213,39 @@ public class LinkedinConnectionClass {
 			groupMembers.add(member);
 		}
 		return groupMembers;
+	}
+	
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public ArrayList<HashMap> getDiscussions(String userToken, String userTokenSecret,String groupId, int count, Date modifiedDate) {
+		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
+		Posts post = null;
+		if(count != 0 && modifiedDate == null ) 
+			post = client.getPostsByGroup(groupId, postField, 0, count);
+		else if(count != 0 && modifiedDate != null)
+			post = client.getPostsByGroup(groupId, postField, 0, count, modifiedDate);
+		else
+			post = client.getPostsByGroup(groupId, postField, 0, 15);
+		
+		ArrayList<HashMap> groupDiscussions = new ArrayList<HashMap>();
+		HashMap discussion;
+		
+		for (Post p : post.getPostList()) {
+			discussion=new HashMap();
+			discussion.put("id", p.getId());
+			if(p.getTitle() != null)
+				discussion.put("title", p.getTitle());
+			else
+				discussion.put("title", "");
+			
+			if(p.getSummary() != null)
+				discussion.put("summary", p.getSummary());
+			else
+				discussion.put("summary", "");
+			discussion.put("by", p.getCreator().getFirstName() + " " + p.getCreator().getLastName());
+			discussion.put("time",p.getCreationTimestamp());
+			
+			groupDiscussions.add(discussion);
+		}
+		return groupDiscussions;
 	}
 }
