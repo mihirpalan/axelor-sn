@@ -47,7 +47,7 @@
 			<field name="comment" title="Comment" colSpan="3" />
 			<group cols="2" colSpan="1">
 				<button name="addStatusComment" title="Add"
-					onClick="action-status-comment,hideCommentsfield,action-refresh-comments" />
+					onClick="action-status-comment,hideCommentsfield,action-refresh-comments,action-comment-clear" />
 				<button name="cancel" title="Cancel"
 					onClick="action-comment-clear,hideCommentsfield" />
 			</group>
