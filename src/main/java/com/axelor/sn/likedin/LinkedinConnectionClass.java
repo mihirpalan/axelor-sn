@@ -11,6 +11,7 @@ import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 import javax.ws.rs.Consumes;
@@ -19,6 +20,7 @@ import org.joda.time.DateTime;
 
 import com.google.code.linkedinapi.client.LinkedInApiClient;
 import com.google.code.linkedinapi.client.LinkedInApiClientFactory;
+import com.google.code.linkedinapi.client.enumeration.CommentField;
 import com.google.code.linkedinapi.client.enumeration.GroupMembershipField;
 import com.google.code.linkedinapi.client.enumeration.NetworkUpdateType;
 import com.google.code.linkedinapi.client.enumeration.PostField;
@@ -27,6 +29,7 @@ import com.google.code.linkedinapi.client.oauth.LinkedInAccessToken;
 import com.google.code.linkedinapi.client.oauth.LinkedInOAuthService;
 import com.google.code.linkedinapi.client.oauth.LinkedInOAuthServiceFactory;
 import com.google.code.linkedinapi.client.oauth.LinkedInRequestToken;
+import com.google.code.linkedinapi.schema.Comments;
 import com.google.code.linkedinapi.schema.Connections;
 import com.google.code.linkedinapi.schema.GroupMembership;
 import com.google.code.linkedinapi.schema.GroupMemberships;
@@ -38,6 +41,7 @@ import com.google.code.linkedinapi.schema.Update;
 import com.google.code.linkedinapi.schema.UpdateComment;
 import com.google.code.linkedinapi.schema.UpdateComments;
 import com.google.code.linkedinapi.schema.Updates;
+import com.google.code.linkedinapi.schema.Comment;
 
 public class LinkedinConnectionClass {
 	
@@ -52,6 +56,8 @@ public class LinkedinConnectionClass {
 			GroupMembershipField.MEMBERSHIP_STATE, GroupMembershipField.GROUP_NAME);
 	final Set<PostField> postField = EnumSet.of(PostField.ID, PostField.SUMMARY, PostField.TITLE,
 			PostField.CREATION_TIMESTAMP, PostField.CREATOR_FIRST_NAME, PostField.CREATOR_LAST_NAME);
+	final Set<CommentField> commentField = EnumSet.of(CommentField.ID, CommentField.CREATOR,
+			CommentField.CREATION_TIMESTAMP, CommentField.TEXT);
 	
 	public String getUrl(String consumerKey, String consumerSecret, String redirectUrl, String userName) throws IOException {
 		String authUrl = "";
@@ -216,7 +222,7 @@ public class LinkedinConnectionClass {
 	}
 	
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ArrayList<HashMap> getDiscussions(String userToken, String userTokenSecret,String groupId, int count, Date modifiedDate) {
+	public ArrayList<HashMap> getDiscussions(String userToken, String userTokenSecret, String groupId, int count, Date modifiedDate) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
 		Posts post = null;
 		if(count != 0 && modifiedDate == null ) 
@@ -247,5 +253,67 @@ public class LinkedinConnectionClass {
 			groupDiscussions.add(discussion);
 		}
 		return groupDiscussions;
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public HashMap addGroupDiscussion(String userToken, String userTokenSecret, String groupId, String title, String summary) {
+		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
+		client.createPost(groupId, title, summary);
+		
+		Posts post = client.getPostsByGroup(groupId, postField, 0, 1);
+		HashMap discussionIdTime = new HashMap();
+		discussionIdTime.put("id",post.getPostList().get(0).getId());
+		discussionIdTime.put("time",post.getPostList().get(0).getCreationTimestamp());
+		discussionIdTime.put("by", post.getPostList().get(0).getCreator().getFirstName()
+				+ " " + post.getPostList().get(0).getCreator().getLastName());
+		
+		return discussionIdTime;
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public ArrayList<HashMap> getDiscussionComments(String userToken, String userTokenSecret, String discussionId) {
+		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
+		Comments cmnt = client.getPostComments(discussionId, commentField);
+		Comments comments = client.getPostComments(discussionId, commentField, 0, Integer.parseInt(cmnt.getTotal().toString()) );
+		ArrayList<HashMap> commentList = new ArrayList<HashMap>();
+		HashMap comment;
+		for(int i = 0; i < comments.getTotal(); i++) {
+			Comment c = comments.getCommentList().get(i);
+			comment = new HashMap();
+			comment.put("id", c.getId());
+			comment.put("text", c.getText());
+			comment.put("time", c.getCreationTimestamp());
+			comment.put("by", c.getCreator().getFirstName() + " "+ c.getCreator().getLastName());
+			commentList.add(comment);
+		}
+		return commentList;
+	}
+	
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public HashMap addDiscussionComment(String userToken, String userTokenSecret, String discussionId, String comment) {
+		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
+		client.addPostComment(discussionId, comment);
+		Comments cmnt = client.getPostComments(discussionId, commentField);
+		Comments comments = client.getPostComments(discussionId, commentField, Integer.parseInt(cmnt.getTotal().toString()) - 1, 1);
+		HashMap commentMap = new HashMap();
+		Comment c = comments.getCommentList().get(0);
+		commentMap.put("id", c.getId());
+		commentMap.put("text", c.getText());
+		commentMap.put("time", c.getCreationTimestamp());
+		commentMap.put("by", c.getCreator().getFirstName() + " "+ c.getCreator().getLastName());
+		return commentMap;
+	}
+	
+	public boolean deleteDiscussion(String userToken, String userTokenSecret, String discussionId) {
+		boolean status = false;
+		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
+		try {
+			client.deletePost(discussionId);
+			status = true;
+		}
+		catch(Exception e) {
+			
+		}
+		return status;	
 	}
 }

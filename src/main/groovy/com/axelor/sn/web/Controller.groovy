@@ -136,10 +136,7 @@ class Controller {
 		response.flash = acknowledgement
 	}
 
-	/**
-	 *This function is used to obtain the Memberships to a Group from Linkedin 
-	 */
-	@Transactional
+	 //This function is used to obtain the Memberships to a Group from Linkedin 
 	void getMembership(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		String acknowledgement = LinkedinService.getMembership(user)
@@ -165,113 +162,38 @@ class Controller {
 		context.setDiscussions(lstDiscussions)
 		response.values = context
 	}
+	
+	//This function is used to post a new discussion to a particular Group
+   void postDiscussion(ActionRequest request, ActionResponse response) {
+	   def context = request.context as GroupDiscussion
+	   if(context.getId() == null) 	{
+		   User user = request.context.get("__user__")
+		   String title = request.context.get("discussionTitle")
+		   String summary = request.context.get("discussionSummary")
+		   GroupMember groupMember = request.context.get("groupName")
+		   String groupId = groupMember.groupId
+		   HashMap discussionIdTime = LinkedinService.addGroupDiscussion(title, summary, groupId, user)
+		   String discussionId = discussionIdTime.get("id").toString()
+		   DateTime date = new DateTime(discussionIdTime.get("time"))
+		   String discussionBy = discussionIdTime.get("by").toString()
+		   response.values = ["discussionId" : discussionId, "discussionTime" : date, "discussionBy" : discussionBy]
+		   response.flash = "Succesfully Posted to Group "+groupMember.groupName.toUpperCase()+"..."
+	   }
+   }
 
-	/**
-	 * This function is used to get the comments from a particular Discussion 
-	 */
-	@Transactional
+	 // This function is used to get the comments from a particular Discussion 
 	void getDiscussionComments(ActionRequest request, ActionResponse response) {
-		List<GroupDiscussionComments> posts = request.context.get("discussionComments")
-		int start = posts.size()
 		User user = request.context.get("__user__")
-		String postId = request.context.get("discussionId")
 		GroupDiscussion groupDiscussion = request.context.get("__self__")
-		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-		if(snType != null) {
-			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-				if(applicationCredential != null) {
-					String consumerKeyValue = applicationCredential.apikey
-					String consumerSecretValue = applicationCredential.apisecret
-					String userToken = personalCredential.userToken
-					String userTokenSecret = personalCredential.userTokenSecret
-					LinkedinService.getDiscussionComments(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue,
-						user, groupDiscussion, snType, start)
-					response.flash = "Comments Fetched Successfully..."
-				}
-				else
-					throw new Exception("No Application Defined")
-			}
-			else
-				throw new Exception("Please Login First")
-		}
-		else
-			throw new Exception("Network Type not Found...")
-	}
-
-	/**
-	 *This function is used to post a new discussion to a particular Group 
-	 */
-	@Transactional
-	void postDiscussion(ActionRequest request, ActionResponse response) {
-		def context = request.context as GroupDiscussion
-		if(context.getId() == null) 	{
-			User user = request.context.get("__user__")
-			String title = request.context.get("discussionTitle")
-			String summary = request.context.get("discussionSummary")
-			GroupMember groupMember = request.context.get("groupName")
-			String groupId = groupMember.groupId
-			SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-			if(snType != null)	{
-				PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-				if(personalCredential !=null) {
-					ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-					if(applicationCredential != null) {
-						String consumerKeyValue = applicationCredential.apikey
-						String consumerSecretValue = applicationCredential.apisecret
-						String userToken = personalCredential.userToken
-						String userTokenSecret = personalCredential.userTokenSecret
-						String postIdTime = LinkedinService.addGroupDiscussion(userToken, userTokenSecret, consumerKeyValue,
-							consumerSecretValue, title, summary, groupId)
-						String[] array = postIdTime.split(":")
-						DateTime date = new DateTime(Long.parseLong(array[1]));
-						response.values = ["discussionId":array[0],"discussionTime":date,"discussionBy":array[2]]
-						response.flash = "Succesfully Posted to Group "+groupMember.groupName.toUpperCase()+"..."
-					}
-					else
-						throw new Exception("No Application Defined")
-				}
-				else
-					throw new Exception("Please Login First")
-			}
-			else
-				throw new Exception("Network Type not Found...")
-		}
+		LinkedinService.getDiscussionComments(user, groupDiscussion)
 	}
 
 	//This function is used to add anew comment on a particular Discussion in a group
-	@Transactional
 	void addDiscussionComment(ActionRequest request, ActionResponse response) {
-		List<GroupDiscussionComments> lstGroupDiscussionComments = request.context.get("discussionComments")
-		int start = lstGroupDiscussionComments.size()
-		String discussionId = request.context.get("discussionId")
 		String comment = request.context.get("comment")
 		User user = request.context.get("__user__")
 		GroupDiscussion groupDiscussion = request.context.get("__self__")
-
-		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-		if(snType != null) {
-			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-			if(personalCredential != null)	{
-				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-				if(applicationCredential != null) {
-					String consumerKeyValue = applicationCredential.apikey
-					String consumerSecretValue = applicationCredential.apisecret
-					String userToken = personalCredential.userToken
-					String userTokenSecret = personalCredential.userTokenSecret
-					LinkedinService.addDiscussionComment(userToken, userTokenSecret, consumerKeyValue, consumerSecretValue,
-						user, groupDiscussion, discussionId, comment,start,snType)
-					response.flash = "Comment Added..."
-				}
-				else
-					throw new Exception("No Application Defined")
-			}
-			else
-				throw new Exception("Please Login First")
-		}
-		else
-			throw new Exception("Network Type not Found...")
+		LinkedinService.addDiscussionComment(user, groupDiscussion, comment)
 	}
 
 	//This function refreshes the view with Discussion Comments
@@ -288,31 +210,14 @@ class Controller {
 	}
 
 	//This function is used to delete a discussion from Linkedin
-	@Transactional
 	void deleteDiscussion(ActionRequest request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		List lstIdValues = request.context.get("_ids")
-
-		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
-		if(snType != null) {
-			PersonalCredential personalCredential = LinkedinService.getPersonalCredential(user, snType)
-			if(personalCredential != null) {
-				ApplicationCredentials applicationCredential = LinkedinService.getApplicationCredential(snType)
-				if(applicationCredential != null) {
-					String consumerKeyValue = applicationCredential.apikey
-					String consumerSecretValue = applicationCredential.apisecret
-					String userToken = personalCredential.userToken
-					String userTokenSecret = personalCredential.userTokenSecret
-					String str = LinkedinService.deleteDiscussion(lstIdValues, userToken, userTokenSecret, consumerKeyValue, consumerSecretValue, user)
-					response.flash = str
-				}
-				else
-					throw new Exception("No Application Defined")
-			}
-			else
-				throw new Exception("Please Login First")
-		}
-		else
-			throw new Exception("Network Type not Found...")
+		response.flash = LinkedinService.deleteDiscussion(lstIdValues, user)
+	}
+	
+	void unAuthorizeApp(ActionRequest request, ActionResponse response) {
+		User user = request.context.get("__user__")
+		response.flash = LinkedinService.unAuthorize(user)
 	}
 }

@@ -16,6 +16,7 @@ import javax.persistence.EntityTransaction;
 import com.axelor.auth.db.User;
 import com.axelor.db.JPA;
 import com.axelor.sn.db.Comments;
+import com.axelor.sn.db.DirectMessages;
 import com.axelor.sn.db.NetworkUpdates;
 import com.axelor.sn.db.PostUpdates;
 import com.axelor.sn.db.ApplicationCredentials;
@@ -60,14 +61,7 @@ public class SNService {
 	@Inject
 	LinkedinConnectionClass LinkedinConnect;
 	
-	static LinkedInApiClient client = null;
-	static LinkedInApiClientFactory factory = null;
-	static LinkedInAccessToken accessToken = null;
-	static LinkedInRequestToken requestToken = null;
-	static LinkedInOAuthService oauthService = null;
 	static SocialNetworking socialType = null;
-	static String consumerKeyValue = null;
-	static String consumerSecretValue = null;
 	SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
 	EntityManager em = JPA.em();
 	
@@ -497,120 +491,202 @@ public class SNService {
 		}
 	}
 
-	static String addGroupDiscussion(String userToken, String userTokenSecret, String consumerKeyValue, String consumerSecretValue, String title,
-			String summary, String groupId) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		client.createPost(groupId, title, summary);
-
-		Set<PostField> postField = EnumSet.of(PostField.ID, PostField.SUMMARY,
-				PostField.TITLE, PostField.TYPE, PostField.CREATION_TIMESTAMP,
-				PostField.CREATOR_FIRST_NAME, PostField.CREATOR_LAST_NAME);
-
-		Posts post = client.getPostsByGroup(groupId, postField, 0, 1);
-		String discussionIdTime = post.getPostList().get(0).getId() + ":"
-				+ post.getPostList().get(0).getCreationTimestamp() + ":"
-				+ post.getPostList().get(0).getCreator().getFirstName() + " "
-				+ post.getPostList().get(0).getCreator().getLastName();
-		return discussionIdTime;
+	@SuppressWarnings("rawtypes")
+	public HashMap addGroupDiscussion( String title, String summary, String groupId, User user) throws Exception {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					HashMap discussionIdTime = LinkedinConnect.addGroupDiscussion(userToken, userTokenSecret, groupId, title, summary);
+					return discussionIdTime;
+				}
+			}
+		}
 	}
 
-	static void addDiscussionComment(String userToken, String userTokenSecret, String consumerKeyValue, String consumerSecretValue, User user,
-			GroupDiscussion groupDiscussion, String discussionId, String comment, int start, SocialNetworking snType) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		client.addPostComment(discussionId, comment);
-
-		getDiscussionComments(userToken, userTokenSecret, consumerKeyValue,
-				consumerSecretValue, user, groupDiscussion, snType, start);
-	}
-
+	@SuppressWarnings("rawtypes")
 	@Transactional
-	static void getDiscussionComments(String userToken, String userTokenSecret, String consumerKeyValue, String consumerSecretValue, User user,
-			GroupDiscussion groupDiscussion, SocialNetworking snType, int start) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-
-		LinkedinParameters parameters = null;
-		List<GroupDiscussionComments> lstGroupDiscussionComments = null;
-		com.google.code.linkedinapi.schema.Comments comments = null;
-
-		lstGroupDiscussionComments = GroupDiscussionComments.all().filter("curUser=? and discussion=?", user, groupDiscussion).fetch();
-		List<String> lstCommentIds = new ArrayList<String>();
-
-		for (int i = 0; i < lstGroupDiscussionComments.size(); i++)
-			lstCommentIds.add(lstGroupDiscussionComments.get(i).getCommentId());
-
-		Set<CommentField> commentField = EnumSet.of(CommentField.ID,
-				CommentField.CREATOR, CommentField.CREATION_TIMESTAMP,
-				CommentField.TEXT);
-		try {
-			parameters = LinkedinParameters.all().filter("curUser=? and snType=?", user, snType).fetchOne();
-			if (parameters == null) {
-				comments = client.getPostComments(groupDiscussion.getDiscussionId(), commentField, start, 10);
-			} else if (parameters.getRecordNumbers() == 0) {
-				comments = client.getPostComments(groupDiscussion.getDiscussionId(), commentField, start, 10);
-			} else if (parameters.getRecordNumbers() != 0) {
-				comments = client.getPostComments( groupDiscussion.getDiscussionId(), commentField, start, parameters.getRecordNumbers());
-			}
-		} catch (NullPointerException e) {
-			return;
-		}
-
-		for (com.google.code.linkedinapi.schema.Comment comment : comments.getCommentList()) {
-			if (!lstCommentIds.contains(comment.getId())) {
-				GroupDiscussionComments groupDiscussionComment = new GroupDiscussionComments();
-				DateTime date = new DateTime(comment.getCreationTimestamp());
-				groupDiscussionComment.setCommentId(comment.getId());
-				groupDiscussionComment.setComment(comment.getText());
-				groupDiscussionComment.setCommentTime(date);
-				groupDiscussionComment.setByUser(comment.getCreator().getFirstName()
-						+ " "+ comment.getCreator().getLastName());
-				groupDiscussionComment.setCurUser(user);
-				groupDiscussionComment.setDiscussion(groupDiscussion);
-				groupDiscussionComment.persist();
+	public void addDiscussionComment( User user, GroupDiscussion groupDiscussion, String comment) throws Exception {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					String discussionId = groupDiscussion.getDiscussionId();
+					HashMap commentMap = LinkedinConnect.addDiscussionComment(userToken, userTokenSecret, discussionId, comment);
+					GroupDiscussionComments groupDiscussionComment = new GroupDiscussionComments();
+					DateTime date = new DateTime(commentMap.get("time"));
+					groupDiscussionComment.setCommentId(commentMap.get("id").toString());
+					groupDiscussionComment.setComment(commentMap.get("text").toString());
+					groupDiscussionComment.setCommentTime(date);
+					groupDiscussionComment.setByUser(commentMap.get("by").toString());
+					groupDiscussionComment.setCurUser(user);
+					groupDiscussionComment.setDiscussion(groupDiscussion);
+					groupDiscussionComment.persist();
+				}
 			}
 		}
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Transactional
-	static String deleteDiscussion(List<Integer> lstIdValues, String userToken, String userTokenSecret, String consumerKeyValue,
-			String consumerSecretValue, User user) {
-		factory = LinkedInApiClientFactory.newInstance(consumerKeyValue, consumerSecretValue);
-		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-
-		EntityManager em = JPA.em();
-		EntityTransaction tx = em.getTransaction();
-		tx.begin();
-
-		String message = "";
-
-		for (int i = 0; i < lstIdValues.size(); i++) {
-			GroupDiscussion groupDiscussion = GroupDiscussion.all().filter("id=?", lstIdValues.get(i)).fetchOne();
-			try {
-				client.deletePost(groupDiscussion.getDiscussionId()); 
-				em.remove(groupDiscussion);
-				message = "Deleted Successfully...";
-			} catch (LinkedInApiClientException e) {
-				message = "Something Went Wrong...: " + e.getMessage();
+	public void getDiscussionComments( User user, GroupDiscussion groupDiscussion) throws Exception {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					String discussionId = groupDiscussion.getDiscussionId();
+					
+					ArrayList<HashMap> commentList = LinkedinConnect.getDiscussionComments(userToken, userTokenSecret, discussionId);
+					List<String> lstCommentIds = em.createQuery("SELECT a.commentId FROM GroupDiscussionComments a WHERE a.curUser="
+							+ user.getId() + " AND a.discussion=" + groupDiscussion.getId()).getResultList();
+					HashMap comment = new HashMap();
+					for(int i = 0; i < commentList.size(); i++) {
+						comment = commentList.get(i);
+						if (!lstCommentIds.contains(comment.get("id").toString())) {
+							GroupDiscussionComments groupDiscussionComment = new GroupDiscussionComments();
+							DateTime date = new DateTime(comment.get("time"));
+							groupDiscussionComment.setCommentId(comment.get("id").toString());
+							groupDiscussionComment.setComment(comment.get("text").toString());
+							groupDiscussionComment.setCommentTime(date);
+							groupDiscussionComment.setByUser(comment.get("by").toString());
+							groupDiscussionComment.setCurUser(user);
+							groupDiscussionComment.setDiscussion(groupDiscussion);
+							groupDiscussionComment.persist();
+						}
+					}
+				}
 			}
 		}
-		tx.commit();
-		return message;
+	}
+	
+	@Transactional
+	public String deleteDiscussion(List<Integer> lstIdValues, User user) throws Exception {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null)
+				throw new Exception("Please Login First");
+			else {
+				ApplicationCredentials applicationCredential = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+				if (applicationCredential == null)
+					throw new Exception("No Application Defined");
+				else {
+					String userToken = personalCredential.getUserToken();
+					String userTokenSecret = personalCredential.getUserTokenSecret();
+					for (int i = 0; i < lstIdValues.size(); i++) {
+						GroupDiscussion discussion = GroupDiscussion.find(lstIdValues.get(i).longValue());
+						boolean status = LinkedinConnect.deleteDiscussion(userToken, userTokenSecret,discussion.getDiscussionId());
+						if(status) {
+							em.remove(discussion);
+						}
+					}
+					return "Group Discussions Deleted Successfully ";
+				}
+			}
+		}
 	}
 
-	static List<Comments> refreshComments(PostUpdates postUpdates) {
+	public List<Comments> refreshComments(PostUpdates postUpdates) {
 		List<Comments> lstComment = Comments.all().filter("contentId=?", postUpdates).fetch();
 		return lstComment;
 	}
 
-	static List<GroupDiscussion> refreshDiscussions(GroupMember member) {
+	public List<GroupDiscussion> refreshDiscussions(GroupMember member) {
 		List<GroupDiscussion> lstDiscussion = GroupDiscussion.all().filter("groupName=?", member).fetch();
 		return lstDiscussion;
 	}
 
-	static List<GroupDiscussionComments> refreshDiscussionComments(GroupDiscussion discussion) {
+	public List<GroupDiscussionComments> refreshDiscussionComments(GroupDiscussion discussion) {
 		List<GroupDiscussionComments> lstGroupDiscussionComment = GroupDiscussionComments.all().filter("discussion=?", discussion).fetch();
 		return lstGroupDiscussionComment;
+	}
+	
+	@Transactional
+	public String unAuthorize(User user) throws Exception {
+		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
+		if (snType == null)
+			throw new Exception("Network Type Not Found");
+		else {
+			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
+			if (personalCredential == null) {
+				throw new Exception("You Have not Authorized the Application...");
+			}
+			else {
+				List<GroupDiscussionComments> discussionComments = GroupDiscussionComments.all().filter("curUSer=?", user).fetch();
+				for(int i = 0; i < discussionComments.size(); i++) {
+					em.remove(GroupDiscussionComments.find(discussionComments.get(i).getId().longValue()));
+				}
+				
+				List<GroupDiscussion> discussion = GroupDiscussion.all().filter("curUSer=?", user).fetch();
+				for(int i = 0; i < discussion.size(); i++) {
+					em.remove(GroupDiscussion.find(discussion.get(i).getId().longValue()));
+				}
+				
+				List<GroupMember> groupMember = GroupMember.all().filter("curUSer=?", user).fetch();
+				for(int i = 0; i < groupMember.size(); i++) {
+					em.remove(GroupMember.find(groupMember.get(i).getId().longValue()));
+				}
+				
+				List<NetworkUpdates> networkUpdates = NetworkUpdates.all().filter("curUSer=?", user).fetch();
+				for(int i = 0; i < networkUpdates.size(); i++) {
+					em.remove(NetworkUpdates.find(networkUpdates.get(i).getId().longValue()));
+				}
+				
+				List<Comments> comments = Comments.all().filter("curUSer=?", user).fetch();
+				for(int i = 0; i < comments.size(); i++) {
+					em.remove(Comments.find(comments.get(i).getId().longValue()));
+				}
+				
+				List<PostUpdates> postUpdates = PostUpdates.all().filter("curUSer=?", user).fetch();
+				for(int i = 0; i < postUpdates.size(); i++) {
+					em.remove(PostUpdates.find(postUpdates.get(i).getId().longValue()));
+				}
+				
+				List<DirectMessages> directMessages = DirectMessages.all().filter("curUSer=?", user).fetch();
+				for(int i = 0; i < directMessages.size(); i++) {
+					em.remove(DirectMessages.find(directMessages.get(i).getId().longValue()));
+				}
+				
+				List<ImportContact> importContact = ImportContact.all().filter("curUSer=?", user).fetch();
+				for(int i = 0; i < importContact.size(); i++) {
+					em.remove(ImportContact.find(importContact.get(i).getId().longValue()));
+				}
+				
+				em.remove(personalCredential);
+			}
+			return "Successfully UnAuthorized...";
+		}
 	}
 }
