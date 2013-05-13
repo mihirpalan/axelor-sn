@@ -152,8 +152,8 @@ public class SNService {
 					String userToken = personalCredential.getUserToken();
 					String userTokenSecret = personalCredential.getUserTokenSecret();
 					ArrayList<HashMap> users = LinkedinConnect.getUserConnections(userToken, userTokenSecret);
-					List<String> lstUserId = (List<String>) em.createQuery("SELECT a.userId FROM ImportContact a WHERE a.curUser="
-									+ user.getId() + " AND a.snType="+ snType.getId()).getResultList();
+					List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.userId FROM ImportContact contact " +
+							"WHERE contact.curUser=" + user.getId() + " AND contact.snType="+ snType.getId()).getResultList();
 					HashMap<String, String> userDetails = new HashMap<String, String>();
 					for (int i = 0; i < users.size(); i++) {
 						userDetails = (HashMap<String, String>) users.get(i);
@@ -238,13 +238,13 @@ public class SNService {
 					String userTokenSecret = personalCredential.getUserTokenSecret();
 					ArrayList<HashMap> commentList = LinkedinConnect.getComments(userToken, userTokenSecret, contentId);
 
-					List<String> lstUserId = (List<String>) em.createQuery("SELECT a.userId FROM ImportContact a WHERE a.curUser="
-							+ user.getId() + " AND a.snType="+ snType.getId()).getResultList();
+					List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.userId FROM ImportContact contact " +
+							"WHERE contact.curUser=" + user.getId() + " AND contact.snType="+ snType.getId()).getResultList();
 
 					PostUpdates postUpdate = PostUpdates.all().filter("contentId=?", contentId).fetchOne();
 					
-					List<String> lstCommentsId = em.createQuery("SELECT a.commentId FROM Comments a WHERE a.curUser="
-							+ user.getId() + " AND a.contentId=" + postUpdate.getId()).getResultList();
+					List<String> lstCommentsId = em.createQuery("SELECT comment.commentId FROM Comments comment " +
+							"WHERE comment.curUser=" + user.getId() + " AND comment.contentId=" + postUpdate.getId()).getResultList();
 
 					HashMap comments = new HashMap();
 					for(int i = 0; i < commentList.size(); i++) {
@@ -355,11 +355,11 @@ public class SNService {
 					}
 					ArrayList<HashMap> networkUpdatesList = LinkedinConnect.fetchNetworkUpdates(userToken, userTokenSecret, count, startDate, endDate);
 					
-					List<String> lstUserId = (List<String>) em.createQuery("SELECT a.userId FROM ImportContact a WHERE a.curUser="
-							+ user.getId() + " AND a.snType="+ snType.getId()).getResultList();
+					List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.userId FROM ImportContact contact " +
+							"WHERE contact.curUser=" + user.getId() + " AND contact.snType="+ snType.getId()).getResultList();
 					
-					List<String> lstNetworkUpdateIds = (List<String>) em.createQuery("SELECT a.contentId FROM NetworkUpdates a WHERE a.curUser="
-							+ user.getId()).getResultList();
+					List<String> lstNetworkUpdateIds = (List<String>) em.createQuery("SELECT networkUpdate.contentId FROM NetworkUpdates networkUpdate"
+							+ " WHERE networkUpdate.curUser=" + user.getId()).getResultList();
 					
 					HashMap networkUpdate = new HashMap();
 					for(int i = 0; i < networkUpdatesList.size(); i++) {
@@ -403,7 +403,8 @@ public class SNService {
 					String userToken = personalCredential.getUserToken();
 					String userTokenSecret = personalCredential.getUserTokenSecret();
 					ArrayList<HashMap> groupMembers = LinkedinConnect.getMemberships(userToken, userTokenSecret);
-					List<String> lstGroupIds = em.createQuery("SELECT a.groupId FROM GroupMember a WHERE a.curUser=" + user.getId()).getResultList();
+					List<String> lstGroupIds = em.createQuery("SELECT member.groupId FROM GroupMember member " +
+							"WHERE member.curUser=" + user.getId()).getResultList();
 					HashMap members = new HashMap();
 					for(int i = 0; i < groupMembers.size(); i++) {
 						members = groupMembers.get(i);
@@ -466,8 +467,8 @@ public class SNService {
 						modifiedDate = null;
 					}
 					ArrayList<HashMap> groupDiscussions = LinkedinConnect.getDiscussions(userToken, userTokenSecret, groupId, count, modifiedDate);
-					List<String> lstGroupDiscussionIds = em.createQuery("SELECT a.discussionId FROM GroupDiscussion a WHERE a.curUser="
-							+ user.getId() + " AND a.groupName=" + groupMember.getId()).getResultList();
+					List<String> lstGroupDiscussionIds = em.createQuery("SELECT discussion.discussionId FROM GroupDiscussion discussion " +
+							"WHERE discussion.curUser=" + user.getId() + " AND discussion.groupName=" + groupMember.getId()).getResultList();
 					
 					HashMap discussion = new HashMap();
 					for(int i = 0; i < groupDiscussions.size(); i++) {
@@ -567,8 +568,8 @@ public class SNService {
 					String discussionId = groupDiscussion.getDiscussionId();
 					
 					ArrayList<HashMap> commentList = LinkedinConnect.getDiscussionComments(userToken, userTokenSecret, discussionId);
-					List<String> lstCommentIds = em.createQuery("SELECT a.commentId FROM GroupDiscussionComments a WHERE a.curUser="
-							+ user.getId() + " AND a.discussion=" + groupDiscussion.getId()).getResultList();
+					List<String> lstCommentIds = em.createQuery("SELECT discussionComments.commentId FROM GroupDiscussionComments discussionComments " +
+							"WHERE discussionComments.curUser=" + user.getId() + " AND a.discussion=" + groupDiscussion.getId()).getResultList();
 					HashMap comment = new HashMap();
 					for(int i = 0; i < commentList.size(); i++) {
 						comment = commentList.get(i);
