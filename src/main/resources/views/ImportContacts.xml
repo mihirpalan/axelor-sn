@@ -20,12 +20,12 @@
 	<form name="import-contacts-form" title="Contacts" cols="4"
 		onNew="action-import-contact,action-user3" model="com.axelor.sn.db.ImportContact">
 		<toolbar>
-			<button name="sync" title="Synchronise" onClick="action-import-contact" />
+<!-- 			<button name="sync" title="Synchronise" onClick="action-import-contact" /> -->
 			<button name="new" title="" hidden="true" />
 			<button name="search" title="" hidden="true" />
 			<button name="copy" title="" hidden="true" />
 		</toolbar>
-		<field name="userId" title="Linkedin-ID" readonly="true"
+		<field name="snUserId" title="Linkedin-ID" readonly="true"
 			colSpan="3" />
 		<break />
 		<field name="snType" title="Network Type" readonly="true"

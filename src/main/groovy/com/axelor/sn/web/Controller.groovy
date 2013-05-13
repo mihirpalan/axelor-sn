@@ -72,7 +72,7 @@ class Controller {
 	void sendMessage(ActionRequest  request, ActionResponse response) {
 		User user = request.context.get("__user__")
 		ImportContact contact = request.context.get("userid")
-		String userId = contact.getUserId()
+		String userId = contact.getSnUserId()
 		String subject = request.context.get("subject")
 		String message = request.context.get("msgcontent")
 		String acknowlegement = LinkedinService.sendMessage(userId, subject, message, user)

@@ -4,14 +4,10 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 
 import com.axelor.auth.db.User;
 import com.axelor.db.JPA;
@@ -28,29 +24,6 @@ import com.axelor.sn.db.LinkedinParameters;
 import com.axelor.sn.db.PersonalCredential;
 import com.axelor.sn.db.SocialNetworking;
 import com.axelor.sn.likedin.LinkedinConnectionClass;
-import com.gargoylesoftware.htmlunit.html.xpath.LowerCaseFunction;
-import com.google.code.linkedinapi.client.LinkedInApiClient;
-import com.google.code.linkedinapi.client.LinkedInApiClientException;
-import com.google.code.linkedinapi.client.LinkedInApiClientFactory;
-import com.google.code.linkedinapi.client.enumeration.CommentField;
-import com.google.code.linkedinapi.client.enumeration.GroupMembershipField;
-import com.google.code.linkedinapi.client.enumeration.NetworkUpdateType;
-import com.google.code.linkedinapi.client.enumeration.PostField;
-import com.google.code.linkedinapi.client.enumeration.ProfileField;
-import com.google.code.linkedinapi.client.oauth.LinkedInAccessToken;
-import com.google.code.linkedinapi.client.oauth.LinkedInOAuthService;
-import com.google.code.linkedinapi.client.oauth.LinkedInRequestToken;
-import com.google.code.linkedinapi.schema.Connections;
-import com.google.code.linkedinapi.schema.GroupMembership;
-import com.google.code.linkedinapi.schema.GroupMemberships;
-import com.google.code.linkedinapi.schema.Network;
-import com.google.code.linkedinapi.schema.Person;
-import com.google.code.linkedinapi.schema.Post;
-import com.google.code.linkedinapi.schema.Posts;
-import com.google.code.linkedinapi.schema.Update;
-import com.google.code.linkedinapi.schema.UpdateComment;
-import com.google.code.linkedinapi.schema.UpdateComments;
-import com.google.code.linkedinapi.schema.Updates;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 
@@ -152,14 +125,14 @@ public class SNService {
 					String userToken = personalCredential.getUserToken();
 					String userTokenSecret = personalCredential.getUserTokenSecret();
 					ArrayList<HashMap> users = LinkedinConnect.getUserConnections(userToken, userTokenSecret);
-					List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.userId FROM ImportContact contact " +
+					List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.snUserId FROM ImportContact contact " +
 							"WHERE contact.curUser=" + user.getId() + " AND contact.snType="+ snType.getId()).getResultList();
 					HashMap<String, String> userDetails = new HashMap<String, String>();
 					for (int i = 0; i < users.size(); i++) {
 						userDetails = (HashMap<String, String>) users.get(i);
 						if (!lstUserId.contains(userDetails.get("userId").toString())) {
 							ImportContact contact = new ImportContact();
-							contact.setUserId(userDetails.get("userId"));
+							contact.setSnUserId(userDetails.get("userId"));
 							contact.setName(userDetails.get("userName"));
 							contact.setSnType(snType);
 							contact.setCurUser(user);
@@ -238,7 +211,7 @@ public class SNService {
 					String userTokenSecret = personalCredential.getUserTokenSecret();
 					ArrayList<HashMap> commentList = LinkedinConnect.getComments(userToken, userTokenSecret, contentId);
 
-					List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.userId FROM ImportContact contact " +
+					List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.snUserId FROM ImportContact contact " +
 							"WHERE contact.curUser=" + user.getId() + " AND contact.snType="+ snType.getId()).getResultList();
 
 					PostUpdates postUpdate = PostUpdates.all().filter("contentId=?", contentId).fetchOne();
@@ -252,7 +225,7 @@ public class SNService {
 						if(lstUserId.contains(comments.get("fromUser").toString())) {
 							if(!lstCommentsId.contains(comments.get("commentId").toString())) {
 								Comments comment = new Comments();
-								ImportContact contact = ImportContact.all().filter("userId=? and curUser=?",
+								ImportContact contact = ImportContact.all().filter("snUserId=? and curUser=?",
 										comments.get("fromUser").toString(), user).fetchOne();
 								DateTime date = new DateTime(comments.get("commentTime"));
 								comment.setContentId(postUpdate);
@@ -289,7 +262,7 @@ public class SNService {
 					String userTokenSecret = personalCredential.getUserTokenSecret();
 					HashMap comments = LinkedinConnect.addStatusComment(userToken, userTokenSecret, contentId, comment);
 					PostUpdates postUpdate = PostUpdates.all().filter("contentId=?", contentId).fetchOne();
-					ImportContact contact = ImportContact.all().filter("userId=? and curUser=?", comments.get("fromUser").toString(), user).fetchOne();
+					ImportContact contact = ImportContact.all().filter("snUserId=? and curUser=?", comments.get("fromUser").toString(), user).fetchOne();
 					
 					Comments commentObject = new Comments();
 					DateTime date = new DateTime(comments.get("commentTime"));
@@ -355,7 +328,7 @@ public class SNService {
 					}
 					ArrayList<HashMap> networkUpdatesList = LinkedinConnect.fetchNetworkUpdates(userToken, userTokenSecret, count, startDate, endDate);
 					
-					List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.userId FROM ImportContact contact " +
+					List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.snUserId FROM ImportContact contact " +
 							"WHERE contact.curUser=" + user.getId() + " AND contact.snType="+ snType.getId()).getResultList();
 					
 					List<String> lstNetworkUpdateIds = (List<String>) em.createQuery("SELECT networkUpdate.contentId FROM NetworkUpdates networkUpdate"
@@ -367,7 +340,7 @@ public class SNService {
 						if (lstUserId.contains(networkUpdate.get("fromUser").toString())) {
 							if (!lstNetworkUpdateIds.contains(networkUpdate.get("contentId").toString())) {
 								NetworkUpdates networkUpdateObject = new NetworkUpdates();
-								ImportContact fromUser = ImportContact.all().filter("userId=? and curUser=?",networkUpdate.get("fromUser").toString(), user).fetchOne();
+								ImportContact fromUser = ImportContact.all().filter("snUserId=? and curUser=?",networkUpdate.get("fromUser").toString(), user).fetchOne();
 								DateTime date = new DateTime(networkUpdate.get("timeStamp"));
 								networkUpdateObject.setContentId(networkUpdate.get("contentId").toString());
 								networkUpdateObject.setContent(networkUpdate.get("content").toString());
@@ -403,8 +376,8 @@ public class SNService {
 					String userToken = personalCredential.getUserToken();
 					String userTokenSecret = personalCredential.getUserTokenSecret();
 					ArrayList<HashMap> groupMembers = LinkedinConnect.getMemberships(userToken, userTokenSecret);
-					List<String> lstGroupIds = em.createQuery("SELECT member.groupId FROM GroupMember member " +
-							"WHERE member.curUser=" + user.getId()).getResultList();
+					List<String> lstGroupIds = (List<String>) em.createQuery("SELECT grpMember.groupId FROM GroupMember grpMember WHERE grpMember.curUser=" + user.getId()).getResultList();
+					System.out.println(lstGroupIds);
 					HashMap members = new HashMap();
 					for(int i = 0; i < groupMembers.size(); i++) {
 						members = groupMembers.get(i);
@@ -569,7 +542,7 @@ public class SNService {
 					
 					ArrayList<HashMap> commentList = LinkedinConnect.getDiscussionComments(userToken, userTokenSecret, discussionId);
 					List<String> lstCommentIds = em.createQuery("SELECT discussionComments.commentId FROM GroupDiscussionComments discussionComments " +
-							"WHERE discussionComments.curUser=" + user.getId() + " AND a.discussion=" + groupDiscussion.getId()).getResultList();
+							"WHERE discussionComments.curUser=" + user.getId() + " AND discussionComments.discussion=" + groupDiscussion.getId()).getResultList();
 					HashMap comment = new HashMap();
 					for(int i = 0; i < commentList.size(); i++) {
 						comment = commentList.get(i);
@@ -645,6 +618,10 @@ public class SNService {
 				throw new Exception("You Have not Authorized the Application...");
 			}
 			else {
+				LinkedinParameters parameters = LinkedinParameters.all().filter("curUser=?", user).fetchOne();
+				if(parameters != null)
+					em.remove(parameters);
+				
 				List<GroupMember> groupMember = GroupMember.all().filter("curUser=?", user).fetch();
 				for(int i = 0; i < groupMember.size(); i++) {
 					em.remove(GroupMember.find(groupMember.get(i).getId().longValue()));

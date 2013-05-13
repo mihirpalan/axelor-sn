@@ -314,7 +314,7 @@ public class SNTWTService
 				List<String> str=new ArrayList<String>();
 				for(int i=0;i<query1.size();i++)
 				{
-					str.add(query1.get(i).getUserId());
+					str.add(query1.get(i).getSnUserId());
 
 				}
 				for(int p=0;p<returnResponse.size();p+=3)
@@ -322,7 +322,7 @@ public class SNTWTService
 					if(!str.contains(returnResponse.get(p).toString()))
 					{
 						ImportContact twtcntc=new ImportContact();
-						twtcntc.setUserId(returnResponse.get(p).toString());
+						twtcntc.setSnUserId(returnResponse.get(p).toString());
 						twtcntc.setName(returnResponse.get((p+1)).toString());
 						twtcntc.setLink(returnResponse.get((p+2)).toString());
 						twtcntc.setSnType(sn);

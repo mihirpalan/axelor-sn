@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.7.xsd">
 	<module name="sn" package="com.axelor.sn.db" />
 	<entity name="ImportContact">
-		<string name="userId" title="User-Id"></string>
+		<string name="snUserId" title="User-Id"></string>
 		<string name="name" title="Name" namecolumn="true"></string>
 		<string name="link" title="Link"></string>
 <!-- 		<string name="snType" title="Social Networking Type"></string> -->

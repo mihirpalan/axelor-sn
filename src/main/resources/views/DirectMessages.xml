@@ -28,7 +28,7 @@
 		<field name="userid" title="To" colSpan="3"
 			domain="self.curUser = :curUser AND self.snType= :snType">
 			<grid title="To User">
-				<field name="userId" />
+				<field name="snUserId" />
 				<field name="name" />
 			</grid>
 		</field>
