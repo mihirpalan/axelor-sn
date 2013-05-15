@@ -66,7 +66,7 @@ public class LinkedinConnectionClass {
 //		} catch (LinkedInApiClientException e) {
 //			throw new LinkedInApiClientException("Problem with Linkedin Website");
 //		}
-		File temp = new File(userName+".txt");
+		File temp = new File("/tmp/" + userName + ".txt");
 		ObjectOutputStream outStream = new ObjectOutputStream( new FileOutputStream(temp));
 		outStream.writeObject(requestToken);
 		outStream.close();
@@ -74,7 +74,7 @@ public class LinkedinConnectionClass {
 	}
 
 	public String getUserToken(String verifier, String userName) throws IOException, ClassNotFoundException {
-		File temp = new File(userName+".txt");
+		File temp = new File("/tmp/" + userName + ".txt");
 		ObjectInputStream inStream = new ObjectInputStream(new FileInputStream(temp));
 		requestToken=(LinkedInRequestToken)inStream.readObject();
 		temp.delete();
