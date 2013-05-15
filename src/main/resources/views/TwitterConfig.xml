@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 	<grid title="Configuration" name="twt-config-grid">
 		<field name="snType"></field>
 		<field name="page"></field>
@@ -14,7 +14,9 @@
 		<field readonly="true" title="N/W Type" name="snType" hidden="true" />
 		<group cols="3">
 			<field name="page" />
+			<label title="&lt;Font Size='0.75' Color='#ff0000'&gt;Max:10&lt;/Font&gt;" />
 			<field name="content" />
+			<label title="&lt;Font Size='0.75' Color='#ff0000'&gt;Max:100&lt;/Font&gt;" />
 			<field onChange="action-latest-update,action-on-latest-update"
 				title="Latest Updates" name="since" />
 		</group>

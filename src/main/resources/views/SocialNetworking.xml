@@ -1,13 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 	<grid name="sn-grid" title="Social Networking Details">
 		<field name="name"></field>
 		<field name="website"></field>
 	</grid>
 
-	<form name="sn-form" title="Social Networking Details" cols="1">
+	<form name="sn-form" title="Social Networking Details" cols="1"
+		onSave="com.axelor.sn.web.ViewRestrictionController:lowerSnName">
 		<group title="Social Networking Details">
 			<field name="name"></field>
 			<field name="website"></field>

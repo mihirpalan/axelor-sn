@@ -346,7 +346,6 @@ public class SNService {
 								networkUpdateObject.setContent(networkUpdate.get("content").toString());
 								networkUpdateObject.setCurUser(user);
 								networkUpdateObject.setContentTime(date);
-								networkUpdateObject.setSnType(snType);
 								networkUpdateObject.setFromUser(fromUser);
 								networkUpdateObject.persist();
 							}
@@ -387,7 +386,6 @@ public class SNService {
 							groupMember.setGroupName(members.get("groupName").toString());
 							groupMember.setMembershipState(members.get("membershipState").toString());
 							groupMember.setCurUser(user);
-							groupMember.setSnType(snType);
 							
 							groupMember.persist();
 						}

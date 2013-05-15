@@ -1,21 +1,30 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
-	<grid title="Facebook Instant Message" name="fbibox-msg-grid">
-	<toolbar>
-	<button name="new" title="New" hidden="true"/>
-	<button name="edit" title="Edit" hidden="true"/>
-	<button name="btnSyn" title="Sync Messages" onClick="com.axelor.sn.web.FBController:fetchInbox"/>
-<!-- 	<button name="btnDel" title="Delete" onClick="com.axelor.sn.web.FBController:deleteInBox"/> -->
-	</toolbar>
-		
-		<field name="toName"></field>
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
+	<grid title="Facebook Inbox" name="fbibox-msg-grid">
+		<toolbar>
+			<button name="new" title="New" hidden="true" />
+			<button name="edit" title="Edit" hidden="true" />
+			<button name="btnSyn" title="Sync Messages"
+				onClick="com.axelor.sn.web.FBController:fetchInbox" />
+		</toolbar>
+		<field name="fromName"></field>
 		<field name="msgBody"></field>
-		<field name="fromId"></field>
 		<field name="sendDate"></field>
 		<field name="msgId" hidden="true"></field>
 		<field name="curUser" hidden="true"></field>
-		
 	</grid>
+
+	<form title="Facebook Inbox Message" name="fbibox-msg-form">
+		<toolbar>
+			<button name="new" title="New" hidden="true" />
+			<button name="edit" title="Edit" hidden="true" />
+		</toolbar>
+		<field name="fromName" readonly="true"></field>
+		<break/>
+		<field name="msgBody" readonly="true"></field>
+		<break/>
+		<field name="sendDate" readonly="true"></field>
+	</form>
 </object-views>

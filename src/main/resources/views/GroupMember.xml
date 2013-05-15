@@ -1,8 +1,6 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
-	
 	<grid title="Memberships" name="linkedin-group-membership-grid">
 		<toolbar>
 			<button name="memberships" title="Memberships" onClick="action-get-membership" />
@@ -11,7 +9,6 @@
 		<field name="groupName" title="Name" />
 		<field name="membershipState" title="Membership State" />
 	</grid>
-	
 	<form title="Membership" name="linkedin-group-membership-form"
 		cols="4" onNew="action-view-discussion" onLoad="action-view-discussion">
 		<toolbar>
@@ -40,7 +37,6 @@
 			</page>
 		</notebook>
 	</form>
-	
 	<action-method name="action-get-membership">
 		<call class="com.axelor.sn.web.Controller" method="getMembership" />
 	</action-method>

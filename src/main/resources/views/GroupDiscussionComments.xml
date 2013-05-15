@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
-	
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">	
 	<grid name="linkedin-discussion-comment-grid" title="All Comments"
 		model="com.axelor.sn.db.GroupDiscussionComments">
 		<field name="comment" title="Comment" />
@@ -16,5 +14,4 @@
 		<field name="byUser" title="By" />
 		<field name="curUser" />
 	</form>
-
 </object-views>

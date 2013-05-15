@@ -2,24 +2,20 @@
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
-
-	<grid title="Friend Request" name="fb-req-grid">
-
+	<grid title="Notifications" name="fb-notif-grid"
+		model="com.axelor.sn.db.FacebookNotification" orderBy="-notifId">
 		<toolbar>
 			<button name="new" title="New" hidden="true" />
 			<button name="edit" title="Edit" hidden="true" />
-			<button name="delete" title="Delete" />
-			<button name="retriveRequest" title="Friend Request"
-				onClick="com.axelor.sn.web.FBController:getFriendRequest" />
+			<button name="save" title="Save" hidden="true" />
+			<button name="fire-notif" title="Notification"
+				onClick="com.axelor.sn.web.FBController:getNotificationsFromFB" />
 		</toolbar>
-		<field name="name"></field>
-		<field name="gender"></field>
+		<field name="notifId"></field>
+		<field name="title"></field>
 		<field name="link"></field>
+		<field name="updateTime"></field>
 		<field name="curUser" hidden="true"></field>
 	</grid>
-	<form title="Detail View" name="fb-req-form">
-		<field name="name" readonly="true"></field>
-		<field name="gender" readonly="true"></field>
-		<field name="link" readonly="true"></field>
-	</form>
 </object-views>
+

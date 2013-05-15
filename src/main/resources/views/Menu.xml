@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
 	<!-- PARENT MENU -->
 	<menuitem name="menu-sn" title="Social Networking" priority="100"
@@ -15,11 +15,6 @@
 	<menuitem name="menu-fb-sn" title="Facebook" parent="menu-sn"
 		icon="img/facebook.jpg" />
 
-	<!-- <menuitem name="menu-dome" title="Demo Test" parent="menu-fb-sn" action="action-demo"/> -->
-	<!-- <action-view name="action-demo" model="com.axelor.sn.db.NewFile" title="Demo 
-		FIle"> -->
-	<!-- <view type="form" name="demo-form"/> -->
-	<!-- </action-view> -->
 	<menuitem name="menu-fb-personal-credential" title="Personal Credential"
 		action="action-fb-personal-credential" parent="menu-fb-sn" icon="img/login.png" />
 	<action-view name="action-fb-personal-credential" model="com.axelor.sn.db.PersonalCredential"
@@ -28,18 +23,9 @@
 		<view type="form" name="personal-credential-form" />
 		<!-- userId -->
 		<domain>self.userId=:u_ser and self.snType.name=:sn</domain>
-		<context name="sn" expr="Facebook" />
+		<context name="sn" expr="facebook" />
 		<context name="u_ser" expr="eval:__user__" />
-
 	</action-view>
-
-	<!-- <menuitem name="menu-fb-sn-searchresult" title="Search Result" -->
-	<!-- action="action-fb-searchResult" parent="menu-fb-sn" /> -->
-	<!-- <action-view name="action-fb-searchResult" model="com.axelor.sn.db.SearchResult" -->
-	<!-- title="Search"> -->
-	<!-- <view type="grid" name="result" /> -->
-	<!-- <view type="form" name="result-form" /> -->
-	<!-- </action-view> -->
 
 	<menuitem name="menu-fb-sn-news-feed" title="News Feed"
 		action="action-fb-sn-news-feed" parent="menu-fb-sn" icon="img/newsfeed.png" />
@@ -62,6 +48,7 @@
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
 
+
 	<menuitem name="menu-fb-sn-postevent" title="Event"
 		action="action-fb-post-event" parent="menu-fb-sn" icon="img/eventfb.png" />
 	<action-view name="action-fb-post-event" model="com.axelor.sn.db.PostEvent"
@@ -72,17 +59,18 @@
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
 
+
 	<menuitem name="menu-fb-sn-import-contact" title="Contact(s)"
 		action="action-fb-import-contact" parent="menu-fb-sn" icon="img/fbcontact.jpg" />
 	<action-view name="action-fb-import-contact" model="com.axelor.sn.db.ImportContact"
 		title="Import Facebook Contacts">
 		<view type="grid" name="import-contact-grid" />
-
 		<view type="form" name="import-contact-formNew" />
 		<domain>self.curUser=:u_ser AND self.snType.name=:sn_type</domain>
-		<context name="sn_type" expr="Facebook" />
+		<context name="sn_type" expr="facebook" />
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
+
 
 	<menuitem name="menu-fb-notif" title="Notification(s)" parent="menu-fb-sn"
 		icon="img/notifications.jpg" action="action-fb-notif" />
@@ -93,26 +81,32 @@
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
 
+
 	<menuitem name="menu-fb-inbox" title="Inbox" action="action-fb-inbox"
 		parent="menu-fb-sn" icon="img/fbinbox.jpg" />
 	<action-view name="action-fb-inbox" model="com.axelor.sn.db.FBInbox"
 		title="Message Inbox">
 		<view type="grid" name="fbibox-msg-grid" />
+		<view type="form" name="fbibox-msg-form"/>
 		<domain>self.curUser=:u_ser</domain>
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
+
 
 	<menuitem name="menu-fb-frn-req" title="Friend Request(s)"
 		parent="menu-fb-sn" action="action-fb-frn-req" icon="img/fbFriendReq.jpg" />
 	<action-view name="action-fb-frn-req" model="com.axelor.sn.db.FBFriendrequest"
-		title="Pendin Friend Request">
+		title="Pending Friend Request">
 		<view type="grid" name="fb-req-grid" />
+		<view type="form" name="fb-req-form" />
 		<domain>self.curUser=:u_ser</domain>
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
 
+
 	<menuitem name="menu-fb-sn-pages-main" title="Page(s)" parent="menu-fb-sn"
 		icon="img/fbpages.gif" />
+
 
 	<menuitem name="menu-fb-sn-pages" title="Import"
 		parent="menu-fb-sn-pages-main" action="action-fb-pages" icon="img/page.png" />
@@ -124,6 +118,7 @@
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
 
+
 	<menuitem name="menu-fb-sn-page-post" title="Post" icon="img/status.png"
 		parent="menu-fb-sn-pages-main" action="action-fb-page-post" />
 	<action-view name="action-fb-page-post" model="com.axelor.sn.db.FBPagePost"
@@ -134,6 +129,7 @@
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
 
+
 	<menuitem name="menu-fb-Sn-SearchPerson" title="Search"
 		action="action-fb-search-person" parent="menu-fb-sn" icon="img/Search.png" />
 	<action-view name="action-fb-search-person" model="com.axelor.sn.db.SearchPerson"
@@ -143,6 +139,7 @@
 		<domain>self.curUser=:u_ser</domain>
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
+
 
 	<menuitem name="menu-param-config" title="Parameter Configration"
 		action="action-param-config" parent="menu-fb-sn" icon="img/parameter.jpg" />
@@ -156,12 +153,12 @@
 
 
 
-
-
 	<!-- FIRST LEVEL MENU FOR TWITTER -->
+
 
 	<menuitem name="menu-twt-sn" title="Twitter" parent="menu-sn"
 		icon="img/twitterLogo.png" />
+
 
 	<menuitem name="menu-twt-personal-credential" title="Personal Credential"
 		action="action-twt-personal-credential" parent="menu-twt-sn" icon="img/login.png" />
@@ -171,20 +168,21 @@
 		<view type="form" name="twitter-credential-form" />
 		<!-- userId -->
 		<domain>self.userId=:u_ser and self.snType.name=:sn</domain>
-		<context name="sn" expr="Twitter" />
+		<context name="sn" expr="twitter" />
 		<context name="u_ser" expr="eval:__user__" />
-
 	</action-view>
+
 
 	<menuitem name="menu-twt-home-timeline" title="Home"
 		icon="img/twitterHome.png" parent="menu-twt-sn" action="action-twt-home-timeline" />
 	<action-view name="action-twt-home-timeline" model="com.axelor.sn.db.TwitterHomeTimeline"
 		title="Timeline">
 		<view type="grid" name="twt-timeline-grid" />
-		<view type="form" name="twt-timeline-form"/>
+		<view type="form" name="twt-timeline-form" />
 		<domain>self.curUser=:u_ser</domain>
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
+
 
 	<menuitem name="menu-twt-post-tweet" title="Tweet(s)" parent="menu-twt-sn"
 		action="action-twt-post-tweet" icon="img/twt.png" />
@@ -202,39 +200,45 @@
 	<action-view name="action-twt-import-contact" model="com.axelor.sn.db.ImportContact"
 		title="Import Twitter Followers">
 		<view type="grid" name="twt-import-contact-grid" />
-
 		<view type="form" name="twt-import-contact-form" />
 		<domain>self.curUser=:u_ser AND self.snType.name=:sn_type</domain>
 		<context name="u_ser" expr="eval:__user__" />
-		<context name="sn_type" expr="Twitter" />
+		<context name="sn_type" expr="twitter" />
 	</action-view>
+
 
 	<menuitem name="menu-twt-direct-msg" title="Direct Message"
 		action="action-direct-msg-disp" parent="menu-twt-sn" icon="img/compose.png" />
 	<action-view name="action-direct-msg-disp" model="com.axelor.sn.db.DirectMessage"
 		title="Send Messages">
+		<view type="grid" name="direct-msg-grid" />
 		<view type="form" name="direct-msg-form" />
 		<domain>self.curUser=:u_ser</domain>
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
+
 
 	<menuitem name="menu-twt-inbox" title="Inbox" action="action-twt-inbox"
 		parent="menu-twt-sn" icon="img/Mail.png" />
 	<action-view name="action-twt-inbox" model="com.axelor.sn.db.TwitterInbox"
 		title="Twiter Inbox Messages">
 		<view type="grid" name="twt-inbox-grid" />
+		<view type="form" name="twt-inbox-form" />
 		<domain>self.curUser=:u_ser</domain>
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
+
 
 	<menuitem name="menu-twt-follower-request" title="Follower(s) Request"
 		parent="menu-twt-sn" action="action-twt-follower-request" icon="img/twitter_follow_button.png" />
 	<action-view name="action-twt-follower-request" model="com.axelor.sn.db.TwitterFollowerRequest"
 		title="Pending Request">
 		<view type="grid" name="twt-follower-grid" />
+		<view type="form" name="twt-follower-form" />
 		<domain>self.curUser=:u_ser</domain>
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
+
 
 	<menuitem name="menu-twt-param-config" title="Parameter Configuration"
 		icon="img/parameter.jpg" parent="menu-twt-sn" action="action-twt-param-config" />
@@ -248,9 +252,14 @@
 
 
 
+
+
 	<!-- LINKED IN MENU -->
 	<menuitem name="menu-linkedin" parent="menu-sn" title="LinkedIn"
 		icon="img/linkedin-icon-vector.jpg" />
+
+
+
 	<menuitem name="menu-personal-credential" parent="menu-linkedin"
 		title="Personal Credentials" action="personalCredential" icon="img/login.png" />
 	<action-view name="personalCredential" title="Credentials"
@@ -259,10 +268,12 @@
 		<view type="form" name="personal-credentials-form" />
 		<domain>self.userId=:u_ser AND self.snType.name=:sntype</domain>
 		<context name="u_ser" expr="eval:__user__" />
-		<context name="sntype" expr="Linkedin" /><!-- <domain>self.userId 
+		<context name="sntype" expr="linkedin" /><!-- <domain>self.userId 
 			= :user_id</domain> --><!-- <context name="user_id" 
 			expr="eval:__user__" /> -->
 	</action-view>
+
+
 	<menuitem name="menu-linkedin-contact" parent="menu-linkedin"
 		title="Contacts" action="importContact" icon="img/LINcontact.png" />
 	<action-view name="importContact" title="Contacts"
@@ -271,8 +282,10 @@
 		<view type="form" name="import-contacts-form" />
 		<domain>self.curUser = :user_id and self.snType.name=:snt</domain>
 		<context name="user_id" expr="eval:__user__" />
-		<context name="snt" expr="Linkedin" />
+		<context name="snt" expr="linkedin" />
 	</action-view>
+
+
 	<menuitem name="menu-linkedin-message" parent="menu-linkedin"
 		title="Messages" action="send.message" icon="img/LINMSG.jpg" />
 	<action-view name="send.message" title="Messages"
@@ -282,6 +295,8 @@
 		<domain>self.curUser = :user_id</domain>
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
+
+
 	<menuitem name="menu-linkedin-post" parent="menu-linkedin"
 		title="Status Updates" action="updatePost" icon="img/LInUpdate.jpg" />
 	<action-view name="updatePost" title="Posts"
@@ -291,6 +306,8 @@
 		<domain>self.curUser = :user_id</domain>
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
+
+
 	<menuitem name="menu-linkedin-network-updates" parent="menu-linkedin"
 		title="Network Updates" action="network.updates" icon="img/LINnw.jpg" />
 	<action-view name="network.updates" title="Updates"
@@ -300,6 +317,8 @@
 		<domain>self.curUser = :user_id</domain>
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
+
+
 	<menuitem name="menu-linkedin-groups" parent="menu-linkedin"
 		title="Groups" icon="img/LINgroups.jpg" />
 	<menuitem name="menu-linkedin-groups-list" parent="menu-linkedin-groups"
@@ -311,6 +330,8 @@
 		<domain>self.curUser = :user_id</domain>
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
+
+
 	<menuitem name="menu-linkedin-groups-disussion" parent="menu-linkedin-groups"
 		title="Discussions" action="discussion-view" icon="img/LINGD.jpg" />
 	<action-view name="discussion-view" title="Discussions"
@@ -322,6 +343,7 @@
 		<context name="current_user" expr="true" />
 	</action-view>
 
+
 	<menuitem name="menu-parameter-config" parent="menu-linkedin"
 		title="Parameter Configurations" action="parameterConfig" icon="img/parameter.jpg" />
 	<action-view name="parameterConfig" title="Parameters"
@@ -332,13 +354,13 @@
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
 
+
+
 	<!-- First Level menu CONFIGRATION -->
 
 	<menuitem name="menu-config" title="Configration" parent="menu-sn"
 		groups="admins" icon="img/wrench.png" />
 
-
-	<!-- SOCIAL NETWORKING'S-APPLICATION CREDENTIAL AND TYPES -->
 
 	<menuitem name="menu-sn-entry" title="Social Networking Types"
 		action="action-sn-credential" parent="menu-config" icon="img/socialnw.jpeg" />
@@ -346,9 +368,8 @@
 		title="Social Networking Entry">
 		<view type="grid" name="sn-grid" />
 		<view type="form" name="sn-form" />
-		<!-- <domain>self.userId=:u_ser</domain> -->
-		<!-- <context name="u_ser" expr="Administrator"/> -->
 	</action-view>
+
 
 	<menuitem name="menu-fb-credential" title="Social Networking Application Credential"
 		action="action-fb-credential" parent="menu-config" icon="img/App.png" />
@@ -356,17 +377,14 @@
 		title="Application Credentials">
 		<view type="grid" name="application-credential-grid" />
 		<view type="form" name="application-credential-form" />
-		<!-- <domain>self.userId=:u_ser</domain> -->
-		<!-- <context name="u_ser" expr="1" /> -->
 	</action-view>
+
 
 	<menuitem name="menu-view-controller" title="View Controller"
 		action="action-view-controller" parent="menu-config" icon="img/viewconroller.jpg" />
 	<action-view name="action-view-controller" model="com.axelor.sn.db.ViewController"
 		title=" Restriction on View">
 		<view type="form" name="view-control-form" />
-		<!-- <domain>self.parent=:menu_val</domain> -->
-		<!-- <context name="menu_val" expr="Social Networking"/> -->
 	</action-view>
 
 

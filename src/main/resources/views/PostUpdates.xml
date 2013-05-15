@@ -21,13 +21,11 @@
 
 	<form name="post-form" title="Status" cols="4" colWidths="15%,*,25%"
 		onLoad="action-post-attributes,action-refresh-comments" onSave="action-status-update,save,action-post-attributes"
-		onNew="action-user4,action-network2,action-post-attributes">
+		onNew="action-user4,action-post-attributes">
 		<group colSpan="4" cols="4">
 			<field name="contentId" title="Status ID" colSpan="3" readonly="true" />
 			<break />
 			<field name="content" title="Status" colSpan="3" />
-			<break />
-			<field name="snType" title="Network" hidden="true" />
 			<break />
 			<field name="curUser" title="User" hidden="true" />
 			<break />
@@ -116,9 +114,5 @@
 
 	<action-method name="action-get-comments">
 		<call class="com.axelor.sn.web.Controller" method="getComments" />
-	</action-method>
-
-	<action-method name="action-network2">
-		<call class="com.axelor.sn.web.Controller" method="networkType" />
 	</action-method>
 </object-views>

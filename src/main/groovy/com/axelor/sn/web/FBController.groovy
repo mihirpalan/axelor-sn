@@ -28,10 +28,9 @@ import javax.inject.Inject;
 
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
-import com.axelor.sn.service.SNFBService;
+import com.axelor.rpc.Response;
 
-public class FBController
-{
+public class FBController {
 	@Inject
 	SNFBService service;
 
@@ -40,222 +39,109 @@ public class FBController
 	String apisecret;
 	String userName,password
 
-	void getAuthUrlFB(ActionRequest request,ActionResponse response)
-	{
-		def context=request.context as PersonalCredential
-		List keys=request.context.keySet().asList()
-		List values=request.context.values().asList()
-		User user=values.get(keys.indexOf("__user__"))
-		SocialNetworking sn=values.get(keys.indexOf("snType"))
-		println ("OUTSIDE Values")
-		ack=service.obtainAuthUrl(user,sn);
-		if(ack.startsWith("You Already Have One Account Associated..."))
-		{
-			response.flash=ack;
-		}
-		else
-		{
-			response.flash="<a href=$ack target=_blank> Please Click Here </a>"
-		}
-		println(ack)
-
+	void getAuthUrlFB(ActionRequest request,ActionResponse response) {
+		User user = request.context.get("__user__")
+		SocialNetworking sn = request.context.get("snType")
+		def context = request.context as PersonalCredential
+		ack = service.obtainAuthUrl(user,sn);
+		if(ack.equals("0"))
+			response.flash="Sorry You can't Do anyting Admin Doesnt set Application Credentials";
+		else if(ack.equals("1"))
+			response.flash="You allready have one account Associated!!";
+		else			
+			response.flash = "<a target=_blank href="+ack+">Click Here To Authorize The Application</a>";
 	}
-	void searchPerson(ActionRequest request,ActionResponse response)
-	{
-		println("Search Person"+request.context.toString())
+
+	void searchPerson(ActionRequest request,ActionResponse response) {
 		String userToken;
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"))
+		try {
+			User user = request.context.get("__user__")
 			def context = request.context as SearchPerson
 			String param = context.searchparam
 			ack=service.searchPerson(user,param)
-			if(ack.equals("1"))
-			{
-				response.view=[title: "Search Grid", resource: SearchPerson.class.name, viewType: "grid"]
-				ack="Search Completed Please Click on Reresh"
-				response.flash=ack;
-			}
-			else
-			{
-				ack="Some Problem is there"
-			}
+			if(ack.equals("0")) 
+				response.flash = "Please Authorise The Applicaton First";
+			
+			else if (ack.equals("1"))
+				response.flash = "You need to Re-Authorise The Application Please go to Personal Credential";
+
+			else 				
+				response.values = ["resultSearch":SearchResult.all().filter("searchPerson = ? and curUser = ?",SearchPerson.all().filter("searchparam = ?", param).fetchOne(),user).fetch()]
+
 		}
-		catch(Exception e)
-		{
+		catch(Exception e) {
 			e.printStackTrace()
-			ack=e.getMessage()
-			response.flash=ack;
+			ack = e.getMessage()
+			response.flash = ack;
 		}
 	}
 
-	void saySNType(ActionRequest request, ActionResponse response)
-	{
-		try
-		{
-			println("saySnType")
-			SocialNetworking snType=SocialNetworking.all().filter("name=?", "Facebook").fetchOne()
-			println(snType);
-			response.values=["snType":snType]
+	void saySNType(ActionRequest request, ActionResponse response) {
+		try {
+			SocialNetworking snType = SocialNetworking.all().filter("name = ?", "facebook").fetchOne()
+			response.values = ["snType":snType]
 		}
-		catch (Exception e)
-		{
-			response.flash=e.getMessage();
-		}
-	}
-
-	void getAuthentication(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			//request.context.
-			String noVal=""
-			println("Its been Called")
-			def context=request.context as PersonalCredential
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"))
-			SocialNetworking sn=values.get(keys.indexOf("snType"))
-			println ("OUTSIDE Values")
-
-			userName=context.snUsername
-			password=context.password
-			ack=service.getUserToken(user,sn, userName, password);
-			if(ack.startsWith("AA"))
-			{
-				response.values=["password":noVal,"userToken":ack]
-				response.flash="Login Successfully You may Proceed!!";
-			}
-			else
-			{
-				response.values=["password":noVal]
-				response.flash=ack;
-			}
-		}
-		catch (Exception e)
-		{
-			response.flash=e.getMessage();
+		catch (Exception e) {
+			response.flash = e.getMessage();
+			e.printStackTrace();
 		}
 	}
 
 
-	void getRefresh(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"))
-			SocialNetworking sn=values.get(keys.indexOf("snType"))
-			ack=service.getRefreshToken(user,sn);
-			response.flash=ack;
-		}
-		catch (Exception e)
-		{
-			response.flash=e.getMessage();
-		}
-	}
 
-	void getVal(ActionRequest request, ActionResponse response)
-	{
-		try
-		{
-			ArrayList al=new ArrayList();
-			println("getVal() is Called  "+al.size())
-			for(int i=0;i<al.size();i++)
-			{
-				println("API Key  "+al.get(i))
-			}
-		}
-		catch (Exception e)
-		{
-			response.flash=e.getMessage();
-		}
-	}
-	void getLoginAuthorization(ActionRequest request,ActionResponse response)
-	{
-		def context=request.context
-		println(context.values)
-	}
+	void fbPostStatus(ActionRequest request,ActionResponse response) {
+		def context = request.context as PostMessage
+		if(context.getId() == null) {
+			try {
+				User user = request.context.get("__user__")
+				String privacy = request.context.get("privacy")
+				ack = service.postStatus(user,context.content,privacy)
+				if(ack.equals("0"))
+					response.flash = "Please Authorise The Applicaton First";
 
+				else if(ack.equals("1"))
+					response.flash = "You need to Re-Authorise The Application Please go to Personal Credential";
 
-
-
-	void fbPostStatus(ActionRequest request,ActionResponse response)
-	{
-		def context=request.context as PostMessage
-		if(context.getId()==null)
-		{
-			try
-			{
-				List keys=request.context.keySet().asList()
-				List values=request.context.values().asList()
-				User user=values.get(keys.indexOf("__user__"))
-				println(request.context.toString())
-
-
-				String privacy=values.get(keys.indexOf("privacy"))
-				ack=service.postStatus(user,context.content,privacy)
-				if(ack.startsWith("[a-zA-Z]"))
-				{
-					response.flash=ack;
-				}
+				else if(!ack.isEmpty())
+					response.values = ["acknowledgment":ack];
 				else
-				{
-					response.values=["acknowledgment":ack];
-					response.flash="Successfully Updated status"
-				}
+					response.flash = "There is Some issue with Posting Status";
 			}
-			catch(Exception e)
-			{
+			catch(Exception e) {
 				e.printStackTrace()
-				ack=e.getMessage()
+				ack = e.getMessage()
+				response.flash = ack;
 			}
-
 		}
 		else
-		{
-			response.flash="Record Already Saved"
-		}
+			response.flash = "Record Already Saved"
 	}
 
 
-	public void postEvent(ActionRequest request,ActionResponse response)
-	{
-		println("Events::::"+request.context.toString())
+	public void postEvent(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__")
+			String privacy = request.context.get("privacy")
+			def context = request.context as PostEvent
+			org.joda.time.DateTime startDate = context.startdate
+			Date startD = startDate.toDate()
+			org.joda.time.DateTime endDate = context.enddate
+			Date endD = endDate.toDate()
+			ack = service.fbPostEvent(user, startD, endD, context.occession, context.location, privacy)
+			if(ack.equals("0"))
+				response.flash = "Please Authorise The Applicaton First";
 
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"))
-			println(request.context.toString())
-			String privacy=values.get(keys.indexOf("privacy"))
-			def context=request.context as PostEvent
+			else if(ack.equals("1"))
+				response.flash = "You need to Re-Authorise The Application Please go to Personal Credential";
 
-
-			org.joda.time.DateTime startDate=context.startdate
-			Date startD=startDate.toDate()
-			org.joda.time.DateTime endDate=context.enddate
-			Date endD=endDate.toDate()
-			ack=service.fbPostEvent(user,startD,endD, context.occession, context.location,privacy)
-			if(ack.startsWith("[a-zA-Z]"))
-			{
-				response.flash=ack;
-			}
+			else if(!ack.isEmpty())
+				response.values = ["acknowledgment":ack];
 			else
-			{
-
-				response.values=["acknowledgment":ack]
-				response.flash="Successfully Updated Event"
-				//response.view=[title:"Post Even" , resource:PostEvent.class.name,viewType:"grid",domain: "self.curUser = '${__user__}'"];
-			}
+				response.flash = "There is Some issue With Posting Event";
 
 		}
-		catch(Exception e)
-		{
+		catch(Exception e) {
+			response.flash = e.getMessage();
 			e.printStackTrace()
 		}
 	}
@@ -266,346 +152,282 @@ public class FBController
 	 * @param request
 	 * @param response
 	 */
-	void getAllContactsFB(ActionRequest request,ActionResponse response)
-	{
-		println(request.context.toString())
-
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"))
-			ack=service.importContactsFB(user)
-			response.flash=ack;
+	void getAllContactsFB(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__")
+			ack = service.importContactsFB(user)
+			response.flash = ack;
 		}
-		catch(Exception e)
-		{
-			response.flash=e.toString()
+		catch(Exception e) {
+			response.flash = e.getMessage()
 			e.printStackTrace()
 		}
 	}
 
 
-	void getCommentsOfStatus(ActionRequest request,ActionResponse response)
-	{
-		println("Comments:::"+request.context.toString())
+	void getCommentsOfStatus(ActionRequest request,ActionResponse response) {
 		String statusId;
-		def context= request.context as PostMessage
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"))
-			ack=service.getCommentsFB(user, context.getAcknowledgment());
-			response.flash=ack;
+		User user = request.context.get("__user__")
+		String acknowledgment = request.context.get("acknowledgment");
+
+		def context = request.context as PostMessage
+		try {
+			ArrayList lstRetrivedValues = service.getCommentsFB(user, context.getAcknowledgment());
+			if(lstRetrivedValues.size > 1) 
+				response.values = ["comments":Comment.all().filter("curUser = ? and contentid = ?", user, context).fetch()]
+
+			else
+				response.flash = lstRetrivedValues.get(0);
 
 		}
-		catch (Exception e)
-		{
-			response.flash=e.toString()
+		catch (Exception e) {
+			response.flash = e.getMessage()
 			e.printStackTrace()
 		}
 	}
 
-	void fetchInbox(ActionRequest request,ActionResponse response)
-	{
-
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"))
-			ack=service.getInbox(user)
-			if(ack.equals("Message Syncronization Completed!!"))
-			{
-				response.flash=ack;
-			}
-			else
-			{
-				response.flash=ack;
-			}
-
+	void fetchInbox(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__")
+			ack = service.getInbox(user)
+			response.flash = ack;
 		}
-		catch(Exception e)
-		{
+		catch(Exception e) {
+			response.flash = e.getMessage()
 			e.printStackTrace();
 		}
 	}
 
-	void getNotificationsFromFB(ActionRequest request,ActionResponse response)
-	{
-
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"))
-			ack=service.getNotifications(user);
-			if(ack.startsWith("[a-zA-Z]"))
-			{
-				response.flash="You have "+ack+" new Notification";
-			}
-			else
-			{
-				response.flash="You have "+ack+" new Notification";
-			}
-
+	void getNotificationsFromFB(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__")
+			ack = service.getNotifications(user);
+			response.flash = ack;
 		}
-		catch(Exception e)
-		{
+		catch(Exception e) {
 			response.flash=e.getMessage();
 			e.printStackTrace();
 		}
-
 	}
 
 
-
-	void getFriendRequest(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"));
-			ack=service.getFriendRequest(user);
-			response.flash=ack;
+	void getFriendRequest(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__")
+			ack = service.getFriendRequest(user);
+			response.flash = ack;
 		}
-		catch (Exception e)
-		{
-			response.flash=e.getMessage();
-		}
-
-	}
-
-	void retriveNewsFeed(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"));
-			ack=service.getNewsFeeds(user);
-			response.flash=ack;
-		}
-		catch (Exception e)
-		{
-			response.flash=e.getMessage();
+		catch (Exception e) {
+			response.flash = e.getMessage();
+			e.printStackTrace();
 		}
 	}
 
-	void getPages(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			List keys=request.context.keySet().asList();
-			List values=request.context.values().asList();
-			User user=values.get(keys.indexOf("__user__"));
-			ack=service.getPageFB(user);
-			response.flash=ack;
+	void retriveNewsFeed(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__")
+			SocialNetworking sn = request.context.get("snType")
+			ack = service.getNewsFeeds(user);
+			response.flash = ack;
 		}
-		catch (Exception e)
-		{
-			response.flash=e.getMessage();
+		catch (Exception e) {
+			response.flash = e.getMessage();
+			e.printStackTrace();
+		}
+	}
+
+	void getPages(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__")
+			ack = service.getPageFB(user);
+			response.flash = ack;
+		}
+		catch (Exception e) {
+			response.flash = e.getMessage();
+			e.printStackTrace();
 		}
 	}
 
 
-	void postToPage(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
+	void postToPage(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__")
+			FBPages page = request.context.get("page")
 			def context = request.context as FBPagePost;
-			if(context.id==null)
-			{
-				List keys=request.context.keySet().asList();
-				List values=request.context.values().asList();
-				User user=values.get(keys.indexOf("__user__"));
-				FBPages page=values.get(keys.indexOf("page"))
-				ack=service.postPageContent(user,page,context);
-				if(ack.startsWith("[a-zA-Z]"))
-				{
-					response.flash="Some Error is there Please Try Later!!";
-				}
+			if(context.id == null) {
+				ack = service.postPageContent(user,page,context);
+				if(ack.equals("0"))
+					response.flash = "Please Authorise The Applicaton First";
+
+				else if(ack.equals("1"))
+					response.flash = "You need to Re-Authorise The Application Please go to Personal Credential";
+
+				else if(!ack.isEmpty())
+					response.values = ["acknowledgment":ack];
 				else
-				{
-					response.values=["acknowledgment":ack]
-					//response.values=["acknowledgment":"","curUser":"","postedTime":"","content":"","page":""]
-					response.flash="Successfully Posted to " + page.name;
-				}
+					response.flash = "There is Some issue With Posting Topic";
 			}
 			else
-			{
 				response.flash="Record Already Saved"
-			}
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			response.flash=e.getMessage();
+			e.printStackTrace();
 		}
 	}
 
-	void deletePagePost(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"));
-			List ids=values.get(keys.indexOf("_ids"));
-			ack=service.deletePagePost(user,ids);
-			response.flash=ack;
-		}
-		catch (Exception e)
-		{
-			response.flash=e.getMessage();
-		}
-	}
+	void deletePagePost(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__");
+			List lstIds = request.context.get("_ids");
+			if(lstIds.empty)
+				ack = "Please Select Record(s) and Click on Delete"
 
-	void getPagePostComment(ActionRequest request,ActionResponse response)
-	{
-		println(request.context.toString())
-		String statusId;
-		def context= request.context as FBPagePost
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"))
-			ack=service.getPageCommentsFB(user, context.getAcknowledgment());
-			if(ack.equals("Comment Will only Display if there is Some Comment on Content"))
-			{
-				response.flash=ack;
-			}
 			else
-			{
-				response.flash=ack;
-			}
+				ack = service.deletePagePost(user,lstIds);
+
+			response.flash = ack;
 		}
-		catch (Exception e)
-		{
-			response.flash=e.toString()
+		catch (Exception e) {
+			response.flash = e.getMessage();
+			e.printStackTrace();
+		}
+	}
+
+	void getPagePostComment(ActionRequest request,ActionResponse response) {
+		User user = request.context.get("__user__");
+		String statusId;
+		def context = request.context as FBPagePost
+		try {
+			ack = service.getPageCommentsFB(user, context.getAcknowledgment());
+			if(ack.isEmpty())
+				response.values=["postedComments":FBPageComment.all().filter("curUser = ? and contentid=?" , user, context).fetch()];
+			else
+				response.flash = ack;
+		}
+		catch (Exception e) {
+			response.flash = e.toString()
 			e.printStackTrace()
 		}
 	}
 
+	void getDeleteMessage(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__");
+			List lstIds = request.context.get("_ids");
+			if(lstIds.empty)
+				ack = "Please Select Record(s) and Click on Delete"
 
-
-	void getDeleteMessage(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			println(request.context.toString())
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"));
-			List ids=values.get(keys.indexOf("_ids"));
-			ack=service.getDeleteMessage(user,ids);
-			response.flash=ack;
+			else
+				ack = service.getDeleteMessage(user,lstIds);
+			response.flash = ack;
 		}
-		catch (Exception e)
-		{
-			response.flash=e.getMessage();
+		catch (Exception e) {
+			response.flash = e.getMessage();
+			e.printStackTrace();
 		}
 	}
 
 
-	void getDeleteEvent(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			println(request.context.toString())
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"));
-			List ids=values.get(keys.indexOf("_ids"));
-			ack=service.getDeleteEvent(user,ids);
-			response.flash=ack;
+	void getDeleteEvent(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__");
+			List lstIds = request.context.get("_ids");
+			if(lstIds.empty)
+				ack = "Please Select Record(s) and Click on Delete"
+			else
+				ack = service.getDeleteEvent(user,lstIds);
+			response.flash = ack;
 		}
-		catch (Exception e)
-		{
-			response.exception=e.getMessage();
+		catch (Exception e) {
+			response.exception = e.getMessage();
+			e.printStackTrace();
 		}
 	}
 
-	void deleteInBox(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			println(request.context.toString())
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"));
-			List ids=values.get(keys.indexOf("_ids"));
-			ack=service.deleteInBox(user,ids);
-			response.flash=ack;
+	void deleteInBox(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__");
+			List lstIds = request.context.get("_ids");
+			if(lstIds.empty)
+				ack = "Please Select Record(s) and Click on Delete"
+
+			else
+				ack = service.deleteInBox(user,lstIds);
+
+			response.flash = ack;
 		}
-		catch (Exception e)
-		{
-			response.exception=e.getMessage();
+		catch (Exception e) {
+			response.flash = e.getMessage();
+			e.printStackTrace();
 		}
 	}
 
 
-	void getLikes(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			println(request.context.toString())
+	void getLikes(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__");
 			def context = request.context as FBNewsFeed
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"));
-			ack=service.getLike(user,context.id);
-			response.flash=ack;
+			ack = service.getLike(user,context.id);
+			response.flash = ack;
 		}
-		catch (Exception e)
-		{
+		catch (Exception e) {
 			response.exception=e.getMessage();
+			e.printStackTrace();
 		}
-
-
 	}
 
-	void postComment(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"));
-			String postedComment=values.get(keys.indexOf("postComment"))
+	void postComment(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__");
+			String postedComment = request.context.get("postComment");
 			def context = request.context as PostMessage
 			context.acknowledgment;
-			ack=service.postCommmentonStatus(user,context.acknowledgment,postedComment)
-			response.flash=ack;
-			println context.acknowledgment;
-			println postedComment;
+			ack = service.postCommmentonStatus(user,context.acknowledgment,postedComment)
+			response.values = ["postComment":""]
+			response.flash = ack;
 		}
-		catch (Exception e)
-		{
-			response.exception=e.getMessage();
+		catch (Exception e) {
+			response.flash=e.getMessage();
+			e.printStackTrace();
 		}
 	}
 
-	void postPagePostComment(ActionRequest request,ActionResponse response)
-	{
-		try
-		{
-
-			List keys=request.context.keySet().asList()
-			List values=request.context.values().asList()
-			User user=values.get(keys.indexOf("__user__"));
-			String postedComment=values.get(keys.indexOf("postComment"))
+	void postPagePostComment(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__");
+			String postedComment = request.context.get("postComment")
 			def context = request.context as FBPagePost
 			context.acknowledgment;
-			ack=service.postCommmentonStatus(user,context.acknowledgment,postedComment)
-			response.flash=ack;
+			ack = service.postCommmentonStatus(user,context.acknowledgment,postedComment)
+			response.values = ["postComment":""]
+			response.flash = ack;
 		}
-		catch (Exception e)
-		{
-			response.exception=e.getMessage();
+		catch (Exception e) {
+			response.exception = e.getMessage();
+			e.printStackTrace();
 		}
 	}
 
+	void clearAllData(ActionRequest request,ActionResponse response) {
+		try {
+			User user = request.context.get("__user__")
+			List lstIds = request.context.get("_ids")
+			if(lstIds.empty)
+				ack = "Please Select Record and Click on Remove"
+			else {
+				long idVal = lstIds.get(0);
+				ack = service.removeAllDetail(user, idVal)
+			}
+			response.flash = ack;
+		}
+		catch (java.lang.IndexOutOfBoundsException index) {
+			response.flash = index.getMessage();
+			index.printStackTrace();
+		}
+		catch (Exception e) {
+			response.flash=e.getMessage();
+			e.printStackTrace();
+		}
+	}
 }

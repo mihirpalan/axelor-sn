@@ -10,8 +10,6 @@
     <string name="content" required="true" multiline="true" namecolumn="true" max="600" />
     <datetime name="postTime" tz="true" />
     <many-to-one name="curUser" ref="com.axelor.auth.db.User" />
-    <many-to-one name="snType" required="true" ref="com.axelor.sn.db.SocialNetworking" />
     <one-to-many name="comments" ref="com.axelor.sn.db.Comments" mappedBy="contentId" />
  </entity>
-
 </domain-models>

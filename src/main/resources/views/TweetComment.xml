@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
-	<grid name="twt-comment-grid" title="Tweet Grid">
+	<grid name="twt-comment-grid" title="Tweet Grid" orderBy="contentid">
 
 		<field name="contentid"></field>
 		<field name="tweetFrom"></field>
@@ -16,10 +16,5 @@
 		<field name="contentid" onChange="com.axelor.sn.web.TWTController:getComments">
 		</field>
 		<break />
-<!-- 		<field name="tweetFrom" readonly="true"></field> -->
-<!-- 		<field name="tweetContent" readonly="true"></field> -->
-<!-- 		<field name="tweetTime" readonly="true"></field> -->
-<!-- 		<field name="tweetFevourite" readonly="true"></field> -->
-<!-- 		<field name="curUser" readonly="true" hidden="true"></field> -->
 	</form>
 </object-views>

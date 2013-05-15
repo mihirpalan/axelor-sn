@@ -6,7 +6,7 @@
 	<entity name="TwitterConfig">
 		<many-to-one name="snType" ref="com.axelor.sn.db.SocialNetworking"></many-to-one>
 		<integer name="page" min="0" max="10" help="Minimum 1st Page and Maximum 10th Page"></integer>
-		<integer name="content" min="0" max="200" help="1 to 200 Number Content Per page"></integer>
+		<integer name="content" min="0" max="100" help="1 to 100 Number Content Per page"></integer>
 		<boolean name="since" default="false" title="Only Latest Updates"></boolean>
 <!-- 		<many-to-one name="since" ref="com.axelor.sn.db.TwitterHomeTimeline" orphan="true" ></many-to-one> -->
 		<many-to-one name="curUser" ref="com.axelor.auth.db.User" unique="true"></many-to-one>

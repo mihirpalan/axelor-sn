@@ -53,6 +53,7 @@ class Controller {
 
 	void networkType(ActionRequest request, ActionResponse response) {
 		SocialNetworking snType = LinkedinService.getSnType("Linkedin")
+		println(snType)
 		if(snType != null)
 			response.values = ["snType":snType]
 		else

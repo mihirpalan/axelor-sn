@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
 
 	<selection name="privacy-param">
@@ -10,12 +10,15 @@
 		<option value="SELF">ONLY ME</option>
 	</selection>
 
-	<grid title="All Posted Status" name="post-msg-grid">
+	<grid title="All Posted Status" name="post-msg-grid"
+		model="com.axelor.sn.db.PostMessage" orderBy="-postedTime">
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
 			<button name="save" title="Save" hidden="true" />
 			<button name="delete" title="Delete" hidden="true" />
-			<button name="btnfbdelmsg" title="Delete" onClick="com.axelor.sn.web.FBController:getDeleteMessage" />
+			<button name="btnfbdelmsg" title="Delete"
+				prompt="It will delete record(s) from Facebook and Database would you like to Continue?"
+				onClick="com.axelor.sn.web.FBController:getDeleteMessage" />
 		</toolbar>
 		<field name="postedTime" readonly="true"></field>
 		<field name="content" title="Content"></field>
@@ -35,9 +38,9 @@
 
 
 
-	<form title="Post to Facebook" name="post-msg-form"
-		onNew="action-runTime-comnt-fb,action-user-post-msg-user" onSave="com.axelor.sn.web.FBController:fbPostStatus"
-		onLoad="action-runTime-comnt-fb,action-user-post-msg-user">
+	<form title="Post to Facebook" name="post-msg-form" model="com.axelor.sn.db.PostMessage"
+		onNew="action-runTime-comnt-fb,action-user-post-msg-user" onLoad="action-runTime-comnt-fb"
+		onSave="com.axelor.sn.web.FBController:fbPostStatus">
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
 			<button name="save" title="Save" />
@@ -49,25 +52,21 @@
 			<field name="privacy" title="Privacy" selection="privacy-param"
 				canSelect="true" required="true"></field>
 			<break />
-			<button name="retriveComments" title="Get Comments" hidden="true"
-				onClick="com.axelor.sn.web.FBController:getCommentsOfStatus" />
-			<!-- <button name="addComment" title="Add Comment" onClick="action-runtime-comnt-box-cntrl" 
-				/> -->
-			<break />
 			<field name="acknowledgment" title="Acknowledgment" readonly="true"
 				hidden="true"></field>
 			<field name="postedTime" readonly="true"></field>
 			<break />
 			<field name="curUser" readonly="true" hidden="true"></field>
 			<break />
+			<button name="retriveComments" title="Get Comments" hidden="true"
+				onClick="com.axelor.sn.web.FBController:getCommentsOfStatus" />
+			<break />
 			<field name="postComment" title="Post Comment"></field>
-			<button name="postIt" title="Post"
+			<button name="postIt" title="Post" colSpan="1"
 				onClick="com.axelor.sn.web.FBController:postComment" />
 		</group>
 		<break />
-
 		<break />
-
 		<group cols="1" colSpan="6">
 			<field name="comments" readonly="true">
 				<grid title="Comment's Content" editable="true">
@@ -79,20 +78,17 @@
 				</grid>
 			</field>
 		</group>
-
 	</form>
 
-	<form title="Comments" name="msg-comment-so">
+	<form title="Comments" name="msg-comment-so" model="com.axelor.sn.db.PostMessage">
 		<field name="acknowledgment" title="Acknowledgment" readonly="true"
 			hidden="true"></field>
 		<break />
 		<field name="comments" readonly="true">
-			<grid title="Comment's Content">
+			<grid title="Comment's Content" name="fb-get-comment">
 				<field name="from_user" readonly="true"></field>
 				<field name="comment" readonly="true"></field>
 				<field name="commentTime" readonly="true"></field>
-<!-- 				<field name="commentLikes" readonly="true"></field> -->
-<!-- 				<field name="contentid" title="Posted Discussion" hidden="false"></field> -->
 			</grid>
 		</field>
 	</form>

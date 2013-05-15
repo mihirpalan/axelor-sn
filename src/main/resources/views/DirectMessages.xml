@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+<object-views xmlns="http://apps.axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 	<grid name="direct-message-grid" title="Messages"
 		model="com.axelor.sn.db.DirectMessages">
@@ -24,7 +23,7 @@
 			<button name="search" title="" hidden="true" />
 		</toolbar>
 		<field name="curUser" readonly="true" hidden="true" />
-		<field name="snType" hidden="true" />
+		<field name="snType" hidden="true" widget="MANY_TO_ONE[target=com.axelor.sn.db.SocialNetworking|targetName=name]" />
 		<field name="userid" title="To" colSpan="3"
 			domain="self.curUser = :curUser AND self.snType= :snType">
 			<grid title="To User">
@@ -61,5 +60,4 @@
 	<action-method name="action-clear">
 		<call class="com.axelor.sn.web.Controller" method="clear" />
 	</action-method>
-
 </object-views>

@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
-	<grid title="Search" name="search-grid">
+	<grid title="Search" name="search-grid" model="com.axelor.sn.db.SearchPerson"
+		orderBy="searchparam">
 		<field name="searchparam" title="Please Enter Person Name"></field>
 		<field name="resultSearch" title="Result" colSpan="5">
 			<grid title="Result">
@@ -15,11 +16,11 @@
 			</grid>
 		</field>
 	</grid>
-	<form title="Search" name="search-form" onNew="action-check-initial" onLoad="action-check-initial">
+	<form title="Search" name="search-form"  model="com.axelor.sn.db.SearchPerson">
 		<toolbar>
 			<button name="save" title="Save" hidden="true" />
-			<button name="edit" title="Edit" hidden="true"  />
-			<button name="delete" title="Delete" hidden="true"/>
+			<button name="edit" title="Edit" hidden="true" />
+			<button name="delete" title="Delete" hidden="true" />
 		</toolbar>
 		<notebook title="Search On Facebook">
 			<page title="Person">
@@ -29,10 +30,10 @@
 					onClick="com.axelor.sn.web.FBController:searchPerson" />
 				<break />
 				<break />
-				<field name="resultSearch" title="Result" colSpan="5">
-					<grid title="Result" editable="true" >
+				<field name="resultSearch" title="Result" colSpan="5" readonly="true">
+					<grid title="Result" editable="true">
 						<field name="userid" readonly="true"></field>
-						<field name="firstname"  readonly="true"></field>
+						<field name="firstname" readonly="true"></field>
 						<field name="lastname" readonly="true"></field>
 						<field name="gender" readonly="true"></field>
 						<field name="link" readonly="true"></field>
@@ -41,10 +42,4 @@
 			</page>
 		</notebook>
 	</form>
-	
-	<action-attrs name="action-check-initial">
-		<attribute name="hidden" for="resultSearch" expr="eval:id==null"/>
-		<attribute name="readonly" for="searchparam" expr="eval:id!=null"/>
-		<attribute name="hidden" for="submit" expr="eval:id!=null"/>
-	</action-attrs>
 </object-views>

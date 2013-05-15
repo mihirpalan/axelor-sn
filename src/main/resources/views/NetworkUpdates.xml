@@ -29,5 +29,4 @@
 	<action-method name="action-get-network-updates">
 		<call class="com.axelor.sn.web.Controller" method="getNetworkUpdates" />
 	</action-method>
-
 </object-views>

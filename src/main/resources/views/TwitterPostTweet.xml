@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
 
-	<grid title="post-tweet-grid" name="post-tweet-grid">
+	<grid title="Posted Tweets" name="post-tweet-grid" orderBy="-postedTime"
+		model="com.axelor.sn.db.PostTweet">
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
-			<button name="delete" title="Delete" hidden="true"/>
-			<button name="btnDeleteTwt" title="Delete" onClick="com.axelor.sn.web.TWTController:getDeleteMessage"/>
+			<button name="delete" title="Delete" hidden="true" />
+			<button name="btnDeleteTwt" title="Delete"
+				prompt="It will delete record(s) from Twitter and Database would you like to Continue?"
+				onClick="com.axelor.sn.web.TWTController:getDeleteMessage" />
 		</toolbar>
 		<field name="content" title="Content"></field>
 		<field name="acknowledgment" title="Acknowledgment"></field>
@@ -24,16 +27,17 @@
 		</field>
 	</grid>
 
-	<form title="post-tweet-form" name="post-tweet-form" onNew="action-user-post-tweet-user,action-runTime-comnt"
+	<form title="New Tweet" name="post-tweet-form"
+		onNew="action-user-post-tweet-user,action-runTime-comnt"
 		onSave="com.axelor.sn.web.TWTController:postOnTwitter,action-posted-time"
-		onLoad="action-runTime-comnt">
+		model="com.axelor.sn.db.PostTweet" onLoad="action-runTime-comnt">
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
 		</toolbar>
 		<group title="Post Tweet">
-			<field name="content" title="Contents"></field>
+			<field name="content" max="140" title="Contents" bgColor="#FFFFFF"></field>
 			<break />
-			<button name="retriveComments" title="Get Comments" 
+			<button name="retriveComments" title="Get Comments"
 				onClick="com.axelor.sn.web.TWTController:getComments" />
 			<!-- onClick="com.axelor.sn.web.TWTController:postOnTwitter" -->
 			<break />
@@ -41,15 +45,15 @@
 
 			<field name="curUser" readonly="true" hidden="true"></field>
 			<field name="postedTime" readonly="true" hidden="true"></field>
-			<break/>
+			<break />
 			<field name="postComment" title="Post Replay"></field>
-			<button name="postIt" title="Post" onClick="com.axelor.sn.web.TWTController:postTweetReplay"/>
+			<button name="postIt" title="Post"
+				onClick="com.axelor.sn.web.TWTController:postTweetReplay" />
 		</group>
 		<break />
 		<group cols="1" colSpan="5">
 			<field name="commentsTweet" readonly="true">
 				<grid title="Comments On Tweets">
-					<field name="contentid"></field>
 					<field name="tweetFrom"></field>
 					<field name="tweetContent"></field>
 					<field name="tweetTime"></field>
@@ -64,13 +68,13 @@
 	</action-record>
 
 	<action-record name="action-posted-time" model="com.axelor.sn.db.PostTweet">
-	<field name="postedTime" expr="eval:__datetime__"/>
+		<field name="postedTime" expr="eval:__datetime__" />
 	</action-record>
-	
+
 	<action-attrs name="action-runTime-comnt">
 		<attribute name="hidden" for="retriveComments" expr="eval:id==null" />
-		<attribute name="readonly" for="content" expr="eval:id!=null"/>
-		<attribute name="hidden" for="commentsTweet" expr="eval:id==null"/>
+		<attribute name="readonly" for="content" expr="eval:id!=null" />
+		<attribute name="hidden" for="commentsTweet" expr="eval:id==null" />
 		<attribute name="hidden" for="postComment" expr="eval:id==null" />
 		<attribute name="hidden" for="postIt" expr="eval:id==null" />
 	</action-attrs>

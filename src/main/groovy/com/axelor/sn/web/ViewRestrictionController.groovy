@@ -6,6 +6,7 @@ import com.axelor.meta.db.MetaMenu;
 import com.axelor.meta.views.MenuItem;
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
+import com.axelor.sn.db.SocialNetworking
 import com.axelor.sn.service.SNMetaService
 import com.google.inject.Inject;
 
@@ -16,10 +17,8 @@ class ViewRestrictionController
 
 	void getSelectedValues(ActionRequest request,ActionResponse response)
 	{
-		List keys=request.context.keySet().asList();
-		List values=request.context.values().asList();
-		MetaMenu menuObj=values.get(keys.indexOf("menus"));
-		Set<Group> grpObj=values.get(keys.indexOf("groups"));
+		MetaMenu menuObj=request.context.get("menus");
+		Set<Group> grpObj=request.context.get("groups");
 		try
 		{
 			response.flash=service.setRestrictions(menuObj, grpObj);
@@ -29,6 +28,11 @@ class ViewRestrictionController
 			response.flash=e.getMessage();
 			e.printStackTrace();
 		}
-
+	}
+	
+	void lowerSnName(ActionRequest request,ActionResponse response)
+	{
+		def context=request.context as SocialNetworking
+		response.values=["name":context.name.toLowerCase()]
 	}
 }

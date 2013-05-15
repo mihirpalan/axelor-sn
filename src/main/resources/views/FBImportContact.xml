@@ -3,15 +3,15 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
-	<grid name="twt-import-contact-grid" title="Contact List"
+	<grid name="import-contact-grid" title="Contact List" orderBy="name"
 		model="com.axelor.sn.db.ImportContact">
 		<toolbar>
 			<button name="butnCustom" title="Sync Contacts"
-				onClick="com.axelor.sn.web.TWTController:getAllContactsTwt" />
+				onClick="com.axelor.sn.web.FBController:getAllContactsFB" />
 			<button name="new" title="New" hidden="true" />
 			<button name="save" title="Get Contacts" hidden="true" />
 			<button name="edit" title="Edit" hidden="true" />
-			<button name="delete" title="Delete" hidden="false" />
+			<button name="delete" title="Delete" />
 			<button name="refresh" title="Refresh" />
 			<button name="search" title="Search" hidden="true" />
 		</toolbar>
@@ -21,30 +21,25 @@
 		<field name="snUserId" readonly="true" title="User Id">
 		</field>
 		<field name="curUser" readonly="true" hidden="true" title="Current User"></field>
-
 	</grid>
 
-	<form name="twt-import-contact-form" title="Contact List"
-		onNew="com.axelor.sn.web.TWTController:getAllContactsTwt">
-		<field name="snUserId" readonly="true"></field>
+	<form name="import-contact-formNew" title="Contact List"
+		onNew="com.axelor.sn.web.FBController:getAllContactsFB" model="com.axelor.sn.db.ImportContact">
+		<field name="snUserId" readonly="true" title="User Id">
+		</field>
 		<break />
-		<field name="name" readonly="true"></field>
+		<field name="name" readonly="true" title="Name"></field>
 		<break />
-		<field name="link" readonly="true"></field>
+		<field name="link" readonly="true" title="Link"></field>
 		<break />
-		<field name="snType" readonly="true"></field>
+		<field name="snType" readonly="true" title="Network Type"></field>
 		<break />
-		<field name="curUser" readonly="true" hidden="true"></field>
+		<field name="curUser" readonly="true" hidden="true" title="Current User"></field>
 	</form>
 
-	<action-record name="twt-action-user-import-contact-user"
+	<action-record name="action-user-import-contact-user"
 		model="com.axelor.sn.db.ImportContact">
 		<field name="curUser" expr="eval:__user__" />
 	</action-record>
-
-	<action-view name="action-getForm" model="com.axelor.sn.db.DirectMessage"
-		title="DirecMessage">
-		<view type="form" name="direct-msg-form" />
-	</action-view>
-
+	
 </object-views>

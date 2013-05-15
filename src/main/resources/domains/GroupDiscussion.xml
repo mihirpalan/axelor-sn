@@ -16,5 +16,4 @@
 		<one-to-many name="discussionComments" ref="com.axelor.sn.db.GroupDiscussionComments" mappedBy="discussion" />
 		<boolean name="discussionByCurrentUser" default="true" />
 	</entity>
-	
 </domain-models>

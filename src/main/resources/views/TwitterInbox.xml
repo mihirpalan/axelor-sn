@@ -1,27 +1,43 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 	<grid title="Inbox" name="twt-inbox-grid">
 		<toolbar>
 			<button name="fireGoEvent" title="Write New!!" onClick="action-fireGoEvent" />
-			<button name="fireEvent" title="Sync Inbox!!" onClick="com.axelor.sn.web.TWTController:getBoxMsg" />			
+			<button name="fireEvent" title="Sync Inbox!!"
+				onClick="com.axelor.sn.web.TWTController:getBoxMsg" />
 			<button name="refresh" title="Refresh" />
 			<button name="search" title="Search" />
 			<button name="new" title="New" hidden="true" />
 			<button name="save" title="Save" />
 			<button name="edit" title="Edit" hidden="true" />
 			<button name="delete" title="Delete" hidden="true" />
-			<button name="fireDelete" title="Delete" onClick="com.axelor.sn.web.TWTController:deleteDirectMessage"/>
+			<button name="fireDelete" title="Delete"
+				prompt="It will delete record(s) from Twitter and Database would you like to Continue?"
+				onClick="com.axelor.sn.web.TWTController:deleteDirectMessage" />
 		</toolbar>
 		<field name="msgId" readonly="true"></field>
 		<field name="msgContent" readonly="true"></field>
 		<field name="senderName" readonly="true"></field>
 		<field name="senderId" readonly="true" hidden="true"></field>
 	</grid>
-	
-	<action-view name="action-fireGoEvent" model="com.axelor.sn.db.DirectMessage" title="Compose New">
-	<view type="form" name="direct-msg-form"/>
+
+	<form title="Detail Message" name="twt-inbox-form">
+		<toolbar>
+			<button name="new" title="New" hidden="true" />
+			<button name="save" title="Save" />
+			<button name="edit" title="Edit" hidden="true" />
+		</toolbar>
+		<break />
+		<field name="senderName" readonly="true"></field>
+		<break />
+		<field name="msgContent" readonly="true"></field>
+	</form>
+
+	<action-view name="action-fireGoEvent" model="com.axelor.sn.db.DirectMessage"
+		title="Compose New">
+		<view type="form" name="direct-msg-form" />
 	</action-view>
 </object-views>
 

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views"
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.7.xsd">
-	<grid title="Home Timeline" name="twt-timeline-grid">
+	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
+	<grid title="Home Timeline" name="twt-timeline-grid" orderBy="-timelineContentId">
 		<toolbar>
 			<button name="new" title="New" hidden="true" />
 			<button name="save" title="Save" hidden="true" />
