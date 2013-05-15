@@ -616,35 +616,12 @@ public class SNService {
 				throw new Exception("You Have not Authorized the Application...");
 			}
 			else {
-				LinkedinParameters parameters = LinkedinParameters.all().filter("curUser=?", user).fetchOne();
-				if(parameters != null)
-					em.remove(parameters);
-				
-				List<GroupMember> groupMember = GroupMember.all().filter("curUser=?", user).fetch();
-				for(int i = 0; i < groupMember.size(); i++) {
-					em.remove(GroupMember.find(groupMember.get(i).getId().longValue()));
-				}
-				
-				List<NetworkUpdates> networkUpdates = NetworkUpdates.all().filter("curUser=?", user).fetch();
-				for(int i = 0; i < networkUpdates.size(); i++) {
-					em.remove(NetworkUpdates.find(networkUpdates.get(i).getId().longValue()));
-				}
-				
-				List<PostUpdates> postUpdates = PostUpdates.all().filter("curUser=?", user).fetch();
-				for(int i = 0; i < postUpdates.size(); i++) {
-					em.remove(PostUpdates.find(postUpdates.get(i).getId().longValue()));
-				}
-				
-				List<DirectMessages> directMessages = DirectMessages.all().filter("curUser=?", user).fetch();
-				for(int i = 0; i < directMessages.size(); i++) {
-					em.remove(DirectMessages.find(directMessages.get(i).getId().longValue()));
-				}
-				
-				List<ImportContact> importContact = ImportContact.all().filter("curUser=?", user).fetch();
-				for(int i = 0; i < importContact.size(); i++) {
-					em.remove(ImportContact.find(importContact.get(i).getId().longValue()));
-				}
-				
+				LinkedinParameters.all().filter("curUser=?", user).remove();
+				GroupMember.all().filter("curUser=?", user).remove();
+				NetworkUpdates.all().filter("curUser=?", user).remove();
+				PostUpdates.all().filter("curUser=?", user).remove();
+				DirectMessages.all().filter("curUser=?", user).remove();
+				ImportContact.all().filter("curUser=? and snType=?", user, snType).remove();
 				em.remove(personalCredential);
 			}
 			return "Successfully UnAuthorized...";
