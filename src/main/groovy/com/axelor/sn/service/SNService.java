@@ -83,15 +83,15 @@ public class SNService {
 		return authUrl;
 	}
 
+	@SuppressWarnings("rawtypes")
 	@Transactional
-	public boolean getUserToken( String verifier, User user) throws Exception {
+	public boolean getUserToken( String verifier, User user, String tokenCode) throws Exception {
 		boolean status = false;
 		
-		String userDetails = LinkedinConnect.getUserToken(verifier, user.getName());
-		String[] details = userDetails.split("=");
-		String token = details[0];
-		String tokenSecret = details[1];
-		String name = details[2];
+		HashMap userDetails = LinkedinConnect.getUserToken(verifier, tokenCode);
+		String token = userDetails.get("accessToken").toString();
+		String tokenSecret = userDetails.get("accessTokenSecret").toString();
+		String name = userDetails.get("userName").toString();
 		try {
 			PersonalCredential personalCredential = new PersonalCredential();
 			personalCredential.setUserToken(token);
@@ -170,7 +170,8 @@ public class SNService {
 		}
 	}
 
-	public String updateStatus(String content, User user) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public HashMap updateStatus(String content, User user) throws Exception {
 		SocialNetworking snType = SocialNetworking.all().filter("lower(name)= ?", "linkedin").fetchOne();
 		if (snType == null)
 			throw new Exception("Network Type Not Found");
@@ -185,7 +186,7 @@ public class SNService {
 				else {
 					String userToken = personalCredential.getUserToken();
 					String userTokenSecret = personalCredential.getUserTokenSecret();
-					String updateKeyTime = LinkedinConnect.updateStatus(userToken, userTokenSecret, content);
+					HashMap updateKeyTime = LinkedinConnect.updateStatus(userToken, userTokenSecret, content);
 					return updateKeyTime;
 				}
 			}

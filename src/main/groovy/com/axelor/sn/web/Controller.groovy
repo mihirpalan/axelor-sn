@@ -85,10 +85,10 @@ class Controller {
 		if(context.getId() == null) {
 			User user = request.context.get("__user__")
 			String content = request.context.get("content").toString()
-			String updateKeyTime = LinkedinService.updateStatus(content, user)
-			String[] array = updateKeyTime.split(":")
-			DateTime date = new DateTime(Long.parseLong(array[1]));
-			response.values = ["contentId":array[0], "postTime":date]
+			HashMap updateKeyTime = LinkedinService.updateStatus(content, user)
+			String contentId = updateKeyTime.get("updateId")
+			DateTime date = new DateTime(updateKeyTime.get("updateTimeStamp"));
+			response.values = ["contentId" : contentId, "postTime" : date]
 			response.flash = "Status Successfully Updated to LinkedIn..."
 		}
 	}

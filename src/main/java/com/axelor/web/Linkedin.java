@@ -20,12 +20,12 @@ public class Linkedin {
 
 	@GET
 	@Path("{id}")
-	public String get(@PathParam("id") Long id, @QueryParam("oauth_verifier") String verifier) throws Exception 
+	public String get(@PathParam("id") Long id, @QueryParam("oauth_verifier") String verifier, @QueryParam("oauth_token") String token) throws Exception 
 	{
 		String str=null;
 		Subject subject = SecurityUtils.getSubject();
 		User currentUser = User.all().filter("self.code = ?1", subject.getPrincipal()).fetchOne();
-		boolean status=LinkedinService.getUserToken( verifier, currentUser);		
+		boolean status=LinkedinService.getUserToken( verifier, currentUser, token);		
 		if(status)
 		{
 //			str="Successfully logged In..";
