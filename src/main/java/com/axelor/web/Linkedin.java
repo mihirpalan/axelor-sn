@@ -10,13 +10,13 @@ import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 
 import com.axelor.auth.db.User;
-import com.axelor.sn.service.SNService;
+import com.axelor.sn.service.LnService;
 
 @Path("/linkedin")
 public class Linkedin {
 	
 	@Inject
-	SNService LinkedinService;
+	LnService LinkedinService;
 
 	@GET
 	@Path("{id}")
@@ -28,7 +28,6 @@ public class Linkedin {
 		boolean status=LinkedinService.getUserToken( verifier, currentUser, token);		
 		if(status)
 		{
-//			str="Successfully logged In..";
 			str="<html><head><script type=\"text/javascript\">  function onLoadPage(){  alert(\"Successfully Logged In\");  window.close(); }   </script></head><body onLoad=\"onLoadPage()\"></body> </HTML>";
 		}
 		return str;

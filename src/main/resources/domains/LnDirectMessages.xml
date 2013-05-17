@@ -5,13 +5,12 @@
 
 	<module name="sn" package="com.axelor.sn.db" />
 
-	<entity name="Comments">
-		<many-to-one name="contentId" ref="com.axelor.sn.db.PostUpdates" />
-		<string name="commentId" title="Comment ID" />
-		<string name="comment" title="Comment" multiline="true" max="700" />
-		<datetime name="commentTime" title="Time" tz="true" />
+	<entity name="LnDirectMessages">
+		<many-to-one name="userid" ref="com.axelor.sn.db.ImportContact"	required="true" />
+		<string name="subject" title="Subject" required="true" max="150" />
+		<string name="msgcontent" multiline="true" title="Message Content" required="true" max="4000" />
 		<many-to-one name="curUser" ref="com.axelor.auth.db.User" />
-		<many-to-one name="fromUser" ref="com.axelor.sn.db.ImportContact" />
+		<datetime name="date" tz="true" />
 	</entity>
 
 </domain-models>

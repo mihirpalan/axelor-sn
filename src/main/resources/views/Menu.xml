@@ -280,16 +280,16 @@
 		model="com.axelor.sn.db.ImportContact">
 		<view type="grid" name="import-contacts-grid" />
 		<view type="form" name="import-contacts-form" />
-		<domain>self.curUser = :user_id and self.snType.name=:snt</domain>
+		<domain>self.curUser = :user_id and self.snType.name=:sntype</domain>
 		<context name="user_id" expr="eval:__user__" />
-		<context name="snt" expr="linkedin" />
+		<context name="sntype" expr="linkedin" />
 	</action-view>
 
 
 	<menuitem name="menu-linkedin-message" parent="menu-linkedin"
 		title="Messages" action="send.message" icon="img/LINMSG.jpg" />
 	<action-view name="send.message" title="Messages"
-		model="com.axelor.sn.db.DirectMessages">
+		model="com.axelor.sn.db.LnDirectMessages">
 		<view type="grid" name="direct-message-grid" />
 		<view type="form" name="direct-message-form" />
 		<domain>self.curUser = :user_id</domain>
@@ -299,10 +299,10 @@
 
 	<menuitem name="menu-linkedin-post" parent="menu-linkedin"
 		title="Status Updates" action="updatePost" icon="img/LInUpdate.jpg" />
-	<action-view name="updatePost" title="Posts"
-		model="com.axelor.sn.db.PostUpdates">
-		<view type="grid" name="post-grid" />
-		<view type="form" name="post-form" /><!-- <view type="form" name="comment-form"/> -->
+	<action-view name="updatePost" title="Updates"
+		model="com.axelor.sn.db.LnStatusUpdates">
+		<view type="grid" name="ln-status-update-grid" />
+		<view type="form" name="ln-status-update-form" />
 		<domain>self.curUser = :user_id</domain>
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
@@ -311,7 +311,7 @@
 	<menuitem name="menu-linkedin-network-updates" parent="menu-linkedin"
 		title="Network Updates" action="network.updates" icon="img/LINnw.jpg" />
 	<action-view name="network.updates" title="Updates"
-		model="com.axelor.sn.db.NetworkUpdates">
+		model="com.axelor.sn.db.LnNetworkUpdates">
 		<view type="grid" name="network-update-grid" />
 		<view type="form" name="network-update-form" />
 		<domain>self.curUser = :user_id</domain>
@@ -324,7 +324,7 @@
 	<menuitem name="menu-linkedin-groups-list" parent="menu-linkedin-groups"
 		title="Memberships" action="membership-view" icon="img/LINMember.jpg" />
 	<action-view name="membership-view" title="Memberships"
-		model="com.axelor.sn.db.GroupMember">
+		model="com.axelor.sn.db.LnGroup">
 		<view type="grid" name="linkedin-group-membership-grid" />
 		<view type="form" name="linkedin-group-membership-form" />
 		<domain>self.curUser = :user_id</domain>
@@ -335,10 +335,10 @@
 	<menuitem name="menu-linkedin-groups-disussion" parent="menu-linkedin-groups"
 		title="Discussions" action="discussion-view" icon="img/LINGD.jpg" />
 	<action-view name="discussion-view" title="Discussions"
-		model="com.axelor.sn.db.GroupDiscussion">
+		model="com.axelor.sn.db.LnGroupDiscussion">
 		<view type="grid" name="group-discussion-grid" />
 		<view type="form" name="group-discussion-form" />
-		<domain>self.curUser = :user_id and self.discussionByCurrentUser =:current_user</domain>
+		<domain>self.curUser = :user_id and self.isByUser =:current_user</domain>
 		<context name="user_id" expr="eval:__user__" />
 		<context name="current_user" expr="true" />
 	</action-view>

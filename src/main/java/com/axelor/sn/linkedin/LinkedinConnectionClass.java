@@ -1,4 +1,4 @@
-package com.axelor.sn.likedin;
+package com.axelor.sn.linkedin;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -61,7 +61,7 @@ public class LinkedinConnectionClass {
 			CommentField.TEXT);
 
 	public String getUrl(String consumerKey, String consumerSecret,
-			String redirectUrl, String userName) throws IOException {
+			String redirectUrl) throws IOException {
 		String authUrl = "";
 		oauthService = LinkedInOAuthServiceFactory.getInstance()
 				.createLinkedInOAuthService(consumerKey, consumerSecret);
@@ -86,8 +86,7 @@ public class LinkedinConnectionClass {
 		requestToken = (LinkedInRequestToken) inStream.readObject();
 		temp.delete();
 		inStream.close();
-		LinkedInAccessToken accessToken = oauthService.getOAuthAccessToken(
-				requestToken, verifier);
+		LinkedInAccessToken accessToken = oauthService.getOAuthAccessToken(requestToken, verifier);
 		HashMap userDetails = new HashMap();
 
 		client = factory.createLinkedInApiClient(accessToken);
@@ -106,8 +105,7 @@ public class LinkedinConnectionClass {
 			String userTokenSecret) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
 		Person profile = client.getProfileForCurrentUser(setProfileFields);
-		Connections connections = client
-				.getConnectionsForCurrentUser(setProfileFields);
+		Connections connections = client.getConnectionsForCurrentUser(setProfileFields);
 
 		HashMap<String, String> userDetails = new HashMap<String, String>();
 		userDetails.put("userId", profile.getId());
@@ -115,18 +113,17 @@ public class LinkedinConnectionClass {
 				profile.getFirstName() + " " + profile.getLastName());
 		userDetails.put("userLink", profile.getPublicProfileUrl());
 
-		ArrayList<HashMap> users = new ArrayList<HashMap>();
-		users.add(userDetails);
+		ArrayList<HashMap> userConnections = new ArrayList<HashMap>();
+		userConnections.add(userDetails);
 
 		for (Person person : connections.getPersonList()) {
 			userDetails = new HashMap<String, String>();
 			userDetails.put("userId", person.getId());
-			userDetails.put("userName",
-					person.getFirstName() + " " + person.getLastName());
+			userDetails.put("userName", person.getFirstName() + " " + person.getLastName());
 			userDetails.put("userLink", person.getPublicProfileUrl());
-			users.add(userDetails);
+			userConnections.add(userDetails);
 		}
-		return users;
+		return userConnections;
 	}
 
 	public void sendMessage(String userToken, String userTokenSecret,
@@ -137,9 +134,9 @@ public class LinkedinConnectionClass {
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public HashMap updateStatus(String userToken, String userTokenSecret,
-			String content) {
+			String updateContent) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		client.updateCurrentStatus(content);
+		client.updateCurrentStatus(updateContent);
 
 		Updates upd = client.getUserUpdates(networkUpdateType, 0, 1)
 				.getUpdates();
@@ -157,138 +154,127 @@ public class LinkedinConnectionClass {
 			String userTokenSecret, String contentId) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
 
-		UpdateComments updateComments = client
-				.getNetworkUpdateComments(contentId);
-		Iterator<UpdateComment> itr = updateComments.getUpdateCommentList()
-				.iterator();
-		UpdateComment comment = null;
+		UpdateComments updateComments = client.getNetworkUpdateComments(contentId);
+		Iterator<UpdateComment> commentIterator = updateComments.getUpdateCommentList().iterator();
+		UpdateComment commentData = null;
 		ArrayList<HashMap> commentList = new ArrayList<HashMap>();
-		while (itr.hasNext()) {
-			comment = itr.next();
-			HashMap comments = new HashMap();
-			comments.put("commentId", comment.getId());
-			comments.put("comment", comment.getComment());
-			comments.put("commentTime", comment.getTimestamp());
-			comments.put("fromUser", comment.getPerson().getId());
-			commentList.add(comments);
+		while (commentIterator.hasNext()) {
+			commentData = commentIterator.next();
+			HashMap comment = new HashMap();
+			comment.put("commentId", commentData.getId());
+			comment.put("commentText", commentData.getComment());
+			comment.put("commentTime", commentData.getTimestamp());
+			comment.put("fromSnUserId", commentData.getPerson().getId());
+			commentList.add(comment);
 		}
 		return commentList;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public HashMap addStatusComment(String userToken, String userTokenSecret,
-			String contentId, String comment) {
+			String contentId, String commentText) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		client.postComment(contentId, comment);
-		UpdateComments updateComments = client
-				.getNetworkUpdateComments(contentId);
-		Iterator<UpdateComment> itr = updateComments.getUpdateCommentList()
-				.iterator();
-		UpdateComment coment = null;
-		HashMap comments = new HashMap();
-		while (itr.hasNext()) {
-			coment = itr.next();
-			if (!itr.hasNext()) {
-				comments = new HashMap();
-				comments.put("commentId", coment.getId());
-				comments.put("comment", coment.getComment());
-				comments.put("commentTime", coment.getTimestamp());
-				comments.put("fromUser", coment.getPerson().getId());
+		client.postComment(contentId, commentText);
+		UpdateComments updateComments = client.getNetworkUpdateComments(contentId);
+		Iterator<UpdateComment> commentsIterator = updateComments.getUpdateCommentList().iterator();
+		UpdateComment comment = null;
+		HashMap commentData = new HashMap();
+		while (commentsIterator.hasNext()) {
+			comment = commentsIterator.next();
+			if (!commentsIterator.hasNext()) {
+				commentData = new HashMap();
+				commentData.put("commentId", comment.getId());
+				commentData.put("commentText", comment.getComment());
+				commentData.put("commentTime", comment.getTimestamp());
+				commentData.put("fromSnUserId", comment.getPerson().getId());
 			}
 		}
-		return comments;
+		return commentData;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public ArrayList<HashMap> fetchNetworkUpdates(String userToken,
 			String userTokenSecret, int count, Date startDate, Date endDate) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		Network network;
+		Network networkUpdates;
 		if (count != 0 && startDate == null)
-			network = client.getNetworkUpdates(networkUpdateType, 0, count);
+			networkUpdates = client.getNetworkUpdates(networkUpdateType, 0, count);
 		else if (count == 0 && startDate != null)
-			network = client.getNetworkUpdates(networkUpdateType, startDate,
+			networkUpdates = client.getNetworkUpdates(networkUpdateType, startDate,
 					endDate);
 		else if (count != 0 && startDate != null)
-			network = client.getNetworkUpdates(networkUpdateType, 0, count,
+			networkUpdates = client.getNetworkUpdates(networkUpdateType, 0, count,
 					startDate, endDate);
 		else
-			network = client.getNetworkUpdates(networkUpdateType, 0, 15);
+			networkUpdates = client.getNetworkUpdates(networkUpdateType, 0, 15);
 
-		Iterator<Update> itr = network.getUpdates().getUpdateList().iterator();
-		Update update = null;
-		HashMap networkUpdates = new HashMap();
+		Iterator<Update> networkUpdatesIterator = networkUpdates.getUpdates().getUpdateList().iterator();
+		Update updateData = null;
+		HashMap networkUpdate = new HashMap();
 		ArrayList networkUpdatesList = new ArrayList();
-		while (itr.hasNext()) {
-			update = itr.next();
-			if (update.getUpdateContent().getPerson().getCurrentShare()
-					.getComment() == null)
+		while (networkUpdatesIterator.hasNext()) {
+			updateData = networkUpdatesIterator.next();
+			if (updateData.getUpdateContent().getPerson().getCurrentShare().getComment() == null)
 				continue;
-			networkUpdates = new HashMap();
-			networkUpdates.put("contentId", update.getUpdateKey());
-			networkUpdates.put("content", update.getUpdateContent().getPerson()
-					.getCurrentShare().getComment());
-			networkUpdates.put("timeStamp", update.getTimestamp());
-			networkUpdates.put("fromUser", update.getUpdateContent()
-					.getPerson().getId());
-			networkUpdatesList.add(networkUpdates);
+			networkUpdate = new HashMap();
+			networkUpdate.put("networkUpdateId", updateData.getUpdateKey());
+			networkUpdate.put("networkUpdateContent", updateData.getUpdateContent().getPerson().getCurrentShare().getComment());
+			networkUpdate.put("networkUpdateTimeStamp", updateData.getTimestamp());
+			networkUpdate.put("fromUser", updateData.getUpdateContent().getPerson().getId());
+			networkUpdatesList.add(networkUpdate);
 		}
 		return networkUpdatesList;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ArrayList<HashMap> getMemberships(String userToken,
-			String userTokenSecret) {
+	public ArrayList<HashMap> getMemberships(String userToken, String userTokenSecret) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
 		GroupMemberships memberships = client.getGroupMemberships(groupFields);
-		ArrayList groupMembers = new ArrayList();
+		ArrayList groupList = new ArrayList();
 		HashMap member = new HashMap();
 		for (GroupMembership membership : memberships.getGroupMembershipList()) {
 			member = new HashMap();
 			member.put("groupId", membership.getGroup().getId());
 			member.put("groupName", membership.getGroup().getName());
-			member.put("membershipState", membership.getMembershipState()
-					.getCode().toString());
-			groupMembers.add(member);
+			member.put("membershipState", membership.getMembershipState().getCode().toString());
+			groupList.add(member);
 		}
-		return groupMembers;
+		return groupList;
 	}
 
 	@SuppressWarnings({ "rawtypes", "unchecked" })
 	public ArrayList<HashMap> getDiscussions(String userToken,
 			String userTokenSecret, String groupId, int count, Date modifiedDate) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		Posts post = null;
+		Posts groupPost = null;
 		if (count != 0 && modifiedDate == null)
-			post = client.getPostsByGroup(groupId, postField, 0, count);
+			groupPost = client.getPostsByGroup(groupId, postField, 0, count);
 		else if (count != 0 && modifiedDate != null)
-			post = client.getPostsByGroup(groupId, postField, 0, count,
-					modifiedDate);
+			groupPost = client.getPostsByGroup(groupId, postField, 0, count, modifiedDate);
 		else
-			post = client.getPostsByGroup(groupId, postField, 0, 15);
+			groupPost = client.getPostsByGroup(groupId, postField, 0, 15);
 
-		ArrayList<HashMap> groupDiscussions = new ArrayList<HashMap>();
-		HashMap discussion;
-
-		for (Post p : post.getPostList()) {
-			discussion = new HashMap();
-			discussion.put("id", p.getId());
-			if (p.getTitle() != null)
-				discussion.put("title", p.getTitle());
+		ArrayList<HashMap> groupDiscussionList = new ArrayList<HashMap>();
+		HashMap groupDiscussionData;
+		for (Post post : groupPost.getPostList()) {
+			groupDiscussionData = new HashMap();
+			groupDiscussionData.put("discussionId", post.getId());
+			if (post.getTitle() != null)
+				groupDiscussionData.put("discussionTitle", post.getTitle());
 			else
-				discussion.put("title", "");
+				groupDiscussionData.put("discussionTitle", "");
 
-			if (p.getSummary() != null)
-				discussion.put("summary", p.getSummary());
+			if (post.getSummary() != null)
+				groupDiscussionData.put("discussionSummary", post.getSummary());
 			else
-				discussion.put("summary", "");
-			discussion.put("by", p.getCreator().getFirstName() + " "
-					+ p.getCreator().getLastName());
-			discussion.put("time", p.getCreationTimestamp());
+				groupDiscussionData.put("discussionSummary", "");
+			groupDiscussionData.put("fromUser", post.getCreator().getFirstName() + " "
+					+ post.getCreator().getLastName());
+			groupDiscussionData.put("discussionTime", post.getCreationTimestamp());
 
-			groupDiscussions.add(discussion);
+			groupDiscussionList.add(groupDiscussionData);
 		}
-		return groupDiscussions;
+		return groupDiscussionList;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
@@ -299,11 +285,10 @@ public class LinkedinConnectionClass {
 
 		Posts post = client.getPostsByGroup(groupId, postField, 0, 1);
 		HashMap discussionIdTime = new HashMap();
-		discussionIdTime.put("id", post.getPostList().get(0).getId());
-		discussionIdTime.put("time", post.getPostList().get(0)
+		discussionIdTime.put("discussionId", post.getPostList().get(0).getId());
+		discussionIdTime.put("discussionTime", post.getPostList().get(0)
 				.getCreationTimestamp());
-		discussionIdTime.put("by", post.getPostList().get(0).getCreator()
-				.getFirstName()
+		discussionIdTime.put("fromUser", post.getPostList().get(0).getCreator().getFirstName()
 				+ " " + post.getPostList().get(0).getCreator().getLastName());
 
 		return discussionIdTime;
@@ -317,36 +302,35 @@ public class LinkedinConnectionClass {
 		Comments comments = client.getPostComments(discussionId, commentField,
 				0, Integer.parseInt(cmnt.getTotal().toString()));
 		ArrayList<HashMap> commentList = new ArrayList<HashMap>();
-		HashMap comment;
+		HashMap commentData;
 		for (int i = 0; i < comments.getTotal(); i++) {
-			Comment c = comments.getCommentList().get(i);
-			comment = new HashMap();
-			comment.put("id", c.getId());
-			comment.put("text", c.getText());
-			comment.put("time", c.getCreationTimestamp());
-			comment.put("by", c.getCreator().getFirstName() + " "
-					+ c.getCreator().getLastName());
-			commentList.add(comment);
+			Comment comment = comments.getCommentList().get(i);
+			commentData = new HashMap();
+			commentData.put("commentId", comment.getId());
+			commentData.put("commentText", comment.getText());
+			commentData.put("commentTime", comment.getCreationTimestamp());
+			commentData.put("commentFrom", comment.getCreator().getFirstName() + " "
+					+ comment.getCreator().getLastName());
+			commentList.add(commentData);
 		}
 		return commentList;
 	}
 
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public HashMap addDiscussionComment(String userToken,
-			String userTokenSecret, String discussionId, String comment) {
+			String userTokenSecret, String discussionId, String commentText) {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
-		client.addPostComment(discussionId, comment);
+		client.addPostComment(discussionId, commentText);
 		Comments cmnt = client.getPostComments(discussionId, commentField);
-		Comments comments = client.getPostComments(discussionId, commentField,
-				Integer.parseInt(cmnt.getTotal().toString()) - 1, 1);
-		HashMap commentMap = new HashMap();
-		Comment c = comments.getCommentList().get(0);
-		commentMap.put("id", c.getId());
-		commentMap.put("text", c.getText());
-		commentMap.put("time", c.getCreationTimestamp());
-		commentMap.put("by", c.getCreator().getFirstName() + " "
-				+ c.getCreator().getLastName());
-		return commentMap;
+		Comments comments = client.getPostComments(discussionId, commentField, Integer.parseInt(cmnt.getTotal().toString()) - 1, 1);
+		HashMap commentData = new HashMap();
+		Comment comment = comments.getCommentList().get(0);
+		commentData.put("commentId", comment.getId());
+		commentData.put("commentText", comment.getText());
+		commentData.put("commentTime", comment.getCreationTimestamp());
+		commentData.put("commentFrom", comment.getCreator().getFirstName() + " "
+				+ comment.getCreator().getLastName());
+		return commentData;
 	}
 
 	public boolean deleteDiscussion(String userToken, String userTokenSecret,

@@ -4,10 +4,10 @@
 
   <module name="sn" package="com.axelor.sn.db" />
 
-  <entity name="NetworkUpdates">
-	<string name="contentId" title="ID" />
-	<string name="content" title="Content" multiline="true" max="10000" />
-	<datetime name="contentTime" title="Time" tz="true" />
+  <entity name="LnNetworkUpdates">
+	<string name="networkUpdateId" title="ID" />
+	<string name="networkUpdateContent" title="Content" multiline="true" max="10000" />
+	<datetime name="networkUpdateTime" title="Time" tz="true" />
 	<many-to-one name="curUser" ref="com.axelor.auth.db.User" />
 	<many-to-one name="fromUser" ref="com.axelor.sn.db.ImportContact" />
   </entity>

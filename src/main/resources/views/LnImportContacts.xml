@@ -1,8 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <object-views xmlns="http://apps.axelor.com/xml/ns/object-views" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
-	<grid name="import-contacts-grid" title="Contacts List"
-		model="com.axelor.sn.db.ImportContact">
+	<grid name="import-contacts-grid" title="Contacts List" model="com.axelor.sn.db.ImportContact">
 		<toolbar>
 			<button name="sync" title="Synchronise" onClick="action-import-contact" />
 			<button name="save" title="" hidden="true" />
@@ -15,28 +14,20 @@
 		<field name="link" title="Link" />
 		<field name="snType" title="Network Type" />
 	</grid>
-	<form name="import-contacts-form" title="Contacts" cols="4"
-		onNew="action-import-contact,action-user3" model="com.axelor.sn.db.ImportContact">
+	<form name="import-contacts-form" title="Contacts" cols="4" model="com.axelor.sn.db.ImportContact">
 		<toolbar>
-<!-- 			<button name="sync" title="Synchronise" onClick="action-import-contact" /> -->
 			<button name="new" title="" hidden="true" />
+			<button name="save" title="" hidden="true" />
 			<button name="search" title="" hidden="true" />
 			<button name="copy" title="" hidden="true" />
 		</toolbar>
-		<field name="snUserId" title="Linkedin-ID" readonly="true"
-			colSpan="3" />
-		<break />
-		<field name="snType" title="Network Type" readonly="true" colSpan="3" />
+		<field name="snUserId" title="Linkedin-ID" readonly="true" colSpan="3" />
 		<break />
 		<field name="name" title="Full Name" readonly="true" colSpan="3" />
 		<break />
 		<field name="link" title="Link" readonly="true" colSpan="3" />
 	</form>
 	<action-method name="action-import-contact">
-		<call class="com.axelor.sn.web.Controller" method="fetchConnections" />
+		<call class="com.axelor.sn.web.LnController" method="fetchConnections" />
 	</action-method>
-	<action-record name="action-user3" model="com.axelor.sn.db.ImportContact">
-		<field name="curUser" expr="eval: __user__" />
-	</action-record>
-
 </object-views>

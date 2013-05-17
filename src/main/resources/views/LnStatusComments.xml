@@ -3,20 +3,16 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 	<grid name="comment-linkedin-grid" title="All Comments"
-		model="com.axelor.sn.db.Comments">
-		<field name="comment" title="Comment" />
+		model="com.axelor.sn.db.LnStatusComments">
+		<field name="commentText" title="Comment" />
 		<field name="commentTime" title="Time" />
 		<field name="fromUser" title="By" />
 	</grid>
-	<form name="comment-linkedin-form" title="Comment" cols="4"
-		onNew="action-user5" model="com..axelor.sn.db.Comments">
-		<field name="comment" title="Comment" />
+	<form name="comment-linkedin-form" title="Comment"
+		model="com..axelor.sn.db.LnStatusComments">
+		<field name="commentText" title="Comment" />
 		<field name="commentTime" title="Time" />
 		<field name="fromUser" title="By" />
 	</form>
-
-	<action-record name="action-user5" model="com.axelor.sn.db.ImportContacts">
-		<field name="curUser" expr="eval: __user__" />
-	</action-record>
 
 </object-views>

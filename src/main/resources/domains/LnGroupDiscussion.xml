@@ -5,15 +5,15 @@
 	
 	<module name="sn" package="com.axelor.sn.db"/>
 	
-	<entity name="GroupDiscussion">
+	<entity name="LnGroupDiscussion">
 		<string name="discussionId" title="Id" />
 		<string name="discussionSummary" title="Summary" max="4000" multiline="true" />
 		<string name="discussionTitle" title="Title" max="200" />
-		<string name="discussionBy" title="By" />
+		<string name="discussionFrom" title="From" />
 		<datetime name="discussionTime" tz="true" title="Time" />
-		<many-to-one name="groupName" ref="com.axelor.sn.db.GroupMember" />
+		<many-to-one name="groupId" ref="com.axelor.sn.db.LnGroup" />
 		<many-to-one name="curUser" ref="com.axelor.auth.db.User" title="User" />
-		<one-to-many name="discussionComments" ref="com.axelor.sn.db.GroupDiscussionComments" mappedBy="discussion" />
-		<boolean name="discussionByCurrentUser" default="true" />
+		<one-to-many name="discussionCommentsList" ref="com.axelor.sn.db.LnGroupDiscussionComments" mappedBy="discussionId" />
+		<boolean name="isByUser" default="true" />
 	</entity>
 </domain-models>
