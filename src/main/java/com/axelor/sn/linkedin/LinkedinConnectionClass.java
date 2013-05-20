@@ -138,14 +138,14 @@ public class LinkedinConnectionClass {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
 		client.updateCurrentStatus(updateContent);
 
-		Updates upd = client.getUserUpdates(networkUpdateType, 0, 1)
+		Updates update = client.getUserUpdates(networkUpdateType, 0, 1)
 				.getUpdates();
-		Iterator<Update> itr = upd.getUpdateList().iterator();
-		Update update = itr.next();
+		Iterator<Update> updatesIterator = update.getUpdateList().iterator();
+		Update updateData = updatesIterator.next();
 		HashMap updateKeyTime = new HashMap();
 		
-		updateKeyTime.put("updateId", update.getUpdateKey());
-		updateKeyTime.put("updateTimeStamp", update.getTimestamp());
+		updateKeyTime.put("updateId", updateData.getUpdateKey());
+		updateKeyTime.put("updateTimeStamp", updateData.getTimestamp());
 		return updateKeyTime;
 	}
 
@@ -231,13 +231,13 @@ public class LinkedinConnectionClass {
 		client = factory.createLinkedInApiClient(userToken, userTokenSecret);
 		GroupMemberships memberships = client.getGroupMemberships(groupFields);
 		ArrayList groupList = new ArrayList();
-		HashMap member = new HashMap();
-		for (GroupMembership membership : memberships.getGroupMembershipList()) {
-			member = new HashMap();
-			member.put("groupId", membership.getGroup().getId());
-			member.put("groupName", membership.getGroup().getName());
-			member.put("membershipState", membership.getMembershipState().getCode().toString());
-			groupList.add(member);
+		HashMap membership = new HashMap();
+		for (GroupMembership member : memberships.getGroupMembershipList()) {
+			membership = new HashMap();
+			membership.put("groupId", member.getGroup().getId());
+			membership.put("groupName", member.getGroup().getName());
+			membership.put("membershipState", member.getMembershipState().getCode().toString());
+			groupList.add(membership);
 		}
 		return groupList;
 	}

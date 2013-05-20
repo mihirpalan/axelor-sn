@@ -34,7 +34,6 @@ public class LnService {
 	@Inject
 	LinkedinConnectionClass LinkedinConnect;
 	
-	static ApplicationCredentials applicationCredentials;
 	SimpleDateFormat sdf = new SimpleDateFormat("MM/dd/yyyy");
 	EntityManager em = JPA.em();
 	
@@ -59,7 +58,7 @@ public class LnService {
 			PersonalCredential personalCredential = PersonalCredential.all().filter("userId=? and snType=?", user, snType).fetchOne();
 			if (personalCredential == null) {
 				try {
-					applicationCredentials = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
+					ApplicationCredentials applicationCredentials = ApplicationCredentials.all().filter("snType=?", snType).fetchOne();
 					if(applicationCredentials == null) {
 						throw new Exception("Application not set. Contact your Admin to set Application.");
 					}
@@ -160,7 +159,7 @@ public class LnService {
 		String userTokenSecret = personalCredential.getUserTokenSecret();
 		ArrayList<HashMap> commentList = LinkedinConnect.getComments(userToken, userTokenSecret, updateId);
 
-		List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.snUserId FROM ImportContact contact " +
+		List<String> lstSnUserIds = (List<String>) em.createQuery("SELECT contact.snUserId FROM ImportContact contact " +
 				"WHERE contact.curUser=" + user.getId() + " AND contact.snType="+ snType.getId()).getResultList();
 
 		LnStatusUpdates statusUpdate = LnStatusUpdates.all().filter("updateId=?", updateId).fetchOne();
@@ -168,18 +167,18 @@ public class LnService {
 		List<String> lstCommentIds = em.createQuery("SELECT commentList.commentId FROM LnStatusComments commentList " +
 				"WHERE commentList.curUser=" + user.getId() + " AND commentList.updateId=" + statusUpdate.getId()).getResultList();
 
-		HashMap comments = new HashMap();
+		HashMap commentData = new HashMap();
 		for(int i = 0; i < commentList.size(); i++) {
-			comments = commentList.get(i);
-			if(lstUserId.contains(comments.get("fromSnUserId").toString())) {
-				if(!lstCommentIds.contains(comments.get("commentId").toString())) {
+			commentData = commentList.get(i);
+			if(lstSnUserIds.contains(commentData.get("fromSnUserId").toString())) {
+				if(!lstCommentIds.contains(commentData.get("commentId").toString())) {
 					LnStatusComments comment = new LnStatusComments();
 					ImportContact contact = ImportContact.all().filter("snUserId=? and curUser=?",
-							comments.get("fromSnUserId").toString(), user).fetchOne();
-					DateTime date = new DateTime(comments.get("commentTime"));
+							commentData.get("fromSnUserId").toString(), user).fetchOne();
+					DateTime date = new DateTime(commentData.get("commentTime"));
 					comment.setUpdateId(statusUpdate);
-					comment.setCommentId(comments.get("commentId").toString());
-					comment.setCommentText(comments.get("commentText").toString());
+					comment.setCommentId(commentData.get("commentId").toString());
+					comment.setCommentText(commentData.get("commentText").toString());
 					comment.setCommentTime(date);
 					comment.setCurUser(user);
 					comment.setFromUser(contact);
@@ -189,11 +188,6 @@ public class LnService {
 		}
 	}
 	
-	public List<LnStatusComments> refreshComments(LnStatusUpdates postUpdates) {
-		List<LnStatusComments> lstComment = LnStatusComments.all().filter("updateId=?", postUpdates).fetch();
-		return lstComment;
-	}
-
 	@SuppressWarnings({ "rawtypes" })
 	@Transactional
 	public void addStatusComment(User user, String updateId, String commentText) throws Exception {
@@ -254,7 +248,7 @@ public class LnService {
 		}
 		ArrayList<HashMap> networkUpdatesList = LinkedinConnect.fetchNetworkUpdates(userToken, userTokenSecret, count, startDate, endDate);
 
-		List<String> lstUserId = (List<String>) em.createQuery("SELECT contact.snUserId FROM ImportContact contact " +
+		List<String> lstSnUserIds = (List<String>) em.createQuery("SELECT contact.snUserId FROM ImportContact contact " +
 				"WHERE contact.curUser=" + user.getId() + " AND contact.snType="+ snType.getId()).getResultList();
 
 		List<String> lstNetworkUpdateIds = (List<String>) em.createQuery("SELECT networkUpdate.networkUpdateId FROM LnNetworkUpdates networkUpdate"
@@ -263,7 +257,7 @@ public class LnService {
 		HashMap networkUpdateData = new HashMap();
 		for(int i = 0; i < networkUpdatesList.size(); i++) {
 			networkUpdateData = networkUpdatesList.get(i);
-			if (lstUserId.contains(networkUpdateData.get("fromUser").toString())) {
+			if (lstSnUserIds.contains(networkUpdateData.get("fromUser").toString())) {
 				if (!lstNetworkUpdateIds.contains(networkUpdateData.get("networkUpdateId").toString())) {
 					LnNetworkUpdates networkUpdate = new LnNetworkUpdates();
 					ImportContact fromUser = ImportContact.all().filter("snUserId=? and curUser=?",networkUpdateData.get("fromUser").toString(), user).fetchOne();
@@ -287,20 +281,19 @@ public class LnService {
 		PersonalCredential personalCredential = (PersonalCredential) credential.get("personalCredential");
 		String userToken = personalCredential.getUserToken();
 		String userTokenSecret = personalCredential.getUserTokenSecret();
-		ArrayList<HashMap> groupMembers = LinkedinConnect.getMemberships(userToken, userTokenSecret);
+		ArrayList<HashMap> groupMemberships = LinkedinConnect.getMemberships(userToken, userTokenSecret);
 		List<String> lstGroupIds = (List<String>) em.createQuery("SELECT group.groupId FROM LnGroup group WHERE group.curUser=" + user.getId()).getResultList();
-		System.out.println(lstGroupIds);
-		HashMap members = new HashMap();
-		for(int i = 0; i < groupMembers.size(); i++) {
-			members = groupMembers.get(i);
-			if (!lstGroupIds.contains(members.get("groupId").toString())) {
-				LnGroup groupMember = new LnGroup();
-				groupMember.setGroupId(members.get("groupId").toString());
-				groupMember.setGroupName(members.get("groupName").toString());
-				groupMember.setMembershipState(members.get("membershipState").toString());
-				groupMember.setCurUser(user);
+		HashMap membership = new HashMap();
+		for(int i = 0; i < groupMemberships.size(); i++) {
+			membership = groupMemberships.get(i);
+			if (!lstGroupIds.contains(membership.get("groupId").toString())) {
+				LnGroup group = new LnGroup();
+				group.setGroupId(membership.get("groupId").toString());
+				group.setGroupName(membership.get("groupName").toString());
+				group.setMembershipState(membership.get("membershipState").toString());
+				group.setCurUser(user);
 
-				groupMember.persist();
+				group.persist();
 			}
 		}
 		return "Group Memberships Obtained...";
@@ -360,11 +353,6 @@ public class LnService {
 		}
 	}
 
-	public List<LnGroupDiscussion> refreshDiscussions(LnGroup group) {
-		List<LnGroupDiscussion> lstDiscussion = LnGroupDiscussion.all().filter("groupId=?", group).fetch();
-		return lstDiscussion;
-	}
-	
 	@SuppressWarnings("rawtypes")
 	public HashMap addGroupDiscussion( String title, String summary, String groupId, User user) throws Exception {
 		HashMap credential = getUserLogin(user);
@@ -383,13 +371,13 @@ public class LnService {
 		String userToken = personalCredential.getUserToken();
 		String userTokenSecret = personalCredential.getUserTokenSecret();
 		String discussionId = groupDiscussion.getDiscussionId();
-		HashMap commentMap = LinkedinConnect.addDiscussionComment(userToken, userTokenSecret, discussionId, commentText);
+		HashMap commentData = LinkedinConnect.addDiscussionComment(userToken, userTokenSecret, discussionId, commentText);
 		LnGroupDiscussionComments groupDiscussionComment = new LnGroupDiscussionComments();
-		DateTime date = new DateTime(commentMap.get("commentTime"));
-		groupDiscussionComment.setCommentId(commentMap.get("commentId").toString());
-		groupDiscussionComment.setCommentText(commentMap.get("commentText").toString());
+		DateTime date = new DateTime(commentData.get("commentTime"));
+		groupDiscussionComment.setCommentId(commentData.get("commentId").toString());
+		groupDiscussionComment.setCommentText(commentData.get("commentText").toString());
 		groupDiscussionComment.setCommentTime(date);
-		groupDiscussionComment.setFromUser(commentMap.get("commentFrom").toString());
+		groupDiscussionComment.setFromUser(commentData.get("commentFrom").toString());
 		groupDiscussionComment.setCurUser(user);
 		groupDiscussionComment.setDiscussionId(groupDiscussion);
 		groupDiscussionComment.persist();
@@ -422,11 +410,6 @@ public class LnService {
 				groupDiscussionComment.persist();
 			}
 		}
-	}
-	
-	public List<LnGroupDiscussionComments> refreshDiscussionComments(LnGroupDiscussion discussion) {
-		List<LnGroupDiscussionComments> lstGroupDiscussionComment = LnGroupDiscussionComments.all().filter("discussionId=?", discussion).fetch();
-		return lstGroupDiscussionComment;
 	}
 	
 	@SuppressWarnings("rawtypes")

@@ -105,13 +105,9 @@ class LnController {
 	//Function is used to refresh the comments in the view.
 	void refreshComments(ActionRequest request, ActionResponse response) {
 		def context = request.context as LnStatusUpdates
-		List<LnStatusComments> lstComments = context.getCommentList()
-		List<LnStatusComments> lstComment = LinkedinService.refreshComments(context)
-		for(int i=0; i<lstComment.size(); i++) {
-			if(!lstComments.contains(lstComment.get(i)))
-				lstComments.add(lstComment.get(i))
-		}
-		context.setCommentList(lstComments)
+		context.getCommentList().clear()
+		List<LnStatusComments> lstComment = LnStatusComments.all().filter("updateId=?", context).fetch();
+		context.setCommentList(lstComment)
 		response.values = context
 	}
 
@@ -143,13 +139,9 @@ class LnController {
 	//Function is used to refresh the discussions in the view.
 	void refreshDiscussions(ActionRequest request,ActionResponse response) {
 		def context = request.context as LnGroup
-		List<LnGroupDiscussion> lstDiscussions = context.getDiscussionList()
-		List<LnGroupDiscussion> lstDiscussion = LinkedinService.refreshDiscussions(context)
-		for(int i=0; i<lstDiscussion.size(); i++) {
-			if(!lstDiscussions.contains(lstDiscussion.get(i)))
-				lstDiscussions.add(lstDiscussion.get(i))
-		}
-		context.setDiscussionList(lstDiscussions)
+		context.getDiscussionList().clear()
+		List<LnGroupDiscussion> lstDiscussion = LnGroupDiscussion.all().filter("groupId=?", context).fetch();
+		context.setDiscussionList(lstDiscussion)
 		response.values = context
 	}
 	
@@ -186,13 +178,9 @@ class LnController {
 	//Function is used to refresh discussions comments in the view.
 	void refreshDiscussionComments(ActionRequest request,ActionResponse response) {
 		def context = request.context as LnGroupDiscussion
-		List<LnGroupDiscussionComments> lstGroupDiscussionComments = context.getDiscussionCommentsList()
-		List<LnGroupDiscussionComments> lstGroupDiscussionComment = LinkedinService.refreshDiscussionComments(context)
-		for(int i=0; i<lstGroupDiscussionComment.size(); i++) {
-			if(!lstGroupDiscussionComments.contains(lstGroupDiscussionComment.get(i)))
-				lstGroupDiscussionComments.add(lstGroupDiscussionComment.get(i))
-		}
-		context.setDiscussionCommentsList(lstGroupDiscussionComments)
+		context.getDiscussionCommentsList().clear()
+		List<LnGroupDiscussionComments> lstGroupDiscussionComment = LnGroupDiscussionComments.all().filter("discussionId=?", context).fetch();
+		context.setDiscussionCommentsList(lstGroupDiscussionComment)
 		response.values = context
 	}
 
