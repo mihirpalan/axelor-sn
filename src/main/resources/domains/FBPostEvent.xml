@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.8.xsd">
 	<module name="sn" package="com.axelor.sn.db" />
-	<entity name="PostEvent">
+	<entity name="FBPostEvent">
 		<string name="occession" help="Event Name for Facebbok to Publish" ></string>
 		<string name="location" help="Location for Event to Publish"></string>
 		<datetime name="startdate" tz="true" help="Start Date and Time of Event For Facebook"></datetime>

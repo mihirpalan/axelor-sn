@@ -28,7 +28,7 @@ public class Linkedin {
 		boolean status=LinkedinService.getUserToken( verifier, currentUser, token);		
 		if(status)
 		{
-			str="<html><head><script type=\"text/javascript\">  function onLoadPage(){  alert(\"Successfully Logged In\");  window.close(); }   </script></head><body onLoad=\"onLoadPage()\"></body> </HTML>";
+			str="<html><head><script type=\"text/javascript\">  function onLoadPage(){  alert(\"Successfully Logged In\");  window.close(); }   </script></head><body onLoad=\"onLoadPage()\" bgcolor=\"#D9D9D9\"><center><img src=\"http://i47.tinypic.com/jqp34p.png\" width=\"10%\"> <br><b><h2>Linkedin Connector</h2></b></center></body> </HTML>";
 		}
 		return str;
 	}

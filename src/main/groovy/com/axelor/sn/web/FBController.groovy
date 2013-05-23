@@ -18,17 +18,15 @@ import com.axelor.rpc.Request;
 import com.axelor.sn.db.*;
 import com.axelor.meta.db.*;
 import com.axelor.sn.service.SNFBService
+import com.axelor.web.SNApp;
 import com.fasterxml.jackson.databind.node.NodeCursor.Array;
 import com.google.inject.matcher.Matchers.Returns;
-
-
 import java.util.ArrayList;
-
 import javax.inject.Inject;
-
 import com.axelor.rpc.ActionRequest;
 import com.axelor.rpc.ActionResponse;
 import com.axelor.rpc.Response;
+
 
 public class FBController {
 	@Inject
@@ -48,7 +46,7 @@ public class FBController {
 			response.flash="Sorry You can't Do anyting Admin Doesnt set Application Credentials";
 		else if(ack.equals("1"))
 			response.flash="You allready have one account Associated!!";
-		else			
+		else
 			response.flash = "<a target=_blank href="+ack+">Click Here To Authorize The Application</a>";
 	}
 
@@ -56,18 +54,17 @@ public class FBController {
 		String userToken;
 		try {
 			User user = request.context.get("__user__")
-			def context = request.context as SearchPerson
+			def context = request.context as FBSearchPerson
 			String param = context.searchparam
 			ack=service.searchPerson(user,param)
-			if(ack.equals("0")) 
+			if(ack.equals("0"))
 				response.flash = "Please Authorise The Applicaton First";
-			
+
 			else if (ack.equals("1"))
 				response.flash = "You need to Re-Authorise The Application Please go to Personal Credential";
 
-			else 				
-				response.values = ["resultSearch":SearchResult.all().filter("searchPerson = ? and curUser = ?",SearchPerson.all().filter("searchparam = ?", param).fetchOne(),user).fetch()]
-
+			else
+				response.values = ["resultSearch":FBSearchResult.all().filter("searchPerson = ? and curUser = ?",FBSearchPerson.all().filter("searchparam = ?", param).fetchOne(),user).fetch()]
 		}
 		catch(Exception e) {
 			e.printStackTrace()
@@ -90,17 +87,17 @@ public class FBController {
 
 
 	void fbPostStatus(ActionRequest request,ActionResponse response) {
-		def context = request.context as PostMessage
+		def context = request.context as FBPostMessage
 		if(context.getId() == null) {
 			try {
 				User user = request.context.get("__user__")
 				String privacy = request.context.get("privacy")
 				ack = service.postStatus(user,context.content,privacy)
 				if(ack.equals("0"))
-					response.flash = "Please Authorise The Applicaton First";
+					throw new IllegalAccessError("Please Authorise The Applicaton First");
 
 				else if(ack.equals("1"))
-					response.flash = "You need to Re-Authorise The Application Please go to Personal Credential";
+					throw new IllegalAccessError("You need to Re-Authorise The Application Please go to Personal Credential");
 
 				else if(!ack.isEmpty())
 					response.values = ["acknowledgment":ack];
@@ -122,23 +119,22 @@ public class FBController {
 		try {
 			User user = request.context.get("__user__")
 			String privacy = request.context.get("privacy")
-			def context = request.context as PostEvent
+			def context = request.context as FBPostEvent
 			org.joda.time.DateTime startDate = context.startdate
 			Date startD = startDate.toDate()
 			org.joda.time.DateTime endDate = context.enddate
 			Date endD = endDate.toDate()
 			ack = service.fbPostEvent(user, startD, endD, context.occession, context.location, privacy)
 			if(ack.equals("0"))
-				response.flash = "Please Authorise The Applicaton First";
+				throw new IllegalAccessError("Please Authorise The Applicaton First");
 
 			else if(ack.equals("1"))
-				response.flash = "You need to Re-Authorise The Application Please go to Personal Credential";
+				throw new IllegalAccessError("You need to Re-Authorise The Application Please go to Personal Credential");
 
 			else if(!ack.isEmpty())
 				response.values = ["acknowledgment":ack];
 			else
 				response.flash = "There is Some issue With Posting Event";
-
 		}
 		catch(Exception e) {
 			response.flash = e.getMessage();
@@ -170,15 +166,14 @@ public class FBController {
 		User user = request.context.get("__user__")
 		String acknowledgment = request.context.get("acknowledgment");
 
-		def context = request.context as PostMessage
+		def context = request.context as FBPostMessage
 		try {
 			ArrayList lstRetrivedValues = service.getCommentsFB(user, context.getAcknowledgment());
-			if(lstRetrivedValues.size > 1) 
-				response.values = ["comments":Comment.all().filter("curUser = ? and contentid = ?", user, context).fetch()]
-
-			else
+			if(lstRetrivedValues.size  == 1)
 				response.flash = lstRetrivedValues.get(0);
 
+			else
+				response.values = ["comments":FBComment.all().filter("curUser = ? and contentid = ?", user, context).fetch()]
 		}
 		catch (Exception e) {
 			response.flash = e.getMessage()
@@ -257,10 +252,10 @@ public class FBController {
 			if(context.id == null) {
 				ack = service.postPageContent(user,page,context);
 				if(ack.equals("0"))
-					response.flash = "Please Authorise The Applicaton First";
+					throw new IllegalAccessError("Please Authorise The Applicaton First");
 
 				else if(ack.equals("1"))
-					response.flash = "You need to Re-Authorise The Application Please go to Personal Credential";
+					throw new IllegalAccessError("You need to Re-Authorise The Application Please go to Personal Credential");
 
 				else if(!ack.isEmpty())
 					response.values = ["acknowledgment":ack];
@@ -368,11 +363,14 @@ public class FBController {
 		try {
 			User user = request.context.get("__user__");
 			def context = request.context as FBNewsFeed
-			ack = service.getLike(user,context.id);
+			if(context.contentLike)
+				ack = service.getLike(user,context.id);
+			/*		else
+			 ack = service.destroyLikes(user, context.id)	*/
 			response.flash = ack;
 		}
 		catch (Exception e) {
-			response.exception=e.getMessage();
+			response.flash = e.getMessage();
 			e.printStackTrace();
 		}
 	}
@@ -381,7 +379,7 @@ public class FBController {
 		try {
 			User user = request.context.get("__user__");
 			String postedComment = request.context.get("postComment");
-			def context = request.context as PostMessage
+			def context = request.context as FBPostMessage
 			context.acknowledgment;
 			ack = service.postCommmentonStatus(user,context.acknowledgment,postedComment)
 			response.values = ["postComment":""]

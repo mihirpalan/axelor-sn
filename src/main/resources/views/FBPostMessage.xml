@@ -11,7 +11,7 @@
 	</selection>
 
 	<grid title="All Posted Status" name="post-msg-grid"
-		model="com.axelor.sn.db.PostMessage" orderBy="-postedTime">
+		model="com.axelor.sn.db.FBPostMessage" orderBy="-postedTime">
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
 			<button name="save" title="Save" hidden="true" />
@@ -38,7 +38,7 @@
 
 
 
-	<form title="Post to Facebook" name="post-msg-form" model="com.axelor.sn.db.PostMessage"
+	<form title="Post to Facebook" name="post-msg-form" model="com.axelor.sn.db.FBPostMessage"
 		onNew="action-runTime-comnt-fb,action-user-post-msg-user" onLoad="action-runTime-comnt-fb"
 		onSave="com.axelor.sn.web.FBController:fbPostStatus">
 		<toolbar>
@@ -80,7 +80,7 @@
 		</group>
 	</form>
 
-	<form title="Comments" name="msg-comment-so" model="com.axelor.sn.db.PostMessage">
+	<form title="Comments" name="msg-comment-so" model="com.axelor.sn.db.FBPostMessage">
 		<field name="acknowledgment" title="Acknowledgment" readonly="true"
 			hidden="true"></field>
 		<break />
@@ -93,7 +93,7 @@
 		</field>
 	</form>
 
-	<action-record name="action-user-post-msg-user" model="com.axelor.sn.db.PostMessage">
+	<action-record name="action-user-post-msg-user" model="com.axelor.sn.db.FBPostMessage">
 		<field name="curUser" expr="eval:__user__" />
 		<field name="postedTime" expr="eval:__datetime__" />
 	</action-record>

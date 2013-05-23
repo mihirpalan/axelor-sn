@@ -1,6 +1,6 @@
 package com.axelor.sn.web
 
-import com.axelor.sn.db.ConfigParameter;
+import com.axelor.sn.db.FBConfigParameter;
 import com.axelor.sn.service.SNMetaService;
 import javax.inject.Inject;
 import com.axelor.rpc.ActionRequest;

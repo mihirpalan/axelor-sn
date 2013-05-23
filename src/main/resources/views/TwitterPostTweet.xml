@@ -5,7 +5,7 @@
 
 
 	<grid title="Posted Tweets" name="post-tweet-grid" orderBy="-postedTime"
-		model="com.axelor.sn.db.PostTweet">
+		model="com.axelor.sn.db.TwitterPostTweet">
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
 			<button name="delete" title="Delete" hidden="true" />
@@ -30,7 +30,7 @@
 	<form title="New Tweet" name="post-tweet-form"
 		onNew="action-user-post-tweet-user,action-runTime-comnt"
 		onSave="com.axelor.sn.web.TWTController:postOnTwitter,action-posted-time"
-		model="com.axelor.sn.db.PostTweet" onLoad="action-runTime-comnt">
+		model="com.axelor.sn.db.TwitterPostTweet" onLoad="action-runTime-comnt">
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
 		</toolbar>
@@ -63,11 +63,11 @@
 		</group>
 	</form>
 
-	<action-record name="action-user-post-tweet-user" model="com.axelor.sn.db.PostTweet">
+	<action-record name="action-user-post-tweet-user" model="com.axelor.sn.db.TwitterPostTweet">
 		<field name="curUser" expr="eval:__user__" />
 	</action-record>
 
-	<action-record name="action-posted-time" model="com.axelor.sn.db.PostTweet">
+	<action-record name="action-posted-time" model="com.axelor.sn.db.TwitterPostTweet">
 		<field name="postedTime" expr="eval:__datetime__" />
 	</action-record>
 

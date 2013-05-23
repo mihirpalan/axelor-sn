@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.8.xsd">
 	<module name="sn" package="com.axelor.sn.db" />
-	<entity name="FacebookNotification">
+	<entity name="FBNotification">
 		<string name="notifId" title="Notification ID" help="Unique Notification ID"></string>
 		<string name="title" title="Content of Update" help="Content of Notification"></string>
 		<string name="link" title="Direct Link To Update" help="Link To Content"></string>

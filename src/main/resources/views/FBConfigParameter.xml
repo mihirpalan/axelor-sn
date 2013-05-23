@@ -4,16 +4,13 @@
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
 	<selection name="select-functionality">
-		
+
 		<option value="retrive">Retrive</option>
-		
+
 	</selection>
 
 	<grid title="Parameter Configration" name="param-config-grid"
-		model="com.axelor.sn.db.ConfigParameter">
-
-		<field name="snType"></field>
-		<!-- <field name="paramFor"></field> -->
+		model="com.axelor.sn.db.FBConfigParameter">
 		<field name="paramLimit"></field>
 		<field name="paramSince"></field>
 		<field name="paramUntil"></field>
@@ -22,14 +19,11 @@
 
 	<form title="Parameter Configration" name="param-config-form"
 		onNew="action-tell-user,com.axelor.sn.web.FBController:saySNType"
-		model="com.axelor.sn.db.ConfigParameter">
+		model="com.axelor.sn.db.FBConfigParameter">
 		<group canCollapse="true" title="Help" colSpan="3">
 			<label colSpan="3"
 				title="This Parameter Can only set at once although it can be Editable as well as it will used to Retrive Data From Facebook for NEWS FEED(s) and NOTIFICATIONS Only" />
 		</group>
-		<break />
-		<field name="snType" readonly="true"></field>
-		<break />
 		<field name="paramLimit"></field>
 		<label title="&lt;Font Size='0.75' Color='#ff0000'&gt;Max:200&lt;/Font&gt;" />
 		<break />

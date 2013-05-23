@@ -7,6 +7,9 @@ import java.util.*;
 import org.apache.shiro.SecurityUtils;
 import org.apache.shiro.subject.Subject;
 import org.joda.time.DateTime;
+
+import com.google.inject.servlet.SessionScoped;
+
 import twitter4j.*;
 import twitter4j.auth.*;
 
@@ -15,9 +18,10 @@ import twitter4j.auth.*;
  * @author axelor-APAR
  * 
  */
+@SessionScoped
 public class TwitterConnectionClass {
 	// Main TwitterFactory Object by which all operations can be performed
-	Twitter twitter = new TwitterFactory().getInstance();
+	Twitter twitter;// = new TwitterFactory().getInstance();
 
 	// To Storing AccessToken
 	AccessToken accessToken;
@@ -28,15 +32,33 @@ public class TwitterConnectionClass {
 	com.axelor.auth.db.User currentUser = com.axelor.auth.db.User.all()
 			.filter("self.code = ?1", subject.getPrincipal()).fetchOne();
 
-	// For Acknowledgement
-	String acknowledgment = "";
-
 	String userid, content, time, fav;
 
 	@SuppressWarnings("rawtypes")
 	HashMap mapReturnValue;
 
 	// ========== CORE METHOD ===============
+
+	/**
+	 * THIS METHOD WILL CHECK WHETER INSTANCE IS NULL OR NOT AND IF IT ISN'T
+	 * NULL THEN RETURN FALSE ELSE TRUE IN UTILITY CLASS
+	 * 
+	 * @param twitterPasse
+	 * @param accessTokenPassed
+	 * @return
+	 */
+	public boolean isNullTWTObj(Twitter twitterPasse,
+			AccessToken accessTokenPassed) {
+		twitter = twitterPasse;
+		accessToken = accessTokenPassed;
+		boolean status = true;
+		if (twitter != null)
+			if (accessToken != null)
+				status = false;
+
+		return status;
+	}
+
 	/**
 	 * IT WILL GENERATE UNIQUE AUTHENTICATION URL WHICH WILL ALLOW USER TO
 	 * CONNECT WITH TWITTER FROM ABS
@@ -48,6 +70,8 @@ public class TwitterConnectionClass {
 	 */
 	public String getAuthUrl4j(String apiKey, String apiSecret,
 			String redirectUrl) {
+		String acknowledgment = "";
+		twitter = new TwitterFactory().getInstance();
 		twitter.setOAuthConsumer(apiKey, apiSecret);
 		try {
 			RequestToken requestToken = twitter
@@ -70,21 +94,14 @@ public class TwitterConnectionClass {
 	/**
 	 * THIS METHOD IS USED TO RETRIVE ALL FOLLOWERS
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param token
-	 * @param tokenSecret
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ArrayList<HashMap> importContact(String apiKey, String apiSecret,
-			String token, String tokenSecret) {
+	public ArrayList<HashMap> importContact() {
 		ArrayList<HashMap> listContacts = new ArrayList<HashMap>();
 
 		try {
-			twitter.setOAuthConsumer(apiKey, apiSecret);
-			accessToken = new AccessToken(token, tokenSecret);
-			twitter.setOAuthAccessToken(accessToken);
+
 			Paging paging = new Paging(1, 1);
 			Collection<Status> statuses = twitter.getUserTimeline(paging);
 			for (Status status : statuses) {
@@ -115,23 +132,14 @@ public class TwitterConnectionClass {
 	/**
 	 * METHOD USED TO RETRIVE COMMENTS OF PASSED CONTENT
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param token
-	 * @param tokenSecret
-	 * @param gid
+	 * @param tweetId
 	 * @return
 	 */
-
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ArrayList<HashMap> getCommentsOfTweet(String apiKey,
-			String apiSecret, String token, String tokenSecret, String gid) {
+	public ArrayList<HashMap> getCommentsOfTweet(String tweetId) {
 		ArrayList<HashMap> lstResult = new ArrayList<HashMap>();
-		Long id = Long.parseLong(gid);
+		Long id = Long.parseLong(tweetId);
 		try {
-			twitter.setOAuthConsumer(apiKey, apiSecret);
-			accessToken = new AccessToken(token, tokenSecret);
-			twitter.setOAuthAccessToken(accessToken);
 			RelatedResults results = twitter.getRelatedResults(id.longValue());
 			List<Status> lstConversations = results.getTweetsWithConversation();
 
@@ -155,72 +163,16 @@ public class TwitterConnectionClass {
 		}
 		return lstResult;
 	}
-	
-	/*@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ArrayList<HashMap> getCommentsOfTweet(String apiKey,
-			String apiSecret, String token, String tokenSecret, String gid) {
-		ArrayList<HashMap> lstResult = new ArrayList<HashMap>();
-		Long id = Long.parseLong(gid);
-		System.out.println(id);
-		try {
-			twitter.setOAuthConsumer(apiKey, apiSecret);
-			accessToken = new AccessToken(token, tokenSecret);
-			twitter.setOAuthAccessToken(accessToken);
-			Paging page = new Paging(1,200);
-			//page.setMaxId(id);
-			System.out.println(page);
-			Status replayStatus = twitter.showStatus(id);
-			System.out.println(twitter.getMentionsTimeline(new Paging(1,200)));	
-//			twitter.getUserListStatuses(arg0, arg1)
-			ResponseList<Status> allStatus = twitter.getMentions(page);
-			
-			for(Status oneStatus : allStatus)
-			{
-				System.out.println(oneStatus.getId());
-				
-			}
-			/*RelatedResults results = twitter.getRelatedResults(id.longValue());
-			List<Status> lstConversations = results.getTweetsWithConversation();
 
-			for (int i = 0; i < lstConversations.size(); i++) {
-				mapReturnValue = new HashMap();
-				mapReturnValue.put("userid", lstConversations.get(i).getUser()
-						.getId()
-						+ "");
-				mapReturnValue
-						.put("content", lstConversations.get(i).getText());
-				mapReturnValue.put("time", lstConversations.get(i)
-						.getCreatedAt().toString());
-				mapReturnValue.put("fav", lstConversations.get(i).isFavorited()
-						+ "");
-				mapReturnValue
-						.put("commentId", lstConversations.get(i).getId());
-				lstResult.add(mapReturnValue);
-			}
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
-		
-		return lstResult;
-	}
-*/
 	/**
 	 * THIS METHOD USED TO RETRIVE WHOLE INBOX OF TWITTER
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param token
-	 * @param tokenSecret
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ArrayList<HashMap> getDirectMessages(String apiKey,
-			String apiSecret, String token, String tokenSecret) {
+	public ArrayList<HashMap> getDirectMessages() {
 		ArrayList<HashMap> lstResult = new ArrayList<HashMap>();
 		try {
-			twitter.setOAuthConsumer(apiKey, apiSecret);
-			accessToken = new AccessToken(token, tokenSecret);
-			twitter.setOAuthAccessToken(accessToken);
 			ResponseList<twitter4j.DirectMessage> sender = twitter
 					.getDirectMessages();
 			for (twitter4j.DirectMessage dm : sender) {
@@ -229,9 +181,9 @@ public class TwitterConnectionClass {
 				mapReturnValue.put("msgContent", dm.getText());
 				mapReturnValue.put("senderName", dm.getSender().getName());
 				mapReturnValue.put("senderId", dm.getSenderId());
+				mapReturnValue.put("receiveDate", dm.getCreatedAt().toString());
 				lstResult.add(mapReturnValue);
 			}
-
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -241,26 +193,18 @@ public class TwitterConnectionClass {
 	/**
 	 * METHOD IS USED TO RETRIVE USER's HOME TIMELINE
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param userToken
-	 * @param userTokenSecret
 	 * @param pageNo
 	 * @param contentNo
 	 * @param updateId
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ArrayList<HashMap> fetchHomeTimeline(String apiKey,
-			String apiSecret, String userToken, String userTokenSecret,
-			int pageNo, int contentNo, Long updateId) {
+	public ArrayList<HashMap> fetchHomeTimeline(int pageNo, int contentNo,
+			Long updateId) {
 		ArrayList<HashMap> lstTimeLineValues = new ArrayList<HashMap>();
 		Paging page = null;
 		ResponseList<Status> statuses;
 		try {
-			twitter.setOAuthConsumer(apiKey, apiSecret);
-			accessToken = new AccessToken(userToken, userTokenSecret);
-			twitter.setOAuthAccessToken(accessToken);
 			if (pageNo >= 0 && contentNo > 0 && updateId == null) {
 				page = new Paging(pageNo, contentNo);
 				statuses = twitter.getHomeTimeline(page);
@@ -296,20 +240,11 @@ public class TwitterConnectionClass {
 	/**
 	 * IT WILL RETRIVE ALL INCOMING FOLLOWER'S REQUEST
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param userToken
-	 * @param userTokenSecret
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ArrayList<HashMap> retrivePendingRequest(String apiKey,
-			String apiSecret, String userToken, String userTokenSecret) {
+	public ArrayList<HashMap> retrivePendingRequest() {
 		ArrayList lstReturnBack = new ArrayList();
-
-		twitter.setOAuthConsumer(apiKey, apiSecret);
-		accessToken = new AccessToken(userToken, userTokenSecret);
-		twitter.setOAuthAccessToken(accessToken);
 		try {
 			IDs ids = twitter.getIncomingFriendships(-1);
 			long[] followerIds = ids.getIDs();
@@ -333,21 +268,12 @@ public class TwitterConnectionClass {
 	/**
 	 * THIS METHOD USED TO ALLOW SEARCH ON PARTICULAR TWEET
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param userToken
-	 * @param userTokenSecret
 	 * @param searchKeyword
 	 * @return
 	 */
-
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ArrayList<HashMap> searchTweet(String apiKey, String apiSecret,
-			String userToken, String userTokenSecret, String searchKeyword) {
+	public ArrayList<HashMap> searchTweet(String searchKeyword) {
 		ArrayList<HashMap> lstSearchTweet = new ArrayList<HashMap>();
-		twitter.setOAuthConsumer(apiKey, apiSecret);
-		accessToken = new AccessToken(userToken, userTokenSecret);
-		twitter.setOAuthAccessToken(accessToken);
 		try {
 			System.out.println("Executed");
 			Query query = new Query();
@@ -370,21 +296,13 @@ public class TwitterConnectionClass {
 	/**
 	 * THIS METHOD USED TO SEARCH A PARTICUAL PERSON ON TWITTER
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param userToken
-	 * @param userTokenSecret
 	 * @param searchKeyword
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ArrayList<HashMap> searchPerson(String apiKey, String apiSecret,
-			String userToken, String userTokenSecret, String searchKeyword) {
+	public ArrayList<HashMap> searchPerson(String searchKeyword) {
 		ArrayList<HashMap> lstSearchValue = new ArrayList<HashMap>();
 		try {
-			twitter.setOAuthConsumer(apiKey, apiSecret);
-			accessToken = new AccessToken(userToken, userTokenSecret);
-			twitter.setOAuthAccessToken(accessToken);
 			ResponseList<User> searchedPerson = twitter.searchUsers(
 					searchKeyword, 0);
 			for (int i = 0; i < searchedPerson.size(); i++) {
@@ -420,26 +338,17 @@ public class TwitterConnectionClass {
 	/**
 	 * USED FOR POSTING TWEET
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param token
-	 * @param tokenSecret
 	 * @param content
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public HashMap postTweet(String apiKey, String apiSecret, String token,
-			String tokenSecret, String content) {
+	public HashMap postTweet(String content) {
 		mapReturnValue = new HashMap();
 		try {
-			twitter.setOAuthConsumer(apiKey, apiSecret);
-			accessToken = new AccessToken(token, tokenSecret);
-			twitter.setOAuthAccessToken(accessToken);
 			Status status = twitter.updateStatus(content);
 			mapReturnValue.put("acknowledgment", status.getId() + "");
 		} catch (Exception e) {
 			e.printStackTrace();
-			acknowledgment = e.getMessage();
 		}
 		return mapReturnValue;
 	}
@@ -447,22 +356,13 @@ public class TwitterConnectionClass {
 	/**
 	 * IT WILL USED TO POST REPLAY ON PARTICULAR TWEET
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param userToken
-	 * @param userTokenSecret
 	 * @param cotnentId
 	 * @param content
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public HashMap postTweetReplay(String apiKey, String apiSecret,
-			String userToken, String userTokenSecret, String cotnentId,
-			String content) {
+	public HashMap postTweetReplay(String cotnentId, String content) {
 		mapReturnValue = new HashMap();
-		twitter.setOAuthConsumer(apiKey, apiSecret);
-		accessToken = new AccessToken(userToken, userTokenSecret);
-		twitter.setOAuthAccessToken(accessToken);
 		try {
 			Long id = Long.parseLong(cotnentId);
 			StatusUpdate statusUpdate = new StatusUpdate(content);
@@ -470,7 +370,6 @@ public class TwitterConnectionClass {
 			Status status = twitter.updateStatus(statusUpdate);
 			mapReturnValue.put("acknowledgment", status.getId() + "");
 		} catch (Exception e) {
-			acknowledgment = e.getMessage();
 			e.printStackTrace();
 		}
 		return mapReturnValue;
@@ -479,27 +378,18 @@ public class TwitterConnectionClass {
 	/**
 	 * METHOD USED TO SEND DIRECT MESSAGE TO FRIEND/FOLLOWER
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param token
-	 * @param tokenSecret
 	 * @param toId
-	 * @param msgToSend
+	 * @param msg
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public HashMap sendMessage(String apiKey, String apiSecret, String token,
-			String tokenSecret, String gid, String msg) {
+	public HashMap sendMessage(String toId, String msg) {
 		mapReturnValue = new HashMap();
-		Long id = Long.parseLong(gid);
+		Long id = Long.parseLong(toId);
 		try {
-			twitter.setOAuthConsumer(apiKey, apiSecret);
-			accessToken = new AccessToken(token, tokenSecret);
-			twitter.setOAuthAccessToken(accessToken);
 			twitter4j.DirectMessage sender = twitter.sendDirectMessage(id, msg);
 			mapReturnValue.put("acknowledgment", sender.getId() + "");
 		} catch (Exception e) {
-			acknowledgment = "Exception Generated";
 			e.printStackTrace();
 		}
 		return mapReturnValue;
@@ -509,23 +399,15 @@ public class TwitterConnectionClass {
 	/**
 	 * METHOD USED FOR DELETION OF PARTICULAR INBOX MESSAGE
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param userToken
-	 * @param userTokenSecret
 	 * @param msgId
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public HashMap deleteInbox(String apiKey, String apiSecret,
-			String userToken, String userTokenSecret, String msgId) {
+	public HashMap deleteInbox(String msgId) {
 		mapReturnValue = new HashMap();
 		Long id = Long.parseLong(msgId);
 		boolean valueStatus = false;
 		try {
-			twitter.setOAuthConsumer(apiKey, apiSecret);
-			accessToken = new AccessToken(userToken, userTokenSecret);
-			twitter.setOAuthAccessToken(accessToken);
 			DirectMessage msgDeleted = twitter.destroyDirectMessage(id);
 			if (msgDeleted != null)
 				mapReturnValue.put("acknowledgment", valueStatus);
@@ -544,22 +426,14 @@ public class TwitterConnectionClass {
 	/**
 	 * METHOD USED TO DELETE POSTED COMMENT
 	 * 
-	 * @param apiKey
-	 * @param apiSecret
-	 * @param token
-	 * @param tokenSecret
 	 * @param contentId
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public HashMap deleteContent(String apiKey, String apiSecret, String token,
-			String tokenSecret, String contentId) {
+	public HashMap deleteContent(String contentId) {
 		mapReturnValue = new HashMap();
 		boolean valueStatus = true;
 		Long id = Long.parseLong(contentId);
-		twitter.setOAuthConsumer(apiKey, apiSecret);
-		accessToken = new AccessToken(token, tokenSecret);
-		twitter.setOAuthAccessToken(accessToken);
 		try {
 			Status status = twitter.destroyStatus(id);
 			if (status != null)
@@ -573,23 +447,5 @@ public class TwitterConnectionClass {
 			e.printStackTrace();
 		}
 		return mapReturnValue;
-	}
-
-	// =========== ALL ENDS HERE ==========
-	public static void main(String args[]) {
-		try {
-			TwitterConnectionClass twc = new TwitterConnectionClass();
-			// twc.getAuthURL("1t5oXnt5p4wTElFhD5to0g",
-			// "yBXa9R05dpIyplzomCw0noJlUItD8s0GCfAbRZqnMc");
-			// System.out.println(twc.getAuthURL("3BuEKFJMxBEBM2XoglkKiw","oHqo9q8VH2ys89nUESYfWzJRBXDa5MMUhxe73SW4Dc"));
-			// twc.fetchHomeTimeline("7Bt5TV83SR92wP4cpBntw","lUMRE8QfUZlT8CHn0sLuYFUeoRuPr07GxJqCU2sB1g","39463017-gRg7Gg0wdzzWhNLBapZpGoDfxWYcNOYsXHtUBwKnr","YeeG8bDyyzsm3VV5p5WAneccYntYEGdV1fCwaihixPw");
-			// twc.getDirectMessages("7Bt5TV83SR92wP4cpBntw","lUMRE8QfUZlT8CHn0sLuYFUeoRuPr07GxJqCU2sB1g","39463017-gRg7Gg0wdzzWhNLBapZpGoDfxWYcNOYsXHtUBwKnr","YeeG8bDyyzsm3VV5p5WAneccYntYEGdV1fCwaihixPw");
-			// System.out.println(twc.deleteInbox("7Bt5TV83SR92wP4cpBntw","lUMRE8QfUZlT8CHn0sLuYFUeoRuPr07GxJqCU2sB1g","39463017-gRg7Gg0wdzzWhNLBapZpGoDfxWYcNOYsXHtUBwKnr","YeeG8bDyyzsm3VV5p5WAneccYntYEGdV1fCwaihixPw","316127053277708288"));
-			// twc.getCommentsOfTweet("1t5oXnt5p4wTElFhD5to0g","yBXa9R05dpIyplzomCw0noJlUItD8s0GCfAbRZqnMc","39463017-gRg7Gg0wdzzWhNLBapZpGoDfxWYcNOYsXHtUBwKnr","YeeG8bDyyzsm3VV5p5WAneccYntYEGdV1fCwaihixPw","326935995540987905");
-			// twc.searchPerson("7Bt5TV83SR92wP4cpBntw","lUMRE8QfUZlT8CHn0sLuYFUeoRuPr07GxJqCU2sB1g","39463017-gRg7Gg0wdzzWhNLBapZpGoDfxWYcNOYsXHtUBwKnr","YeeG8bDyyzsm3VV5p5WAneccYntYEGdV1fCwaihixPw","apar amin");
-			// System.out.println(twc.getStatusTime("326935995540987905"));
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
 	}
 }

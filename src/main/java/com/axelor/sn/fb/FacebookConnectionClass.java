@@ -11,8 +11,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
-import com.google.common.base.Stopwatch;
+import com.google.inject.servlet.SessionScoped;
 import com.restfb.*;
 import com.restfb.FacebookClient.AccessToken;
 import com.restfb.Parameter;
@@ -25,7 +24,7 @@ import com.restfb.types.*;
  * @author axelor-APAR
  * 
  */
-
+@SessionScoped
 public class FacebookConnectionClass {
 	String userTokenTemp;
 	@SuppressWarnings("rawtypes")
@@ -136,23 +135,29 @@ public class FacebookConnectionClass {
 		return mapReturnvalues;
 	}
 
+	public boolean isNullFBObj(FacebookClient client) {
+		facebookClient = client;
+		boolean status = true;
+		if (facebookClient != null)
+			status = false;
+		return status;
+	}
+
 	// ===============Fetch Methods===================
 
 	/**
 	 * THIS METHOD USED TO SEARCH PERSON ON FACEBOOK
 	 * 
-	 * @param detailParam
-	 * @param userToken
+	 * @param personName
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ArrayList<HashMap> fetchObjectOfPerson(String detailParam,
-			String userToken) {
-		facebookClient = new DefaultFacebookClient(userToken);
+	public ArrayList<HashMap> fetchObjectOfPerson(String personName) {
+		// facebookClient = new DefaultFacebookClient(userToken);
 		ArrayList<HashMap> returnBack = new ArrayList<HashMap>();
 		try {
 			Connection<User> user = facebookClient.fetchConnection("search",
-					User.class, Parameter.with("q", detailParam),
+					User.class, Parameter.with("q", personName),
 					Parameter.with("type", "user"));
 			List<User> retriveValue = user.getData();
 			for (int i = 0; i < retriveValue.size(); i++) {
@@ -185,30 +190,24 @@ public class FacebookConnectionClass {
 	/**
 	 * THIS METHOD IS USED TO IMPORT CONTACT LIST OF FACEBOOK
 	 * 
-	 * @param userToken
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ArrayList<HashMap> getListOfFriends(String userToken) {
+	public ArrayList<HashMap> getListOfFriends() { // String userToken) {
 		lstReturnBack = new ArrayList<HashMap>();
-		Stopwatch stopWatch = new Stopwatch();
-		stopWatch.start();
 		HashMap mapFriend;
 		try {
 			System.out.println("Import Contacts to ERP");
-			facebookClient = new DefaultFacebookClient(userToken);
-
 			Connection<User> friends = facebookClient.fetchConnection(
 					"me/friends", User.class);
 			List<User> retriveData = friends.getData();
 
-			for (int i = 0; i < retriveData.size(); i++) {
-				User link = facebookClient.fetchObject(retriveData.get(i)
-						.getId(), User.class);
+			for (User user : retriveData) {
 				mapFriend = new HashMap();
-				mapFriend.put("facebookId", retriveData.get(i).getId());
-				mapFriend.put("facebookName", retriveData.get(i).getName());
-				mapFriend.put("facebookLink", link.getLink());
+				mapFriend.put("facebookId", user.getId());
+				mapFriend.put("facebookName", user.getName());
+				mapFriend.put("facebookLink",
+						"http://www.facebook.com/" + user.getId());
 				lstReturnBack.add(mapFriend);
 			}
 
@@ -218,10 +217,8 @@ public class FacebookConnectionClass {
 			mapFriend.put("facebookId", link.getId());
 			mapFriend.put("facebookName", link.getName());
 			mapFriend.put("facebookLink", link.getLink());
+
 			lstReturnBack.add(mapFriend);
-			stopWatch.stop();
-			System.out.println("Completed in "
-					+ stopWatch.elapsedTime(TimeUnit.SECONDS) + "Seconds");
 
 		} catch (FacebookOAuthException oe) {
 			if (oe.getErrorCode().intValue() == 190) {
@@ -241,16 +238,14 @@ public class FacebookConnectionClass {
 	/**
 	 * THIS METHOD IS USED TO RETRIVE COMMENTS OF THE FACEBOOK STATUS
 	 * 
-	 * @param userToken
 	 * @param contentId
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public ArrayList<HashMap> getComments(String userToken, String contentId) {
+	public ArrayList<HashMap> getComments(String contentId) {
 		lstReturnBack = new ArrayList<HashMap>();
 		HashMap mapComment;
 		try {
-			facebookClient = new DefaultFacebookClient(userToken);
 			Connection<Comment> commentFeeds = facebookClient.fetchConnection(
 					contentId + "/comments", Comment.class);
 			List<Comment> comments = commentFeeds.getData();
@@ -280,17 +275,13 @@ public class FacebookConnectionClass {
 	/**
 	 * THIS METHOD USED TO RETRIVE INBOX OF FACEBOOK
 	 * 
-	 * @param userToken
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ArrayList<HashMap> retriveMessage(String userToken) {
+	public ArrayList<HashMap> retriveMessage() {// String userToken) {
 		ArrayList<HashMap> listInboxMsg = new ArrayList<HashMap>();
 		HashMap mapInbox;
 		try {
-			facebookClient = new DefaultFacebookClient(userToken);
-			accessToken = new AccessToken();
-			System.out.println("Extended AccessToken=" + userToken);
 			System.out.println("Retrving Your Messages");
 			Connection<Post> myInbox = facebookClient.fetchConnection(
 					"me/inbox", Post.class);
@@ -326,16 +317,15 @@ public class FacebookConnectionClass {
 	/**
 	 * THIS METHOD IS USED TO RETRIVE NOTIFICATIONS OF THE FACEBOOK
 	 * 
-	 * @param userToken
 	 * @param paramLimit
 	 * @param sinceValue
 	 * @param untilValue
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ArrayList<HashMap> getNotification(String userToken, int paramLimit,
-			Date sinceValue, Date untilValue) {
-		facebookClient = new DefaultFacebookClient(userToken);
+	public ArrayList<HashMap> getNotification(int paramLimit, Date sinceValue,
+			Date untilValue) {
+
 		HashMap mapNotification;
 		ArrayList<HashMap> listNotifications = new ArrayList();
 		Notification jsonNotification;
@@ -353,7 +343,7 @@ public class FacebookConnectionClass {
 					&& paramLimit <= 0) {
 				jsonNotification = facebookClient.fetchObject(
 						"me/notifications", Notification.class,
-						Parameter.with("until", untilValue));// .toDateMidnight().toDate()
+						Parameter.with("until", untilValue));
 			} else if (paramLimit > 0 && sinceValue != null
 					&& untilValue == null) {
 				jsonNotification = facebookClient.fetchObject(
@@ -447,15 +437,14 @@ public class FacebookConnectionClass {
 	/**
 	 * THIS METHOD IS USED TO RERTIVE PENDING FRIEND REQUEST OF FACEBOOK
 	 * 
-	 * @param userToken
 	 * @return
 	 */
-	@SuppressWarnings({ "unchecked", "unused", "rawtypes" })
-	public ArrayList<HashMap> getFriendRequest(String userToken) {
+	@SuppressWarnings({ "unchecked", "rawtypes" })
+	public ArrayList<HashMap> getFriendRequest() {
+
 		ArrayList<HashMap> returnBack = new ArrayList<HashMap>();
 		HashMap requesetdFriend;
 		User user = null;
-		facebookClient = new DefaultFacebookClient(userToken);
 		try {
 			List<FqlUser> users = facebookClient.executeFqlQuery(
 					"SELECT uid_from FROM friend_request WHERE uid_to = me()",
@@ -503,19 +492,17 @@ public class FacebookConnectionClass {
 	/**
 	 * THIS METHOD IS USED TO RETRIVE NEWS FEED FOR CURRENT SESSION USER
 	 * 
-	 * @param userToken
 	 * @param paramLimit
 	 * @param sinceValue
 	 * @param untilValue
 	 * @return
 	 */
-	@SuppressWarnings({ "unused", "rawtypes", "unchecked" })
-	public ArrayList<HashMap> getNewsFeed(String userToken, int paramLimit,
-			Date sinceValue, Date untilValue) {
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public ArrayList<HashMap> getNewsFeed(int paramLimit, Date sinceValue,
+			Date untilValue) {
 		Connection<Post> connection;
 		HashMap feedValue;
 		lstReturnBack = new ArrayList<HashMap>();
-		facebookClient = new DefaultFacebookClient(userToken);
 		try {
 			if (paramLimit > 0 && sinceValue == null && untilValue == null) {
 				System.out.println("Limit Called");
@@ -591,14 +578,12 @@ public class FacebookConnectionClass {
 	/**
 	 * IT WILL RETURN PAGE DETAIL WHICH OWN BY CURRENT SESSION USER'S
 	 * 
-	 * @param userToken
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ArrayList<HashMap> getPageDetail(String userToken) {
+	public ArrayList<HashMap> getPageDetail() {
 		lstReturnBack = new ArrayList<HashMap>();
 		HashMap mapPageValue;
-		facebookClient = new DefaultFacebookClient(userToken);
 		User user = facebookClient.fetchObject("me", User.class);
 		String query = " SELECT page_id, name,page_url,username From page WHERE page_id IN (SELECT page_id FROM page_admin WHERE uid = '"
 				+ user.getId() + "')";
@@ -652,16 +637,14 @@ public class FacebookConnectionClass {
 	/**
 	 * IT WILL FETCH PAGE POST'S COMMENT
 	 * 
-	 * @param userToken
 	 * @param contentId
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public ArrayList<HashMap> getPageComments(String userToken, String contentId) {
+	public ArrayList<HashMap> getPageComments(String contentId) {
 		lstReturnBack = new ArrayList<HashMap>();
 		HashMap mapPageComment;
 		try {
-			facebookClient = new DefaultFacebookClient(userToken);
 			Connection<Comment> commentFeeds = facebookClient.fetchConnection(
 					contentId + "/comments", Comment.class);
 
@@ -698,18 +681,16 @@ public class FacebookConnectionClass {
 	 * THIS METHOD IS USED TO POST MESSAGE TO FACEBOOK AS STATUS
 	 * 
 	 * @param msg
-	 * @param userToken
 	 * @param paramPrivacy
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public HashMap publishMessage(String msg, String userToken,
-			String paramPrivacy) {
+	public HashMap publishMessage(String msg, String paramPrivacy) {
 		mapReturnvalues = new HashMap();
 		Privacy privacy = new Privacy();
 		privacy.value = paramPrivacy;
 		try {
-			facebookClient = new DefaultFacebookClient(userToken);
+			// facebookClient = new DefaultFacebookClient(userToken);
 			FacebookType publishMessageResponse = facebookClient.publish(
 					"me/feed", FacebookType.class,
 					Parameter.with("message", msg),
@@ -745,18 +726,17 @@ public class FacebookConnectionClass {
 	 *            - EVENT NAME
 	 * @param location
 	 *            - LOCATION
-	 * @param userToken
 	 * @param paramPrivacy
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
 	public HashMap publishEvent(Date startD, Date endD, String ocession,
-			String location, String userToken, String paramPrivacy) {
+			String location, String paramPrivacy) {
 		mapReturnvalues = new HashMap();
 		Privacy privacy = new Privacy();
 		privacy.value = paramPrivacy;
 		try {
-			facebookClient = new DefaultFacebookClient(userToken);
+			// facebookClient = new DefaultFacebookClient(userToken);
 			FacebookType publishEventResponse = facebookClient.publish(
 					"me/events", FacebookType.class,
 					Parameter.with("name", ocession),
@@ -782,14 +762,13 @@ public class FacebookConnectionClass {
 	 * 
 	 * @param postContent
 	 * @param pageId
-	 * @param userToken
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public HashMap postToPgae(String postContent, String pageId,
-			String userToken) {
+	public HashMap postToPgae(String postContent, String pageId) { // String
+																	// userToken
 		mapReturnvalues = new HashMap();
-		facebookClient = new DefaultFacebookClient(userToken);
+		// facebookClient = new DefaultFacebookClient(userToken);
 		try {
 			FacebookType publishToPage = facebookClient.publish(pageId
 					+ "/feed", FacebookType.class,
@@ -812,11 +791,10 @@ public class FacebookConnectionClass {
 	 * THIS METHOD IS USED TO POST LIKE CONETENT ON FACEBOOK
 	 * 
 	 * @param contentId
-	 * @param userToken
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public HashMap postLike(String contentId, String userToken) {
+	public HashMap postLike(String contentId) {// , String userToken) {
 		mapReturnvalues = new HashMap();
 		Boolean value = null;
 		facebookClient = new DefaultFacebookClient(userToken);
@@ -841,16 +819,15 @@ public class FacebookConnectionClass {
 	/**
 	 * THIS METHOD IS USED TO POST COMMENT ON PASSED VALID FACEBBOK CONTENT ID
 	 * 
-	 * @param userToken
 	 * @param contentd
 	 * @param commentContent
 	 * @return
 	 */
 	@SuppressWarnings({ "rawtypes", "unchecked" })
-	public HashMap postStatusComemnt(String userToken, String contentd,
-			String commentContent) {
+	public HashMap postStatusComemnt(String contentd, String commentContent) { // String
+																				// userToken,
 		mapReturnvalues = new HashMap();
-		facebookClient = new DefaultFacebookClient(userToken);
+		// facebookClient = new DefaultFacebookClient(userToken);
 		try {
 			FacebookType publishComment = facebookClient.publish(contentd
 					+ "/comments", FacebookType.class,
@@ -877,21 +854,22 @@ public class FacebookConnectionClass {
 	 * COMMON METHOD TO DELETE WHATEVER BEEN POSTED BY PASSING THEIR ID
 	 * 
 	 * @param contentId
-	 * @param userToken
+	 * @param isUnlike
 	 * @return
 	 */
 	@SuppressWarnings({ "unchecked", "rawtypes" })
-	public HashMap delete(String contentId, String userToken) {
+	public HashMap delete(String contentId, boolean isUnlike) {
 		boolean value = false;
 		mapReturnvalues = new HashMap();
 		try {
-			facebookClient = new DefaultFacebookClient(userToken);
-			System.out.println(contentId);
-			value = facebookClient.deleteObject(contentId);
-			if (value)
-				mapReturnvalues.put("status", value);
+			// facebookClient = new DefaultFacebookClient(userToken); , String
+			// userToken
+			if (isUnlike)
+				value = facebookClient.deleteObject(contentId + "/likes");
 			else
-				mapReturnvalues.put("status", value);
+				value = facebookClient.deleteObject(contentId);
+
+			mapReturnvalues.put("status", value);
 
 		} catch (FacebookOAuthException oe) {
 			System.out.println("Inside OauthException");
@@ -911,40 +889,5 @@ public class FacebookConnectionClass {
 	}
 
 	// =========ENDS OF ALL METHODS==========
-
-	public static void main(String[] args) {
-		FacebookConnectionClass fbcon = new FacebookConnectionClass();
-
-		// fbcon.getAccessToken("593379047358957",
-		// "a542e3849a7ae72b5be41a5c75f72a6e",
-		// "AQDGyIAzVppZ_cGKPHu7SCj0HbDgpxW7iFOMofTlDSaWf84wwao3m2yWDmfgkJcaO8Ihumh-v9VApsbWkj9356QRR1vQLw4s7NVlDdtQi4wzzLsqqCJMNaXiYK97gAoODh-itBjgz7aZlu84MbKF8yVefQjXePrlcxTTTC5oMXC-zkKKSKtyIn6hofIRGDehz-NXEMv2SiMSkedywWwjt2xJ");
-		// fbcon.fetchObjectOfPerson("Apar Amin",
-		// "BAAIbrNNVwe0BAABhXhDqZBWqTMfRYN9tIuMsHpZAAe5yZB75IUyJpekOlp3EtspzdP4ycgty0OJCpCTDZBcvcHTVZBfwXG1rGlTRkG2bzOs01olh8tYRvHUiu4YJIZA6xjn9ksUXGZCbXgqZArooIZCyzHbSeGQNK1i18qF96uM6P8qV017hFGZCa4");
-		// fbcon.getFBLogin("1","1", "1", "1");
-		// fbcon.fetchObjectOfPerson("Apar Amin",
-		// "AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD");
-		// fbcon.testNotif("AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD");
-		// fbcon.retriveMessage("AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD");
-		// fbcon.getNotification("AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD",3,null,null);
-		// System.out.println(fbcon.postStatusComemnt("AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD",
-		// "100001571838867_513537028708687","Demo Test"));
-		// fbcon.getNewsFeed("AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD",
-		// 0,new DateTime(2013, 04, 01, 00, 8, 00, 00),null);
-		// fbcon.getNotification("BAAIbrNNVwe0BAABhXhDqZBWqTMfRYN9tIuMsHpZAAe5yZB75IUyJpekOlp3EtspzdP4ycgty0OJCpCTDZBcvcHTVZBfwXG1rGlTRkG2bzOs01olh8tYRvHUiu4YJIZA6xjn9ksUXGZCbXgqZArooIZCyzHbSeGQNK1i18qF96uM6P8qV017hFGZCa4",0,null,null);
-		// fbcon.getRefreshAccessToken("457254604345188",
-		// "69e4bf4c07266fbc176cf7737176fa7c",
-		// "AAAGf3uJDj2QBAKsjHLgHrAI9vfOl1TM8LHCAv5oyh0Naf8s4fDccMAZC2LBI8KAkksfvlL6y79MARJZBANz2iCWUbC5RaO9fX0aX5ZCOQZDZD");
-		// System.out.println(fbcon.sendMessage("678241762","Hi","AAAGf3uJDj2QBAKsjHLgHrAI9vfOl1TM8LHCAv5oyh0Naf8s4fDccMAZC2LBI8KAkksfvlL6y79MARJZBANz2iCWUbC5RaO9fX0aX5ZCOQZDZD"));
-		// System.out.println(fbcon.getFBLogin("593379047358957","a542e3849a7ae72b5be41a5c75f72a6e","apar.amin1","O6bO01@p@r"));
-		// fbcon.getRefreshAccessToken("457254604345188",
-		// "69e4bf4c07266fbc176cf7737176fa7c",
-		// "AAAGf3uJDj2QBAKsjHLgHrAI9vfOl1TM8LHCAv5oyh0Naf8s4fDccMAZC2LBI8KAkksfvlL6y79MARJZBANz2iCWUbC5RaO9fX0aX5ZCOQZDZD");
-		// fbcon.removeFriend("100004325733115","AAAGf3uJDj2QBAKsjHLgHrAI9vfOl1TM8LHCAv5oyh0Naf8s4fDccMAZC2LBI8KAkksfvlL6y79MARJZBANz2iCWUbC5RaO9fX0aX5ZCOQZDZD");
-		// .delete("364371463667700","AAAGf3uJDj2QBAKsjHLgHrAI9vfOl1TM8LHCAv5oyh0Naf8s4fDccMAZC2LBI8KAkksfvlL6y79MARJZBANz2iCWUbC5RaO9fX0aX5ZCOQZDZD");
-		// fbcon.postMsgToFriend("Hi","100000165610558","AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD");
-		// fbcon.getPageDetail("AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD");
-		// fbcon.retriveMessage("AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD");
-		// fbcon.sendPersonalMessage("100004325733115","AAAIbrNNVwe0BALCzJN3rECxb2KDZBxvZAKjW7aoY8LZBoCIYthylJFbAELzf6dm4RonC3pIvHn3pisSioeLmd1IwFUBZBDKfv5bpZBxFyVQZDZD","hi");
-	}
 
 }

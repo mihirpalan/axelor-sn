@@ -1,12 +1,12 @@
 package com.axelor.sn.web
 
 import com.axelor.sn.db.ApplicationCredentials
-import com.axelor.sn.db.DirectMessage;
+import com.axelor.sn.db.TwitterDirectMessage;
 import com.axelor.sn.db.ImportContact
 import com.axelor.sn.db.PersonalCredential
-import com.axelor.sn.db.PostTweet
+import com.axelor.sn.db.TwitterPostTweet
 import com.axelor.sn.db.SocialNetworking
-import com.axelor.sn.db.TweetComment;
+import com.axelor.sn.db.TwitterComment;
 import com.axelor.sn.db.TwitterHomeTimeline
 import com.axelor.sn.db.TwitterInbox;
 import com.axelor.sn.service.SNTWTService
@@ -54,7 +54,7 @@ class TWTController {
 
 	void directMessage(ActionRequest request, ActionResponse response) {
 		try {
-			def context = request.context as DirectMessage
+			def context = request.context as TwitterDirectMessage
 			User user = request.context.get("__user__")
 
 			ImportContact contact = request.context.get("userId")
@@ -125,7 +125,7 @@ class TWTController {
 	public void postOnTwitter(ActionRequest request, ActionResponse response) {
 		try {
 			User user = request.context.get("__user__")
-			def context = request.context as PostTweet
+			def context = request.context as TwitterPostTweet
 			if( context.id == null ) {
 				ack = service.postTweet(user, context.content)
 				if (ack.equals("0"))
@@ -217,7 +217,7 @@ class TWTController {
 		try {
 			User user = request.context.get("__user__")
 			String postedComment = request.context.get("postComment")
-			def context = request.context as PostTweet
+			def context = request.context as TwitterPostTweet
 			ack = service.postTweetReplay(user, context.acknowledgment, postedComment)
 			response.values = ["postComment":""]
 			response.flash = ack;
@@ -231,7 +231,7 @@ class TWTController {
 	public String getComments(ActionRequest request,ActionResponse response) {
 		try {
 			User user = request.context.get("__user__")
-			def context = request.context as PostTweet
+			def context = request.context as TwitterPostTweet
 			String gid = context.getAcknowledgment();
 			ack = service.orgGetTweetReplay(user,gid);
 			if(ack.equals("0"))
@@ -239,7 +239,7 @@ class TWTController {
 			else if(ack.equals("1"))
 				response.flash = "Please Try after Sometime, Twitter will takes time to return back Replay"
 			else
-				response.values = ["commentsTweet" : TweetComment.all().filter("curUser = ? and contentid = ?", user , context).fetch()]
+				response.values = ["commentsTweet" : TwitterComment.all().filter("curUser = ? and contentid = ?", user , context).fetch()]
 		}
 		catch(Exception e) {
 			response.flash = e.getMessage();
@@ -292,7 +292,7 @@ class TWTController {
 
 		else if(ack!= null)
 		{
-			PostTweet tweet = service.addTweet(content,user,ack)
+			TwitterPostTweet tweet = service.addTweet(content,user,ack)
 			response.flash = "Successfully posted to Twitter"
 			response.values = ["postTweet":tweet]
 		}
@@ -306,7 +306,7 @@ class TWTController {
 
 	void getTweetsReply(ActionRequest request, ActionResponse response)
 	{
-		PostTweet postTweet = request.context.get("postTweet")
+		TwitterPostTweet postTweet = request.context.get("postTweet")
 		User user = request.context.get("__user__")
 		service.orgGetTweetReplay(user, postTweet.acknowledgment)
 	}
@@ -317,10 +317,10 @@ class TWTController {
 		long id = request.context.get("id")
 		if(id != null)
 		{
-			PostTweet postTweet = request.context.get("postTweet")
+			TwitterPostTweet postTweet = request.context.get("postTweet")
 			if(postTweet != null)
 			{
-				List<TweetComment> lstTweetComment = service.fetchTweetsReply(postTweet)
+				List<TwitterComment> lstTweetComment = service.fetchTweetsReply(postTweet)
 				response.values=["tweets":lstTweetComment]
 			}
 		}
@@ -334,7 +334,7 @@ class TWTController {
 		try	{
 			User user = request.context.get("__user__")
 			String postComment = request.context.get("tweetReply")
-			PostTweet postTweet = request.context.get("postTweet")
+			TwitterPostTweet postTweet = request.context.get("postTweet")
 			ack = service.postTweetReplay(user, postTweet.acknowledgment, postComment)
 			if(ack != null)
 				response.flash = ack;

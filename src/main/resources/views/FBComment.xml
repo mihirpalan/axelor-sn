@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
-	<grid name="comment-grid" title="CommentGrid" model="com.axelor.sn.db.Comment">
+	<grid name="comment-grid" title="CommentGrid" model="com.axelor.sn.db.FBComment">
 
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
@@ -17,7 +17,7 @@
 		<field name="curUser"></field>
 	</grid>
 
-	<form name="comment-form" title="CommentForm" model="com.axelor.sn.db.Comment">
+	<form name="comment-form" title="CommentForm" model="com.axelor.sn.db.FBComment">
 		<field name="contentid" onChange="com.axelor.sn.web.FBController:getCommentsOfStatus">
 		</field>
 		<break />

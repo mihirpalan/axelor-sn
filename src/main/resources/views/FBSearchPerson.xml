@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
-	<grid title="Search" name="search-grid" model="com.axelor.sn.db.SearchPerson"
+	<grid title="Search" name="search-grid" model="com.axelor.sn.db.FBSearchPerson"
 		orderBy="searchparam">
 		<field name="searchparam" title="Please Enter Person Name"></field>
 		<field name="resultSearch" title="Result" colSpan="5">
@@ -16,7 +16,7 @@
 			</grid>
 		</field>
 	</grid>
-	<form title="Search" name="search-form"  model="com.axelor.sn.db.SearchPerson">
+	<form title="Search" name="search-form"  model="com.axelor.sn.db.FBSearchPerson">
 		<toolbar>
 			<button name="save" title="Save" hidden="true" />
 			<button name="edit" title="Edit" hidden="true" />

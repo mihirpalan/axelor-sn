@@ -8,6 +8,7 @@
 		<string name="msgContent" title="Message" multiline="true"></string>
 		<string name="senderName" title="Sender's Name"></string>
 		<string name="senderId" title="Sender's ID"></string>
+		<string name="receiveDate" title="Date"></string>
 		<many-to-one name="curUser" ref="com.axelor.auth.db.User" hidden="true"></many-to-one>
 	</entity>
 </domain-models>

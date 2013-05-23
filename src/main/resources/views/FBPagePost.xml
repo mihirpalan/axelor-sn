@@ -64,11 +64,12 @@
 	</action-record>
 
 	<action-attrs name="action-get-controlls">
-		<attribute name="hidden" for="retriveComments" expr="eval:id==null" />
-		<attribute name="readonly" for="content" expr="eval:id!=null" />
-		<attribute name="hidden" for="postedComments" expr="eval:id==null" />
-		<attribute name="hidden" for="postComment" expr="eval:id==null" />
-		<attribute name="hidden" for="postIt" expr="eval:id==null" />
+		<attribute name="hidden" for="retriveComments" expr="eval:id == null" />
+		<attribute name="readonly" for="page" expr="eval : id != null"/>
+		<attribute name="readonly" for="content" expr="eval:id != null" />
+		<attribute name="hidden" for="postedComments" expr="eval:id == null" />
+		<attribute name="hidden" for="postComment" expr="eval:id == null" />
+		<attribute name="hidden" for="postIt" expr="eval:id == null" />
 	</action-attrs>
 </object-views>
 

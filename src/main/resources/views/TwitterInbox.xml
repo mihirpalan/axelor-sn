@@ -17,10 +17,11 @@
 				prompt="It will delete record(s) from Twitter and Database would you like to Continue?"
 				onClick="com.axelor.sn.web.TWTController:deleteDirectMessage" />
 		</toolbar>
-		<field name="msgId" readonly="true"></field>
-		<field name="msgContent" readonly="true"></field>
-		<field name="senderName" readonly="true"></field>
-		<field name="senderId" readonly="true" hidden="true"></field>
+		<field name="msgId"></field>
+		<field name="msgContent"></field>
+		<field name="senderName"></field>
+		<field name="receiveDate"></field>
+		<field name="senderId"></field>
 	</grid>
 
 	<form title="Detail Message" name="twt-inbox-form">
@@ -31,6 +32,7 @@
 		</toolbar>
 		<break />
 		<field name="senderName" readonly="true"></field>
+		<field name="receiveDate"></field>
 		<break />
 		<field name="msgContent" readonly="true"></field>
 	</form>

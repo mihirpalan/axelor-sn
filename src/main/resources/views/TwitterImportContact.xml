@@ -25,7 +25,7 @@
 	</grid>
 
 	<form name="twt-import-contact-form" title="Contact List"
-		onNew="com.axelor.sn.web.TWTController:getAllContactsTwt">
+		onNew="com.axelor.sn.web.TWTController:getAllContactsTwt" model="com.axelor.sn.db.ImportContact">
 		<field name="snUserId" readonly="true"></field>
 		<break />
 		<field name="name" readonly="true"></field>

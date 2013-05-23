@@ -4,7 +4,7 @@
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 	<grid title="Page" name="fb-page-grid">
 		<toolbar>
-			<!-- <button name="new" hidden="true" title="New" /> -->
+			<button name="new" title="New" hidden="true" />
 			<button name="edit" title="Edit" hidden="true" />
 			<button name="save" title="Save" hidden="true" />
 			<button name="firePages" title="Page(s)"

@@ -3,15 +3,15 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 	<grid title="Sent Messages" name="direct-msg-grid" orderBy="-postedDate"
-		model="com.axelor.sn.db.DirectMessage">
+		model="com.axelor.sn.db.TwitterDirectMessage">
 		<field name="userId" domain="self.curUser=:curUser and self.snType=:snType" />
 		<field name="msgcontent" />
 		<field name="postedDate"></field>
 	</grid>
 
 	<form name="direct-msg-form" title="Twitter Direct Message"
-		onLoad="action-control-display" model="com.axelor.sn.db.DirectMessage"
-		onNew="action-val-fie,com.axelor.sn.web.TWTController:saySNType,action-control-display,action-say-date"
+		onLoad="action-control-display" model="com.axelor.sn.db.TwitterDirectMessage"
+		onNew="action-control-display,action-say-date"
 		onSave="com.axelor.sn.web.TWTController:directMessage">
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
@@ -19,7 +19,6 @@
 		</toolbar>
 		<group title="Send Direct Message">
 			<field name="curUser" hidden="true" />
-			<field name="snType" readonly="true" hidden="true" />
 			<break />
 			<field name="userId" domain="self.curUser=:curUser and self.snType=:snType" />
 			<break />
@@ -34,12 +33,12 @@
 		<attribute name="readonly" for="userId" expr="eval:id!=null" />
 		<attribute name="readonly" for="msgcontent" expr="eval:id!=null" />
 	</action-attrs>
-	<action-record model="com.axelor.sn.db.DirectMessage"
+	<action-record model="com.axelor.sn.db.TwitterDirectMessage"
 		name="action-val-fie">
 		<field name="curUser" expr="eval:__user__" />
 	</action-record>
 
-	<action-record name="action-say-date" model="com.axelor.sn.db.DirectMessage">
+	<action-record name="action-say-date" model="com.axelor.sn.db.TwitterDirectMessage">
 		<field name="postedDate" expr="eval:__datetime__" />
 	</action-record>
 	<action-view name="action-view-all-msg" model="com.axelor.sn.db.TwitterInbox"

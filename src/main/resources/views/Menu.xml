@@ -40,7 +40,7 @@
 
 	<menuitem name="menu-fb-sn-postmsg" title="Status" action="action-fb-post-msg"
 		parent="menu-fb-sn" icon="img/status.png" />
-	<action-view name="action-fb-post-msg" model="com.axelor.sn.db.PostMessage"
+	<action-view name="action-fb-post-msg" model="com.axelor.sn.db.FBPostMessage"
 		title="Post Status">
 		<view type="grid" name="post-msg-grid" />
 		<view type="form" name="post-msg-form" />
@@ -51,7 +51,7 @@
 
 	<menuitem name="menu-fb-sn-postevent" title="Event"
 		action="action-fb-post-event" parent="menu-fb-sn" icon="img/eventfb.png" />
-	<action-view name="action-fb-post-event" model="com.axelor.sn.db.PostEvent"
+	<action-view name="action-fb-post-event" model="com.axelor.sn.db.FBPostEvent"
 		title="Post Event">
 		<view type="grid" name="post-event-grid" />
 		<view type="form" name="post-event-form1" />
@@ -74,7 +74,7 @@
 
 	<menuitem name="menu-fb-notif" title="Notification(s)" parent="menu-fb-sn"
 		icon="img/notifications.jpg" action="action-fb-notif" />
-	<action-view name="action-fb-notif" model="com.axelor.sn.db.FacebookNotification"
+	<action-view name="action-fb-notif" model="com.axelor.sn.db.FBNotification"
 		title="Notifications">
 		<view type="grid" name="fb-notif-grid" />
 		<domain>self.curUser=:u_ser</domain>
@@ -87,7 +87,7 @@
 	<action-view name="action-fb-inbox" model="com.axelor.sn.db.FBInbox"
 		title="Message Inbox">
 		<view type="grid" name="fbibox-msg-grid" />
-		<view type="form" name="fbibox-msg-form"/>
+		<view type="form" name="fbibox-msg-form" />
 		<domain>self.curUser=:u_ser</domain>
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
@@ -132,7 +132,7 @@
 
 	<menuitem name="menu-fb-Sn-SearchPerson" title="Search"
 		action="action-fb-search-person" parent="menu-fb-sn" icon="img/Search.png" />
-	<action-view name="action-fb-search-person" model="com.axelor.sn.db.SearchPerson"
+	<action-view name="action-fb-search-person" model="com.axelor.sn.db.FBSearchPerson"
 		title="Search">
 		<view type="grid" name="search-grid" />
 		<view type="form" name="search-form" />
@@ -143,7 +143,7 @@
 
 	<menuitem name="menu-param-config" title="Parameter Configration"
 		action="action-param-config" parent="menu-fb-sn" icon="img/parameter.jpg" />
-	<action-view name="action-param-config" model="com.axelor.sn.db.ConfigParameter"
+	<action-view name="action-param-config" model="com.axelor.sn.db.FBConfigParameter"
 		title="Parameter(s)">
 		<view type="grid" name="param-config-grid" />
 		<view type="form" name="param-config-form" />
@@ -186,7 +186,7 @@
 
 	<menuitem name="menu-twt-post-tweet" title="Tweet(s)" parent="menu-twt-sn"
 		action="action-twt-post-tweet" icon="img/twt.png" />
-	<action-view name="action-twt-post-tweet" model="com.axelor.sn.db.PostTweet"
+	<action-view name="action-twt-post-tweet" model="com.axelor.sn.db.TwitterPostTweet"
 		title="Post Tweets">
 		<view type="grid" name="post-tweet-grid" />
 		<view type="form" name="post-tweet-form" />
@@ -209,7 +209,7 @@
 
 	<menuitem name="menu-twt-direct-msg" title="Direct Message"
 		action="action-direct-msg-disp" parent="menu-twt-sn" icon="img/compose.png" />
-	<action-view name="action-direct-msg-disp" model="com.axelor.sn.db.DirectMessage"
+	<action-view name="action-direct-msg-disp" model="com.axelor.sn.db.TwitterDirectMessage"
 		title="Send Messages">
 		<view type="grid" name="direct-msg-grid" />
 		<view type="form" name="direct-msg-form" />
@@ -250,16 +250,10 @@
 		<context name="u_ser" expr="eval:__user__" />
 	</action-view>
 
-
-
-
-
 	<!-- LINKED IN MENU -->
+	
 	<menuitem name="menu-linkedin" parent="menu-sn" title="LinkedIn"
 		icon="img/linkedin-icon-vector.jpg" />
-
-
-
 	<menuitem name="menu-personal-credential" parent="menu-linkedin"
 		title="Personal Credentials" action="personalCredential" icon="img/login.png" />
 	<action-view name="personalCredential" title="Credentials"
@@ -268,12 +262,8 @@
 		<view type="form" name="personal-credentials-form" />
 		<domain>self.userId=:u_ser AND self.snType.name=:sntype</domain>
 		<context name="u_ser" expr="eval:__user__" />
-		<context name="sntype" expr="linkedin" /><!-- <domain>self.userId 
-			= :user_id</domain> --><!-- <context name="user_id" 
-			expr="eval:__user__" /> -->
+		<context name="sntype" expr="linkedin" />
 	</action-view>
-
-
 	<menuitem name="menu-linkedin-contact" parent="menu-linkedin"
 		title="Contacts" action="importContact" icon="img/LINcontact.png" />
 	<action-view name="importContact" title="Contacts"
@@ -284,8 +274,6 @@
 		<context name="user_id" expr="eval:__user__" />
 		<context name="sntype" expr="linkedin" />
 	</action-view>
-
-
 	<menuitem name="menu-linkedin-message" parent="menu-linkedin"
 		title="Messages" action="send.message" icon="img/LINMSG.jpg" />
 	<action-view name="send.message" title="Messages"
@@ -295,8 +283,6 @@
 		<domain>self.curUser = :user_id</domain>
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
-
-
 	<menuitem name="menu-linkedin-post" parent="menu-linkedin"
 		title="Status Updates" action="updatePost" icon="img/LInUpdate.jpg" />
 	<action-view name="updatePost" title="Updates"
@@ -306,8 +292,6 @@
 		<domain>self.curUser = :user_id</domain>
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
-
-
 	<menuitem name="menu-linkedin-network-updates" parent="menu-linkedin"
 		title="Network Updates" action="network.updates" icon="img/LINnw.jpg" />
 	<action-view name="network.updates" title="Updates"
@@ -317,8 +301,6 @@
 		<domain>self.curUser = :user_id</domain>
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
-
-
 	<menuitem name="menu-linkedin-groups" parent="menu-linkedin"
 		title="Groups" icon="img/LINgroups.jpg" />
 	<menuitem name="menu-linkedin-groups-list" parent="menu-linkedin-groups"
@@ -330,8 +312,6 @@
 		<domain>self.curUser = :user_id</domain>
 		<context name="user_id" expr="eval:__user__" />
 	</action-view>
-
-
 	<menuitem name="menu-linkedin-groups-disussion" parent="menu-linkedin-groups"
 		title="Discussions" action="discussion-view" icon="img/LINGD.jpg" />
 	<action-view name="discussion-view" title="Discussions"
@@ -342,8 +322,6 @@
 		<context name="user_id" expr="eval:__user__" />
 		<context name="current_user" expr="true" />
 	</action-view>
-
-
 	<menuitem name="menu-parameter-config" parent="menu-linkedin"
 		title="Parameter Configurations" action="parameterConfig" icon="img/parameter.jpg" />
 	<action-view name="parameterConfig" title="Parameters"
@@ -371,7 +349,7 @@
 	</action-view>
 
 
-	<menuitem name="menu-fb-credential" title="Social Networking Application Credential"
+	<menuitem name="menu-application-credential" title="Social Networking Application Credential"
 		action="action-fb-credential" parent="menu-config" icon="img/App.png" />
 	<action-view name="action-fb-credential" model="com.axelor.sn.db.ApplicationCredentials"
 		title="Application Credentials">
@@ -379,6 +357,12 @@
 		<view type="form" name="application-credential-form" />
 	</action-view>
 
+	<menuitem name="menu-all-register-users" title="All Register User"
+		action="action-all-register-users" parent="menu-config" icon="img/all_users.png" />
+	<action-view name="action-all-register-users" title="All Regester User"
+		model="com.axelor.sn.db.PersonalCredential">
+		<view type="grid" name="all-register-user" />
+	</action-view>
 
 	<menuitem name="menu-view-controller" title="View Controller"
 		action="action-view-controller" parent="menu-config" icon="img/viewconroller.jpg" />

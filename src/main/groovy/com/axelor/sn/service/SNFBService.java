@@ -5,23 +5,24 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import com.axelor.auth.db.User;
 import com.axelor.sn.db.ApplicationCredentials;
-import com.axelor.sn.db.Comment;
+import com.axelor.sn.db.FBComment;
 import com.axelor.sn.db.FBFriendrequest;
-import com.axelor.sn.db.ConfigParameter;
+import com.axelor.sn.db.FBConfigParameter;
 import com.axelor.sn.db.FBInbox;
 import com.axelor.sn.db.FBNewsFeed;
 import com.axelor.sn.db.FBPageComment;
 import com.axelor.sn.db.FBPagePost;
 import com.axelor.sn.db.FBPages;
-import com.axelor.sn.db.FacebookNotification;
+import com.axelor.sn.db.FBNotification;
 import com.axelor.sn.db.ImportContact;
 import com.axelor.sn.db.PersonalCredential;
-import com.axelor.sn.db.PostEvent;
-import com.axelor.sn.db.PostMessage;
-import com.axelor.sn.db.SearchPerson;
-import com.axelor.sn.db.SearchResult;
+import com.axelor.sn.db.FBPostEvent;
+import com.axelor.sn.db.FBPostMessage;
+import com.axelor.sn.db.FBSearchPerson;
+import com.axelor.sn.db.FBSearchResult;
 import com.axelor.sn.db.SocialNetworking;
 import com.axelor.sn.fb.FacebookConnectionClass;
+import com.axelor.sn.fb.FacebookUtilityClass;
 import com.google.common.base.Stopwatch;
 import com.google.inject.persist.Transactional;
 import com.google.inject.Inject;
@@ -32,6 +33,9 @@ import com.google.inject.Inject;
  * 
  */
 public class SNFBService {
+
+	@Inject
+	FacebookUtilityClass fbutil;
 
 	@Inject
 	FacebookConnectionClass fbconnect;
@@ -110,7 +114,6 @@ public class SNFBService {
 				mapReturnValues = fbconnect.getAccessToken(apikey, apisecret,
 						code, redirectUrl);
 				if (!mapReturnValues.isEmpty()) {
-
 					PersonalCredential personalCredential = new PersonalCredential();
 					personalCredential.setUserId(user);
 					personalCredential.setUserToken(mapReturnValues
@@ -152,21 +155,16 @@ public class SNFBService {
 	public String searchPerson(User user, String criteria) {
 		boolean checkVal = true;
 		ArrayList<HashMap> mapValues = new ArrayList<HashMap>();
-		String userToken;
+
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "0";
+			if (fbutil.isFBLivecheck(user)) {
+				FBSearchResult result = new FBSearchResult();
+				FBSearchPerson searchKeyword = new FBSearchPerson();
 
-			else {
-				SearchResult result = new SearchResult();
-				SearchPerson searchKeyword = new SearchPerson();
-				userToken = query.get(0).getUserToken();
-				mapValues = fbconnect.fetchObjectOfPerson(criteria, userToken);
-				SearchPerson objPerson = null;
+				mapValues = fbconnect.fetchObjectOfPerson(criteria);
+				FBSearchPerson objPerson = null;
 				if (!mapValues.isEmpty()) {
 					mapReturnValues = mapValues.get(0);
 					if (mapReturnValues.containsKey("oauthError")) {
@@ -176,7 +174,7 @@ public class SNFBService {
 								.remove();
 					} else {
 						try {
-							objPerson = SearchPerson
+							objPerson = FBSearchPerson
 									.all()
 									.filter("searchparam = ? and curUser = ?",
 											criteria, user).fetchOne();
@@ -191,7 +189,7 @@ public class SNFBService {
 							// TO ONE ROW OF D/B AND PERSIST INTO IT
 							for (int i = 0; i < mapValues.size(); i++) {
 								mapReturnValues = mapValues.get(i);
-								result = new SearchResult();
+								result = new FBSearchResult();
 								searchKeyword.setSearchparam(criteria);
 								searchKeyword.setCurUser(user);
 								result.setUserid(mapReturnValues
@@ -210,7 +208,7 @@ public class SNFBService {
 							}
 						}
 						if (checkVal == true) {
-							List<SearchResult> objResult = SearchResult
+							List<FBSearchResult> objResult = FBSearchResult
 									.all()
 									.filter("searchPerson=? and curUser=?",
 											objPerson, user).fetch();
@@ -224,7 +222,7 @@ public class SNFBService {
 							for (int i = 0; i < mapValues.size(); i++) {
 								if (!str.contains(mapValues.get(i).toString())) {
 									mapReturnValues = mapValues.get(i);
-									result = new SearchResult();
+									result = new FBSearchResult();
 									searchKeyword.setSearchparam(criteria);
 									searchKeyword.setCurUser(user);
 									result.setUserid(mapReturnValues.get(
@@ -246,7 +244,8 @@ public class SNFBService {
 					}
 				} else
 					acknowledgment = "2";
-			}
+			} else
+				acknowledgment = "0";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -267,14 +266,8 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "0";
-			else {
-				userToken = query.get(0).getUserToken();
-				mapReturnValues = fbconnect.publishMessage(pmsg, userToken,
-						paramPrivacy);
+			if (fbutil.isFBLivecheck(user)) {
+				mapReturnValues = fbconnect.publishMessage(pmsg, paramPrivacy);
 				if (mapReturnValues.containsKey("oauthError")) {
 					acknowledgment = "1";
 					PersonalCredential.all()
@@ -285,7 +278,8 @@ public class SNFBService {
 						acknowledgment = mapReturnValues.get("acknowledgment")
 								.toString();
 				}
-			}
+			} else
+				acknowledgment = "0";
 		} catch (Exception e) {
 			acknowledgment = e.getMessage();
 		}
@@ -308,15 +302,9 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name=?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-			else {
-
-				userToken = query.get(0).getUserToken();
-				mapReturnValues = fbconnect.postStatusComemnt(userToken,
-						contentId, commentContent);
+			if (fbutil.isFBLivecheck(user)) {
+				mapReturnValues = fbconnect.postStatusComemnt(contentId,
+						commentContent);
 				if (mapReturnValues.containsKey("oauthError")) {
 					acknowledgment = "You need to Re-Authorise The Application Please go to Personal Credential";
 					PersonalCredential.all()
@@ -351,15 +339,10 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			PostMessage status = PostMessage.all()
+			FBPostMessage status = FBPostMessage.all()
 					.filter("acknowledgment = ?", contentId).fetchOne();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-			else {
-				userToken = query.get(0).getUserToken();
-				lstReturnResponse = fbconnect.getComments(userToken, contentId);
+			if (fbutil.isFBLivecheck(user)) {
+				lstReturnResponse = fbconnect.getComments(contentId);
 				if (!lstReturnResponse.isEmpty()) {
 
 					mapRetrivedComments = lstReturnResponse.get(0);
@@ -373,8 +356,8 @@ public class SNFBService {
 
 					else {
 
-						Comment comnt;
-						List<Comment> query1 = Comment
+						FBComment comnt;
+						List<FBComment> query1 = FBComment
 								.all()
 								.filter("curUser = ? and contentid = ?", user,
 										status).fetch();
@@ -388,7 +371,7 @@ public class SNFBService {
 							mapRetrivedComments = lstReturnResponse.get(i);
 							if (!str.contains(mapRetrivedComments.get(
 									"commentId").toString())) {
-								comnt = new Comment();
+								comnt = new FBComment();
 								ImportContact impcnt = ImportContact
 										.all()
 										.filter("snUserId = ? and curUser = ?",
@@ -410,7 +393,7 @@ public class SNFBService {
 								comnt.merge();
 							}
 						}
-						List<Comment> selectedComment = Comment
+						List<FBComment> selectedComment = FBComment
 								.all()
 								.filter("contentid = ? and curUser = ?",
 										status, user).fetch();
@@ -449,30 +432,25 @@ public class SNFBService {
 	@Transactional
 	public String getDeleteMessage(User user,
 			@SuppressWarnings("rawtypes") List contentId) {
-		PostMessage postMsg;
+		FBPostMessage postMsg;
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
 
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				for (int i = 0; i < contentId.size(); i++) {
-					postMsg = new PostMessage();
-					postMsg = PostMessage.all()
+					postMsg = new FBPostMessage();
+					postMsg = FBPostMessage.all()
 							.filter("id = ?", contentId.get(i)).fetchOne();
 					if (!postMsg.getComments().isEmpty()) {
-						List<Comment> cmnt = Comment.all()
+						List<FBComment> cmnt = FBComment.all()
 								.filter("contentid = ?", postMsg).fetch();
 						for (int j = 0; j < cmnt.size(); j++)
 							cmnt.get(j).remove();
 					}
 
 					mapReturnValues = fbconnect.delete(
-							postMsg.getAcknowledgment(), userToken);
+							postMsg.getAcknowledgment(), false);
 					if (mapReturnValues.containsKey("oauthError")) {
 						acknowledgment = "You need to Re-Authorise The Application Please go to Personal Credential";
 						PersonalCredential.all()
@@ -506,20 +484,14 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-			else {
-				userToken = query.get(0).getUserToken();
-				mapReturnValues = fbconnect.publishMessage(pmsg, userToken,
-						paramPrivacy);
+			if (fbutil.isFBLivecheck(user)) {
+				mapReturnValues = fbconnect.publishMessage(pmsg, paramPrivacy);
 				if (mapReturnValues.containsKey("oauthError")) {
 					acknowledgment = "You need to Re-Authorise The Application Please go to Personal Credential";
 					PersonalCredential.all()
 							.filter("userId=? and snType=?", user, sn).remove();
 				} else if (mapReturnValues.containsKey("acknowledgment")) {
-					PostMessage posted = new PostMessage();
+					FBPostMessage posted = new FBPostMessage();
 					posted.setContent(pmsg);
 					posted.setAcknowledgment(mapReturnValues.get(
 							"acknowledgment").toString());
@@ -532,7 +504,8 @@ public class SNFBService {
 							.toString();
 				} else
 					acknowledgment = "Some Problem is there";
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 			acknowledgment = e.getMessage();
 			e.printStackTrace();
@@ -560,14 +533,9 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "0";
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				mapReturnValues = fbconnect.publishEvent(startDate, endDate,
-						eventName, location, userToken, privacy);
+						eventName, location, privacy);
 				if (mapReturnValues.containsKey("oauthError")) {
 					acknowledgment = "1";
 					PersonalCredential.all()
@@ -577,7 +545,9 @@ public class SNFBService {
 						acknowledgment = mapReturnValues.get("acknowledgment")
 								.toString();
 				}
-			}
+			} else
+				acknowledgment = "0";
+
 		} catch (Exception e) {
 			acknowledgment = e.getMessage();
 			e.printStackTrace();
@@ -595,23 +565,17 @@ public class SNFBService {
 	@Transactional
 	public String getDeleteEvent(User user,
 			@SuppressWarnings("rawtypes") List contentId) {
-		PostEvent postEvent;
+		FBPostEvent postEvent;
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				for (int i = 0; i < contentId.size(); i++) {
-					postEvent = new PostEvent();
-					postEvent = PostEvent.all()
+					postEvent = new FBPostEvent();
+					postEvent = FBPostEvent.all()
 							.filter("id = ?", contentId.get(i)).fetchOne();
 					mapReturnValues = fbconnect.delete(
-							postEvent.getAcknowledgment(), userToken);
+							postEvent.getAcknowledgment(), false);
 					if (mapReturnValues.containsKey("oauthError")) {
 						acknowledgment = "You need to Re-Authorise The Application Please go to Personal Credential";
 						PersonalCredential.all()
@@ -622,7 +586,8 @@ public class SNFBService {
 					else
 						acknowledgment = "Some Problem is there Please Try Again Later";
 				}
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 			acknowledgment = e.getMessage();
 			e.printStackTrace();
@@ -637,27 +602,21 @@ public class SNFBService {
 	 * @param user
 	 * @return
 	 */
-	@SuppressWarnings("rawtypes")
+	@SuppressWarnings({ "rawtypes", "deprecation" })
 	@Transactional
 	public String importContactsFB(User user) {
 		Stopwatch stopwatch = new Stopwatch();
 		ArrayList<HashMap> lstReturnResponse = new ArrayList<HashMap>();
 		HashMap mapFriendData;
-		String userToken;
+
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				ImportContact fbcntc;
 				List<ImportContact> query1 = ImportContact.all()
 						.filter("curUser = ? and snType = ?", user, sn).fetch();
-				lstReturnResponse = fbconnect.getListOfFriends(userToken);
+				lstReturnResponse = fbconnect.getListOfFriends();
 				stopwatch.start();
 
 				if (!lstReturnResponse.isEmpty()) {
@@ -702,7 +661,9 @@ public class SNFBService {
 				stopwatch.stop();
 				System.out.println("Database Part Completed in "
 						+ stopwatch.elapsedTime(TimeUnit.SECONDS) + "Seconds");
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
+
 		} catch (Exception e) {
 			acknowledgment = e.toString();
 			e.printStackTrace();
@@ -728,14 +689,9 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty()) {
-				acknowledgment = "Please Authorise The Applicaton First";
-			} else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				FBInbox fibox;
-				lstReturnResponse = fbconnect.retriveMessage(userToken);
+				lstReturnResponse = fbconnect.retriveMessage();
 
 				if (!lstReturnResponse.isEmpty()) {
 					mapInbox = lstReturnResponse.get(0);
@@ -770,7 +726,8 @@ public class SNFBService {
 				} else {
 					acknowledgment = "No New Message it there or Some Problem Occure!,Please Try Later";
 				}
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -792,19 +749,13 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name=?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				for (int i = 0; i < contentId.size(); i++) {
 					inboxMsg = new FBInbox();
 					inboxMsg = FBInbox.all().filter("id=?", contentId.get(i))
 							.fetchOne();
 					mapReturnValues = fbconnect.delete(inboxMsg.getMsgId(),
-							userToken);
+							false);
 					if (mapReturnValues.containsKey("oauthError")) {
 						acknowledgment = "You need to Re-Authorise The Application Please go to Personal Credential";
 						PersonalCredential.all()
@@ -815,7 +766,8 @@ public class SNFBService {
 					else
 						acknowledgment = "Some Problem is there Please Try Again Later";
 				}
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -842,17 +794,11 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-
-			else {
-				userToken = query.get(0).getUserToken();
-				FacebookNotification fbnotif;
-				ConfigParameter param;
+			if (fbutil.isFBLivecheck(user)) {
+				FBNotification fbnotif;
+				FBConfigParameter param;
 				try {
-					param = ConfigParameter.all().filter("curUser=?", user)
+					param = FBConfigParameter.all().filter("curUser=?", user)
 							.fetchOne();
 					if (param == null)
 						throw new javax.persistence.NoResultException();
@@ -872,12 +818,11 @@ public class SNFBService {
 							untilDate = new Date(sdf.format(calender.getTime()));
 						}
 						lstReturnResponse = fbconnect.getNotification(
-								userToken, param.getParamLimit(), sinceDate,
-								untilDate);
+								param.getParamLimit(), sinceDate, untilDate);
 					}
 				} catch (javax.persistence.NoResultException e) {
-					lstReturnResponse = fbconnect.getNotification(userToken, 0,
-							null, null);
+					lstReturnResponse = fbconnect
+							.getNotification(0, null, null);
 				}
 
 				if (!lstReturnResponse.isEmpty()) {
@@ -888,7 +833,7 @@ public class SNFBService {
 								.filter("userId=? and snType=?", user, sn)
 								.remove();
 					} else {
-						List<FacebookNotification> query1 = FacebookNotification
+						List<FBNotification> query1 = FBNotification
 								.all().filter("curUser = ?", user).fetch();
 						for (int i = 0; i < query1.size(); i++)
 							query1.get(i).remove();
@@ -897,7 +842,7 @@ public class SNFBService {
 						// ONE ROW OF D/B AND PERSIST INTO IT
 						for (int i = 0; i < lstReturnResponse.size(); i++) {
 							mapNotification = lstReturnResponse.get(i);
-							fbnotif = new FacebookNotification();
+							fbnotif = new FBNotification();
 							fbnotif.setNotifId(mapNotification.get("notifId")
 									.toString());
 							fbnotif.setTitle(mapNotification.get("notifTitle")
@@ -911,7 +856,9 @@ public class SNFBService {
 						}
 					}
 				}
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
+
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -932,14 +879,9 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				FBFriendrequest fbreq;
-				lstReturnResponse = fbconnect.getFriendRequest(userToken);
+				lstReturnResponse = fbconnect.getFriendRequest();
 				if (!lstReturnResponse.isEmpty()) {
 					mapRequestedFriend = lstReturnResponse.get(0);
 					if (mapRequestedFriend.containsKey("oauthError")) {
@@ -968,7 +910,8 @@ public class SNFBService {
 					}
 				} else
 					acknowledgment = "You do not have Pending Friend Request(s)";
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -993,17 +936,11 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				FBNewsFeed newsFeed;
-				ConfigParameter param;
+				FBConfigParameter param;
 				try {
-					param = ConfigParameter.all().filter("curUser = ?", user)
+					param = FBConfigParameter.all().filter("curUser = ?", user)
 							.fetchOne();
 					if (param == null)
 						throw new javax.persistence.NoResultException();
@@ -1022,12 +959,11 @@ public class SNFBService {
 									-(param.getParamUntil()));
 							untilDate = new Date(sdf.format(calender.getTime()));
 						}
-						lstReturnResponse = fbconnect.getNewsFeed(userToken,
+						lstReturnResponse = fbconnect.getNewsFeed(
 								param.getParamLimit(), sinceDate, untilDate);
 					}
 				} catch (javax.persistence.NoResultException e) {
-					lstReturnResponse = fbconnect.getNewsFeed(userToken, 0,
-							null, null);
+					lstReturnResponse = fbconnect.getNewsFeed(0, null, null);
 				}
 
 				if (!lstReturnResponse.isEmpty()) {
@@ -1078,7 +1014,8 @@ public class SNFBService {
 					}
 				} else
 					acknowledgment = "There is No new Update / Some Problem";
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 
 			e.printStackTrace();
@@ -1102,15 +1039,9 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				FBPages page;
-				lstReturnResponse = fbconnect.getPageDetail(userToken);
+				lstReturnResponse = fbconnect.getPageDetail();
 				if (!lstReturnResponse.isEmpty()) {
 					mapRetrivePage = lstReturnResponse.get(0);
 					if (mapRetrivePage.containsKey("oauthError")) {
@@ -1147,7 +1078,8 @@ public class SNFBService {
 					}
 				} else
 					acknowledgment = "You do not OWN page(s)";
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 			acknowledgment = e.getMessage();
 			e.printStackTrace();
@@ -1168,16 +1100,10 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name=?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "0";
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				String value = content.getContent();
 				String pageId = page.getPageId();
-				mapReturnValues = fbconnect
-						.postToPgae(value, pageId, userToken);
+				mapReturnValues = fbconnect.postToPgae(value, pageId);
 				if (mapReturnValues.containsKey("oauthError")) {
 					acknowledgment = "1";
 					PersonalCredential.all()
@@ -1187,7 +1113,8 @@ public class SNFBService {
 						acknowledgment = mapReturnValues.get("acknowledgment")
 								.toString();
 				}
-			}
+			} else
+				acknowledgment = "0";
 		} catch (Exception e) {
 			acknowledgment = e.getMessage();
 			e.printStackTrace();
@@ -1210,18 +1137,13 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType=?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				for (int i = 0; i < contentId.size(); i++) {
 					postMsg = new FBPagePost();
 					postMsg = FBPagePost.all().filter("id=?", contentId.get(i))
 							.fetchOne();
 					mapReturnValues = fbconnect.delete(
-							postMsg.getAcknowledgment(), userToken);
+							postMsg.getAcknowledgment(), false);
 
 					if (mapReturnValues.containsKey("oauthError")) {
 						acknowledgment = "You need to Re-Authorise The Application Please go to Personal Credential";
@@ -1233,7 +1155,8 @@ public class SNFBService {
 					else
 						acknowledgment = "Some Problem is there Please Try Again Later";
 				}
-			}
+			} else
+				acknowledgment = "Please Authorize The Application First";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1257,17 +1180,10 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
 			FBPagePost status = FBPagePost.all()
 					.filter("acknowledgment = ?", contentId).fetchOne();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-
-			else {
-				userToken = query.get(0).getUserToken();
-				lstReturnResponse = fbconnect.getPageComments(userToken,
-						contentId);
+			if (fbutil.isFBLivecheck(user)) {
+				lstReturnResponse = fbconnect.getPageComments(contentId);
 				if (!lstReturnResponse.isEmpty()) {
 					mapRetriveComment = lstReturnResponse.get(0);
 					if (mapRetriveComment.containsKey("oauthError")) {
@@ -1291,7 +1207,7 @@ public class SNFBService {
 						for (int i = 0; i < lstReturnResponse.size(); i++) {
 							if (!str.contains(mapRetriveComment
 									.get("commentId").toString())) {
-								mapRetriveComment = lstReturnResponse.get(0);
+								mapRetriveComment = lstReturnResponse.get(i);
 								comnt = new FBPageComment();
 								comnt.setCommentid(mapRetriveComment.get(
 										"commentId").toString());
@@ -1311,7 +1227,8 @@ public class SNFBService {
 					}
 				} else
 					acknowledgment = "No Comment available";
-			}
+			} else
+				acknowledgment = "Please Authorize The Application First";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1330,18 +1247,11 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name = ?", "facebook").fetchOne();
-			List<PersonalCredential> query = PersonalCredential.all()
-					.filter("userId = ? and snType = ?", user, sn).fetch();
-			if (query.isEmpty())
-				acknowledgment = "Please Authorise The Applicaton First";
-
-			else {
-				userToken = query.get(0).getUserToken();
+			if (fbutil.isFBLivecheck(user)) {
 				FBNewsFeed newsFeed = FBNewsFeed.all()
 						.filter("id = ?  and curUser = ?", contentId, user)
 						.fetchOne();
-				mapReturnValues = fbconnect.postLike(newsFeed.getFeedid(),
-						userToken);
+				mapReturnValues = fbconnect.postLike(newsFeed.getFeedid());
 				if (mapReturnValues.containsKey("oauthError")) {
 					acknowledgment = "You need to Re-Authorise The Application Please go to Personal Credential";
 					PersonalCredential.all()
@@ -1357,7 +1267,42 @@ public class SNFBService {
 					} else
 						acknowledgment = "Its not Existed or/There is Some Error Please Try after Sometimes!!";
 				}
-			}
+			} else
+				acknowledgment = "Please Authorize The Application First";
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+		return acknowledgment;
+	}
+
+	/**
+	 * METHOD IS USED TO UNLIKE THE POST ON FACEBOOK
+	 * 
+	 * @param user
+	 * @param contentId
+	 * @return
+	 */
+	@Transactional
+	public String destroyLikes(User user, Long contentId) {
+		try {
+			SocialNetworking sn = SocialNetworking.all()
+					.filter("name = ?", "facebook").fetchOne();
+			if (fbutil.isFBLivecheck(user)) {
+				FBNewsFeed newsFeed = FBNewsFeed.all()
+						.filter("id = ?  and curUser = ?", contentId, user)
+						.fetchOne();
+				mapReturnValues = fbconnect.delete(newsFeed.getFeedid(), true);
+
+				if (mapReturnValues.containsKey("oauthError")) {
+					acknowledgment = "You need to Re-Authorise The Application Please go to Personal Credential";
+					PersonalCredential.all()
+							.filter("userId = ? and snType = ?", user, sn)
+							.remove();
+				} else
+					newsFeed.setContentLike(false);
+				newsFeed.merge();
+			} else
+				acknowledgment = "Please Authorize The Application First";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -1376,24 +1321,26 @@ public class SNFBService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name=?", "facebook").fetchOne();
-			PersonalCredential credential = PersonalCredential.all()
-					.filter("id=? and userId=? and snType=?", idVal, user, sn)
-					.fetchOne();
-			Comment.all().filter("curUser = ?", user).remove();
+			PersonalCredential credential = PersonalCredential
+					.all()
+					.filter("id = ? and userId = ? and snType = ?", idVal,
+							user, sn).fetchOne();
+			System.out.println(credential);
+			FBComment.all().filter("curUser = ?", user).remove();
 			FBPageComment.all().filter("curUser = ?", user).remove();
 			FBPagePost.all().filter("curUser=?", user).remove();
 			FBPages.all().filter("curUser=?", user).remove();
 			FBFriendrequest.all().filter("curUser=?", user).remove();
 			FBNewsFeed.all().filter("curUser=?", user).remove();
-			SearchResult.all().filter("curUser=?", user).remove();
-			SearchPerson.all().filter("curUser=?", user).remove();
-			ConfigParameter.all().filter("curUser=?", user).remove();
+			FBSearchResult.all().filter("curUser=?", user).remove();
+			FBSearchPerson.all().filter("curUser=?", user).remove();
+			FBConfigParameter.all().filter("curUser=?", user).remove();
 			FBInbox.all().filter("curUser=?", user).remove();
-			FacebookNotification.all().filter("curUser=?", user).remove();
-			PostEvent.all().filter("curUser=?", user).remove();
+			FBNotification.all().filter("curUser=?", user).remove();
+			FBPostEvent.all().filter("curUser=?", user).remove();
 			ImportContact.all().filter("curUser=? and snType=?", user, sn)
 					.remove();
-			PostMessage.all().filter("curUser=?", user).remove();
+			FBPostMessage.all().filter("curUser=?", user).remove();
 			credential.remove();
 			acknowledgment = "You have successfully Removed all associated Data with this account From here";
 		} catch (Exception e) {

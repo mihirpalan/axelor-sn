@@ -1,26 +1,36 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-  xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<repositories>
 		<repository>
 			<id>axelor-public-repository-group</id>
 			<name>Axelor Public Maven Repository Group</name>
 			<url>http://repository.axelor.com/nexus/content/groups/public/</url>
 		</repository>
-	</repositories>
 
+		<repository>
+			<id>twitter4j.org</id>
+			<name>twitter4j.org Repository</name>
+			<url>http://twitter4j.org/maven2</url>
+			<releases>
+				<enabled>true</enabled>
+			</releases>
+			<snapshots>
+				<enabled>true</enabled>
+			</snapshots>
+		</repository>
+
+	</repositories>
 	<parent>
 		<groupId>com.axelor</groupId>
 		<artifactId>axelor-module-parent</artifactId>
 		<version>0.0.8-SNAPSHOT</version>
 		<relativePath>../axelor-module-parent/pom.xml</relativePath>
 	</parent>
-
 	<modelVersion>4.0.0</modelVersion>
 	<artifactId>axelor-sn</artifactId>
 	<name>Axelor :: Social Networking</name>
 	<dependencies>
-
+	
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>
@@ -41,12 +51,6 @@
 			<version>[3.0,)</version>
 		</dependency>
 
-		<!-- For Twitter Authorization -->
-		<dependency>
-			<groupId>net.sourceforge.htmlunit</groupId>
-			<artifactId>htmlunit</artifactId>
-			<version>2.9</version>
-		</dependency>
 
 		<!-- FACEBOOK DEPENDENCY -->
 		<dependency>
@@ -83,11 +87,13 @@
 			<version>${project.version}</version>
 		</dependency>
 
+		<!-- axelor-contact -->
 		<dependency>
 			<groupId>com.axelor</groupId>
 			<artifactId>axelor-contact</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
 
 		<!-- axelor-auth -->
 		<dependency>
@@ -109,8 +115,8 @@
 			<artifactId>jsr311-api</artifactId>
 			<version>1.1.1</version>
 		</dependency>
-
 	</dependencies>
+
 	<build>
 		<plugins>
 			<plugin>

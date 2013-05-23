@@ -3,7 +3,7 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 
-	<grid title="Post Event Grid" name="post-event-grid" model="com.axelor.sn.db.PostEvent"
+	<grid title="Post Event Grid" name="post-event-grid" model="com.axelor.sn.db.FBPostEvent"
 		orderBy="-postedTime">
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
@@ -29,7 +29,7 @@
 	</selection>
 
 	<form title="Post Event Form1" name="post-event-form1" onNew="action-user-post-event-user"
-		onSave="com.axelor.sn.web.FBController:postEvent" model="com.axelor.sn.db.PostEvent">
+		onSave="com.axelor.sn.web.FBController:postEvent" model="com.axelor.sn.db.FBPostEvent">
 
 		<toolbar>
 			<button name="edit" title="Edit" hidden="true" />
@@ -47,7 +47,7 @@
 		<field name="curUser" readonly="true" hidden="true"></field>
 	</form>
 
-	<action-record name="action-user-post-event-user" model="com.axelor.sn.db.PostEvent">
+	<action-record name="action-user-post-event-user" model="com.axelor.sn.db.FBPostEvent">
 		<field name="curUser" expr="eval:__user__" />
 		<field name="postedTime" expr="eval:__datetime__" />
 	</action-record>

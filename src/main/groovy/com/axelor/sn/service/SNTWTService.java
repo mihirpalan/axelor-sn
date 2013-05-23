@@ -4,21 +4,21 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
 import com.axelor.auth.db.User;
 import com.axelor.db.JPA;
 import com.axelor.sn.db.ApplicationCredentials;
-import com.axelor.sn.db.DirectMessage;
+import com.axelor.sn.db.TwitterDirectMessage;
 import com.axelor.sn.db.ImportContact;
 import com.axelor.sn.db.PersonalCredential;
-import com.axelor.sn.db.PostTweet;
+import com.axelor.sn.db.TwitterPostTweet;
 import com.axelor.sn.db.SocialNetworking;
-import com.axelor.sn.db.TweetComment;
+import com.axelor.sn.db.TwitterComment;
 import com.axelor.sn.db.TwitterConfig;
 import com.axelor.sn.db.TwitterFollowerRequest;
 import com.axelor.sn.db.TwitterHomeTimeline;
 import com.axelor.sn.db.TwitterInbox;
 import com.axelor.sn.twitter.TwitterConnectionClass;
+import com.axelor.sn.twitter.TwitterUtilityClass;
 import com.google.inject.Inject;
 import com.google.inject.persist.Transactional;
 import org.joda.time.DateTime;
@@ -29,6 +29,9 @@ import org.joda.time.DateTime;
  * 
  */
 public class SNTWTService {
+	@Inject
+	TwitterUtilityClass twtUtil;
+
 	@Inject
 	public TwitterConnectionClass twtconnect;
 	String acknowledgment, apiKey, apiSecret, userToken, userTokenSecret,
@@ -94,26 +97,13 @@ public class SNTWTService {
 	@Transactional
 	public String postTweet(User user, String content) {
 		try {
-			SocialNetworking sn = SocialNetworking.all()
-					.filter("name=?", "twitter").fetchOne();
-			List<ApplicationCredentials> query = ApplicationCredentials.all()
-					.filter("snType=? ", sn).fetch();
-			List<PersonalCredential> credential = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-
-			if (credential.isEmpty())
-				acknowledgment = "0";
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
-				mapRetriveValues = twtconnect.postTweet(apiKey, apiSecret,
-						userToken, userTokenSecret, content);
+			if (twtUtil.isTWTLivecheck(user)) {
+				mapRetriveValues = twtconnect.postTweet(content);
 				if (mapRetriveValues.size() > 0)
 					acknowledgment = mapRetriveValues.get("acknowledgment")
 							.toString();
-			}
+			} else
+				acknowledgment = "0";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -131,43 +121,30 @@ public class SNTWTService {
 	@SuppressWarnings("rawtypes")
 	@Transactional
 	public String getDeleteMessage(User user, List contentId) {
-		PostTweet postMsg;
+		TwitterPostTweet postMsg;
 		try {
-			SocialNetworking sn = SocialNetworking.all()
-					.filter("name=?", "twitter").fetchOne();
-			List<ApplicationCredentials> query = ApplicationCredentials.all()
-					.filter("snType=? ", sn).fetch();
-			List<PersonalCredential> credential = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-			if (credential.isEmpty())
-				acknowledgment = "Please Login First";
-
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
+			if (twtUtil.isTWTLivecheck(user)) {
 				for (int i = 0; i < contentId.size(); i++) {
-					postMsg = new PostTweet();
-					postMsg = PostTweet.all().filter("id=?", contentId.get(i))
+					postMsg = new TwitterPostTweet();
+					postMsg = TwitterPostTweet.all().filter("id=?", contentId.get(i))
 							.fetchOne();
 					if (!postMsg.getCommentsTweet().isEmpty()) {
-						List<TweetComment> cmntList = TweetComment.all()
+						List<TwitterComment> cmntList = TwitterComment.all()
 								.filter("id=?", contentId.get(i)).fetch();
 						for (int j = 0; j < cmntList.size(); j++)
 							cmntList.get(j).remove();
 					}
 
-					mapRetriveValues = twtconnect.deleteContent(apiKey,
-							apiSecret, userToken, userTokenSecret,
-							postMsg.getAcknowledgment());
+					mapRetriveValues = twtconnect.deleteContent(postMsg
+							.getAcknowledgment());
 
 					if (mapRetriveValues.containsKey("acknowledgment"))
 						postMsg.remove();
 					else
 						acknowledgment = "There is Some Problem, Please Try late";
 				}
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -186,20 +163,8 @@ public class SNTWTService {
 		try {
 			SocialNetworking sn = SocialNetworking.all()
 					.filter("name=?", "twitter").fetchOne();
-			List<ApplicationCredentials> query = ApplicationCredentials.all()
-					.filter("snType=? ", sn).fetch();
-			List<PersonalCredential> credential = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-			if (credential.isEmpty())
-				acknowledgment = "0";
-
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
-				lstReturnResponse = twtconnect.importContact(apiKey, apiSecret,
-						userToken, userTokenSecret);
+			if (twtUtil.isTWTLivecheck(user)) {
+				lstReturnResponse = twtconnect.importContact();
 				if (!lstReturnResponse.isEmpty()) {
 					List<ImportContact> query1 = ImportContact.all()
 							.filter("curUser=? and snType=?", user, sn).fetch();
@@ -228,7 +193,8 @@ public class SNTWTService {
 
 				} else
 					acknowledgment = "1";
-			}
+			} else
+				acknowledgment = "0";
 
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -246,26 +212,13 @@ public class SNTWTService {
 	@Transactional
 	public String sentMessage(User user, String id, String msg) {
 		try {
-			SocialNetworking sn = SocialNetworking.all()
-					.filter("name=?", "twitter").fetchOne();
-			List<ApplicationCredentials> query = ApplicationCredentials.all()
-					.filter("snType=? ", sn).fetch();
-			List<PersonalCredential> credential = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-			if (credential.isEmpty())
-				acknowledgment = "0";
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
-				mapRetriveValues = twtconnect.sendMessage(apiKey, apiSecret,
-						userToken, userTokenSecret, id, msg);
+			if (twtUtil.isTWTLivecheck(user)) {
+				mapRetriveValues = twtconnect.sendMessage(id, msg);
 				if (mapRetriveValues.containsKey("acknowledgment"))
 					acknowledgment = mapRetriveValues.get("acknowledgment")
 							.toString();
-
-			}
+			} else
+				acknowledgment = "0";
 		} catch (Exception e) {
 			acknowledgment = e.getMessage();
 			e.printStackTrace();
@@ -291,22 +244,9 @@ public class SNTWTService {
 					query1.get(i).remove();
 				}
 			}
-			SocialNetworking sn = SocialNetworking.all()
-					.filter("name=?", "twitter").fetchOne();
-			List<ApplicationCredentials> query = ApplicationCredentials.all()
-					.filter("snType=? ", sn).fetch();
-			List<PersonalCredential> credential = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-			if (credential.isEmpty())
-				acknowledgment = "0";
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
+			if (twtUtil.isTWTLivecheck(user)) {
 				TwitterInbox twtibox = new TwitterInbox();
-				lstReturnResponse = twtconnect.getDirectMessages(apiKey,
-						apiSecret, userToken, userTokenSecret);
+				lstReturnResponse = twtconnect.getDirectMessages();
 				if (!lstReturnResponse.isEmpty()) {
 					List<TwitterInbox> inboxRecords = TwitterInbox.all()
 							.filter("curUser = ?", user).fetch();
@@ -325,12 +265,15 @@ public class SNTWTService {
 								.get("senderName").toString());
 						twtibox.setSenderId(mapRetriveValues.get("senderId")
 								.toString());
+						twtibox.setReceiveDate(mapRetriveValues.get(
+								"receiveDate").toString());
 						twtibox.setCurUser(user);
 						twtibox.persist();
 					}
 				} else
 					acknowledgment = "1";
-			}
+			} else
+				acknowledgment = "0";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -350,32 +293,20 @@ public class SNTWTService {
 	public String deleteDirectMessage(User user,
 			@SuppressWarnings("rawtypes") List contentId) {
 		try {
-			SocialNetworking sn = SocialNetworking.all()
-					.filter("name=?", "twitter").fetchOne();
-			List<ApplicationCredentials> query = ApplicationCredentials.all()
-					.filter("snType=? ", sn).fetch();
-			List<PersonalCredential> credential = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-			if (credential.isEmpty())
-				acknowledgment = "Please Login First";
+			if (twtUtil.isTWTLivecheck(user)) {
 
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
 				for (int i = 0; i < contentId.size(); i++) {
 					TwitterInbox delMsg = TwitterInbox.all()
 							.filter("id=?", contentId.get(i)).fetchOne();
 
-					mapRetriveValues = twtconnect.deleteInbox(apiKey,
-							apiSecret, userToken, userTokenSecret,
-							delMsg.getMsgId());
+					mapRetriveValues = twtconnect
+							.deleteInbox(delMsg.getMsgId());
 
 					if (mapRetriveValues.containsKey("acknowledgment"))
 						delMsg.remove();
 				}
-			}
+			} else
+				acknowledgment = "Please Authorize The Application First";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -391,20 +322,7 @@ public class SNTWTService {
 	public String getHomeTimeLine(User user) {
 
 		try {
-			SocialNetworking sn = SocialNetworking.all()
-					.filter("name=?", "twitter").fetchOne();
-			List<ApplicationCredentials> query = ApplicationCredentials.all()
-					.filter("snType=? ", sn).fetch();
-			List<PersonalCredential> credential = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-			if (credential.isEmpty())
-				acknowledgment = "0";
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
-
+			if (twtUtil.isTWTLivecheck(user)) {
 				try {
 					TwitterConfig param = TwitterConfig.all()
 							.filter("curUser=?", user).fetchOne();
@@ -413,10 +331,7 @@ public class SNTWTService {
 					else {
 						if (param.getSince() == false)
 							lstReturnResponse = twtconnect.fetchHomeTimeline(
-									apiKey, apiSecret, userToken,
-									userTokenSecret, param.getPage(),
-									param.getContent(), null);
-
+									param.getPage(), param.getContent(), null);
 						else {
 							EntityManager em = JPA.em();
 							Long maxId = (Long) em.createQuery(
@@ -427,9 +342,7 @@ public class SNTWTService {
 								acknowledgment = "1";
 							else
 								lstReturnResponse = twtconnect
-										.fetchHomeTimeline(apiKey, apiSecret,
-												userToken, userTokenSecret,
-												param.getPage(),
+										.fetchHomeTimeline(param.getPage(),
 												param.getContent(), maxId);
 
 						}
@@ -437,8 +350,8 @@ public class SNTWTService {
 				} catch (javax.persistence.NoResultException e) {
 					System.out
 							.println("No parameter has been set for This User");
-					lstReturnResponse = twtconnect.fetchHomeTimeline(apiKey,
-							apiSecret, userToken, userTokenSecret, 0, 0, null);
+					lstReturnResponse = twtconnect
+							.fetchHomeTimeline(0, 0, null);
 				}
 				if (!lstReturnResponse.isEmpty()) {
 					TwitterHomeTimeline twtTimeline = new TwitterHomeTimeline();
@@ -470,7 +383,8 @@ public class SNTWTService {
 					}
 				} else
 					acknowledgment = "1";
-			}
+			} else
+				acknowledgment = "0";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -484,25 +398,9 @@ public class SNTWTService {
 	 */
 	@Transactional
 	public String getFollowerRequest(User user) {
-
 		try {
-			SocialNetworking sn = SocialNetworking.all()
-					.filter("name=?", "twitter").fetchOne();
-			List<ApplicationCredentials> query = ApplicationCredentials.all()
-					.filter("snType=? ", sn).fetch();
-			List<PersonalCredential> credential = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-			if (credential.isEmpty())
-				acknowledgment = "Please Login First";
-
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
-
-				lstReturnResponse = twtconnect.retrivePendingRequest(apiKey,
-						apiSecret, userToken, userTokenSecret);
+			if (twtUtil.isTWTLivecheck(user)) {
+				lstReturnResponse = twtconnect.retrivePendingRequest();
 
 				if (!lstReturnResponse.isEmpty()) {
 					TwitterFollowerRequest twtRequest = new TwitterFollowerRequest();
@@ -534,10 +432,10 @@ public class SNTWTService {
 						twtRequest.persist();
 
 					}
-
 				} else
 					acknowledgment = "You do not have any Pending Request";
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -557,28 +455,16 @@ public class SNTWTService {
 		@SuppressWarnings("rawtypes")
 		ArrayList<HashMap> lstComments = new ArrayList<HashMap>();
 
-		PostTweet context = PostTweet.all().filter("acknowledgment=?", tweetId)
+		TwitterPostTweet context = TwitterPostTweet.all().filter("acknowledgment=?", tweetId)
 				.fetchOne();
 		SocialNetworking sn = SocialNetworking.all()
 				.filter("name=?", "twitter").fetchOne();
-		List<ApplicationCredentials> query = ApplicationCredentials.all()
-				.filter("snType=?", sn).fetch();
-		List<PersonalCredential> credential = PersonalCredential.all()
-				.filter("userId=? and snType=?", user, sn).fetch();
-		try {
-			if (query.isEmpty())
-				acknowledgment = "0";
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
 
-				lstComments = twtconnect.getCommentsOfTweet(apiKey, apiSecret,
-						userToken, userTokenSecret, tweetId);
-				
+		try {
+			if (twtUtil.isTWTLivecheck(user)) {
+				lstComments = twtconnect.getCommentsOfTweet(tweetId);
 				if (!lstComments.isEmpty()) {
-					List<TweetComment> query1 = TweetComment.all()
+					List<TwitterComment> query1 = TwitterComment.all()
 							.filter("curUser=?", user).fetch();
 					List<String> str = new ArrayList<String>();
 					for (int i = 0; i < query1.size(); i++)
@@ -595,7 +481,7 @@ public class SNTWTService {
 									.filter("snUserId=? and curUser=? and snType=?",
 											mapRetriveValues.get("userid"),
 											user, sn).fetchOne();
-							TweetComment tcmnt = new TweetComment();
+							TwitterComment tcmnt = new TwitterComment();
 							tcmnt.setTweetcommentid(mapRetriveValues.get(
 									"commentId").toString());
 							tcmnt.setContentid(context);
@@ -614,7 +500,8 @@ public class SNTWTService {
 				} else
 					acknowledgment = "1";
 
-			}
+			} else
+				acknowledgment = "0";
 		} catch (javax.persistence.OptimisticLockException ole) {
 			System.out.println(ole.getEntity());
 		} catch (Exception e) {
@@ -638,27 +525,23 @@ public class SNTWTService {
 	@Transactional
 	public String postTweetReplay(User user, String contentId, String content) {
 		try {
-			SocialNetworking sn = SocialNetworking.all()
-					.filter("name=?", "twitter").fetchOne();
-			List<ApplicationCredentials> query = ApplicationCredentials.all()
-					.filter("snType=? ", sn).fetch();
-			List<PersonalCredential> credential = PersonalCredential.all()
-					.filter("userId=? and snType=?", user, sn).fetch();
-			if (credential.isEmpty())
-				acknowledgment = "Please Login First";
-			else {
-				apiKey = query.get(0).getApikey();
-				apiSecret = query.get(0).getApisecret();
-				userToken = credential.get(0).getUserToken();
-				userTokenSecret = credential.get(0).getUserTokenSecret();
-				String replayTo = credential.get(0).getSnUserName() + content;
-				mapRetriveValues = twtconnect.postTweetReplay(apiKey,
-						apiSecret, userToken, userTokenSecret, contentId,
+			if (twtUtil.isTWTLivecheck(user)) {
+				PersonalCredential credential = PersonalCredential
+						.all()
+						.filter("userId=? and snType=?",
+								user,
+								SocialNetworking.all()
+										.filter("name=?", "twitter").fetchOne())
+						.fetchOne();
+
+				String replayTo = credential.getSnUserName() + content;
+				mapRetriveValues = twtconnect.postTweetReplay(contentId,
 						replayTo);
 				if (!mapRetriveValues.containsKey("acknowledgment"))
 					acknowledgment = "There is Some Problem";
 
-			}
+			} else
+				acknowledgment = "Please Authorize the Application First";
 		} catch (Exception e) {
 			acknowledgment = e.getMessage();
 			e.printStackTrace();
@@ -681,15 +564,15 @@ public class SNTWTService {
 					.filter("id=? and userId=? and snType=?", idVal, user, sn)
 					.fetchOne();
 
-			TweetComment.all().filter("curUser=?", user).remove();
+			TwitterComment.all().filter("curUser=?", user).remove();
 			TwitterConfig.all().filter("curUser=?", user).remove();
-			DirectMessage.all().filter("curUser=?", user).remove();
+			TwitterDirectMessage.all().filter("curUser=?", user).remove();
 			TwitterHomeTimeline.all().filter("curUser=?", user).remove();
 			TwitterFollowerRequest.all().filter("curUser=?", user).remove();
 			ImportContact.all().filter("snType=? and curUser=?", sn, user)
 					.remove();
 			TwitterInbox.all().filter("curUser=?", user).remove();
-			PostTweet.all().filter("curUser=?", user).remove();
+			TwitterPostTweet.all().filter("curUser=?", user).remove();
 			credential.remove();
 			acknowledgment = "You have successfully Removed all associated Data with this account From here";
 		}
@@ -703,11 +586,11 @@ public class SNTWTService {
 
 	// ADDED BY MIHIR ON 16-04-2013 from HERE on to END
 	@Transactional
-	public PostTweet addTweet(String content, User user, String ack)
+	public TwitterPostTweet addTweet(String content, User user, String ack)
 			throws Exception {
 
 		DateTime date = twtconnect.getStatusTime(ack);
-		PostTweet tweet = new PostTweet();
+		TwitterPostTweet tweet = new TwitterPostTweet();
 		tweet.setAcknowledgment(ack);
 		tweet.setContent(content);
 		tweet.setCurUser(user);
@@ -716,10 +599,9 @@ public class SNTWTService {
 		return tweet;
 	}
 
-	public List<TweetComment> fetchTweetsReply(PostTweet postTweet) {
-		List<TweetComment> lstTweetComment = TweetComment.all()
+	public List<TwitterComment> fetchTweetsReply(TwitterPostTweet postTweet) {
+		List<TwitterComment> lstTweetComment = TwitterComment.all()
 				.filter("contentid=?", postTweet).fetch();
 		return lstTweetComment;
 	}
-
 }

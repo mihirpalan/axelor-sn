@@ -3,15 +3,12 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/object-views http://apps.axelor.com/xml/ns/object-views/object-views_0.8.xsd">
 	<grid title="Configuration" name="twt-config-grid">
-		<field name="snType"></field>
 		<field name="page"></field>
 		<field name="content"></field>
 		<field name="since"></field>
 	</grid>
 
-	<form onNew="action-say-cur-user,com.axelor.sn.web.TWTController:saySNType"
-		title="Configuration" name="twt-config-form">
-		<field readonly="true" title="N/W Type" name="snType" hidden="true" />
+	<form title="Configuration" name="twt-config-form">
 		<group cols="3">
 			<field name="page" />
 			<label title="&lt;Font Size='0.75' Color='#ff0000'&gt;Max:10&lt;/Font&gt;" />

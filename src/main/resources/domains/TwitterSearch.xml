@@ -3,11 +3,9 @@
 	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://apps.axelor.com/xml/ns/domain-models http://apps.axelor.com/xml/ns/domain-models/domain-models_0.8.xsd">
 	<module name="sn" package="com.axelor.sn.db" />
-	<entity name="TwitterPostTweet">
-		<string name="content" multiline="true" namecolumn="true"></string>
-		<string name="acknowledgment"></string>
+	<entity name="TwitterSearch">
 		<many-to-one name="curUser" ref="com.axelor.auth.db.User"></many-to-one>
-		<one-to-many name="commentsTweet" ref="com.axelor.sn.db.TwitterComment" title="Comments" mappedBy="contentid" /> 
-		<datetime name="postedTime" title="Posted Time" tz="true" ></datetime>
+		<string name="tweetSource"></string>
+		<one-to-many name="tweetSeachResult" ref="com.axelor.sn.db.TwitterSearchResult" mappedBy="searchWord"/>
 	</entity>
 </domain-models>
